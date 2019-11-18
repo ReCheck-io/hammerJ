@@ -2,6 +2,7 @@ import com.iwebpp.crypto.TweetNaclFast;
 import com.iwebpp.crypto.TweetNaclFast.Box;
 import com.iwebpp.crypto.TweetNaclFast.Signature;
 import com.lambdaworks.crypto.SCrypt;
+import org.apache.commons.lang3.StringUtils;
 import org.kocakosm.jblake2.Blake2s;
 import org.web3j.crypto.Hash;
 
@@ -46,12 +47,12 @@ public class App {
         System.out.println("Sign public user1 : " + Base58Check.encode(keyPairS.getPublicKey()));
         System.out.println("Sign secret user1: " + bytesToHex(keyPairS.getSecretKey()));
         System.out.println("------------------------------");
-
+        Signature signature = new Signature(null, keyPairS.getSecretKey());
     }
 
     //non-static method cannot be referenced from a static context
-    private boolean sign(byte[] file, byte[] privateKey){
-        return Signature.detached_verify(file, privateKey);
+    private boolean sign(Signature signature, byte[] file, byte[] privateKey){
+        return signature.detached_verify(file, privateKey);
     }
 
     private String hashString(String toHash) {
@@ -88,9 +89,35 @@ public class App {
         return derivedBytes;
 
         // From the derivedBytes creating the seed for the following two key pairs
-//        byte[] encryptKeySeed = copyOfRange(derivedBytes, 0, 32);
-//        byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
+        // byte[] encryptKeySeed = copyOfRange(derivedBytes, 0, 32);
+        // byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
     }
+
+    private String[] generateAkKeyPair(String passphrase){
+        passphrase = passphrase.trim();
+        String key1 = "";
+        String key2 = "";
+
+        if ((passphrase != null) && (passphrase != "")) {
+        String[] words = StringUtils.split(passphrase);
+            if (words.length < 12) {
+                System.err.println("Invalid passphrase. Must be 12 words long.");
+            }
+            key1 = words[0] + ' ' + words[1] + ' ' + words[2] + ' ' + words[3] + ' ' + words[4] + ' ' + words[5];
+            key2 = words[6] + ' ' + words[7] + ' ' + words[8] + ' ' + words[9] + ' ' + words[10] + ' ' + words[11];
+        } else {
+//            key1 = diceware(6);
+//            key2 = diceware(6);
+        }
+
+        String phrase = key1 + ' ' + key2;
+
+//        let keys = await _session25519(key1, key2);
+
+        String[] keys = new String[5];
+        return keys;
+    }
+
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
