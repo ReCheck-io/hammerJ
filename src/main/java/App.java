@@ -48,6 +48,9 @@ public class App {
         System.out.println("Sign secret user1: " + bytesToHex(keyPairS.getSecretKey()));
         System.out.println("------------------------------");
         Signature signature = new Signature(null, keyPairS.getSecretKey());
+        RollDice rd = new RollDice();
+        String phrase =  rd.phrase();
+        System.out.println("i tva e " + phrase);
     }
 
     //non-static method cannot be referenced from a static context
