@@ -20,7 +20,7 @@ public class App {
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
 
     public static void main(String args[]) throws GeneralSecurityException {
-
+        String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
         String key1 = "clod sg grata image nelsen gsa";
         String key2 = "bode boxy 1992 deacon keep free";
 
@@ -47,14 +47,18 @@ public class App {
         System.out.println("Sign public user1 : " + Base58Check.encode(keyPairS.getPublicKey()));
         System.out.println("Sign secret user1: " + bytesToHex(keyPairS.getSecretKey()));
         System.out.println("------------------------------");
-        Signature signature = new Signature(null, keyPairS.getSecretKey());
-        RollDice rd = new RollDice();
-        String phrase =  rd.phrase();
-        System.out.println("i tva e " + phrase);
+
+        String[] masiv = generateAkKeyPair(passphrase);
+        System.out.println("public " + masiv[0]);
+        System.out.println("private " + masiv[1]);
+        System.out.println("public " + masiv[2]);
+        System.out.println("private " + masiv[3]);
+        System.out.println("phrase " + masiv[4]);
+
     }
 
     //non-static method cannot be referenced from a static context
-    private boolean sign(Signature signature, byte[] file, byte[] privateKey){
+    private boolean sign(Signature signature, byte[] file, byte[] privateKey) {
         return signature.detached_verify(file, privateKey);
     }
 
@@ -96,31 +100,57 @@ public class App {
         // byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
     }
 
-    private String[] generateAkKeyPair(String passphrase){
-        passphrase = passphrase.trim();
+    private static String[] generateAkKeyPair(String passphrase) throws GeneralSecurityException {
+
         String key1 = "";
         String key2 = "";
 
         if ((passphrase != null) && (passphrase != "")) {
-        String[] words = StringUtils.split(passphrase);
+            passphrase = passphrase.trim();
+            String[] words = StringUtils.split(passphrase);
             if (words.length < 12) {
                 System.err.println("Invalid passphrase. Must be 12 words long.");
             }
-            key1 = words[0] + ' ' + words[1] + ' ' + words[2] + ' ' + words[3] + ' ' + words[4] + ' ' + words[5];
-            key2 = words[6] + ' ' + words[7] + ' ' + words[8] + ' ' + words[9] + ' ' + words[10] + ' ' + words[11];
+            key1 = words[0] + " " + words[1] + " " + words[2] + " " + words[3] + " " + words[4] + " " + words[5];
+            key2 = words[6] + " " + words[7] + " " + words[8] + " " + words[9] + " " + words[10] + " " + words[11];
         } else {
-//            key1 = diceware(6);
-//            key2 = diceware(6);
+            String[] fullphrase = StringUtils.split(diceware());
+            key1 = fullphrase[0] + " " + fullphrase[1] + " " + fullphrase[2] + " " + fullphrase[3] + " " + fullphrase[4] + " " + fullphrase[5];
+            key2 = fullphrase[0] + " " + fullphrase[1] + " " + fullphrase[2] + " " + fullphrase[3] + " " + fullphrase[4] + " " + fullphrase[11];
         }
+        String phrase = key1 + " " + key2;
 
-        String phrase = key1 + ' ' + key2;
+        //gets the 64 byte for the creation of the two key pairs
+        byte[] derivedBytes = session25519(key1, key2);
 
-//        let keys = await _session25519(key1, key2);
+        //the first 32 bytes are used for the encryption pair, the second - sing pair.
+        byte[] encryptKeySeed = copyOfRange(derivedBytes, 0, 32);
+        byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
+
+        // creating a TweetNacl Box object for the encrypt pair
+        Box.KeyPair keyPairSK = Box.keyPair_fromSecretKey(encryptKeySeed);
+        String publicEncKey = Base58Check.encode(keyPairSK.getPublicKey());
+        String privateEncKey = bytesToHex(keyPairSK.getSecretKey());
+
+        // Having the second key pair TweetNacl Signature
+        Signature.KeyPair keyPairS = TweetNaclFast.Signature.keyPair_fromSeed(signKeySeed);
+        String publicSignKey = Base58Check.encode(keyPairS.getPublicKey());
+        String privateSignKey = bytesToHex(keyPairS.getSecretKey());
 
         String[] keys = new String[5];
+        keys[0] = publicEncKey;
+        keys[1] = privateEncKey;
+        keys[2] = publicSignKey;
+        keys[3] = privateSignKey;
+        keys[4] = phrase;
         return keys;
     }
 
+    private static String diceware() {
+        RollDice rd = new RollDice();
+        String phrase = rd.phrase();
+        return phrase;
+    }
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 

@@ -5,7 +5,7 @@ public class RollDice {
 
     public static String phrase() {
         String hand, match, trimmed, passphrase;
-        int hands = 12; // passphrase length
+        int hands = 12; // passphrase words length
         StringBuilder passBuilder = new StringBuilder();
 
         for (int j = 0; j < hands; j++) {
@@ -24,7 +24,6 @@ public class RollDice {
         }
         passphrase = passBuilder.toString();
 
-        System.out.println(passphrase.trim());
         return passphrase.trim();
     }
 }
