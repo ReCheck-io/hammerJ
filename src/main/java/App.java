@@ -6,9 +6,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.kocakosm.jblake2.Blake2s;
 import org.web3j.crypto.Hash;
 
+import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.Random;
 
+import static com.iwebpp.crypto.TweetNaclFast.randombytes;
 import static java.util.Arrays.copyOfRange;
 
 /*
@@ -19,41 +23,26 @@ import static java.util.Arrays.copyOfRange;
 public class App {
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
 
-    public static void main(String args[]) throws GeneralSecurityException {
+    public static void main(String args[]) throws GeneralSecurityException, UnsupportedEncodingException {
         String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
-        String key1 = "clod sg grata image nelsen gsa";
-        String key2 = "bode boxy 1992 deacon keep free";
+        String str = "Blake";
+        String key = Base64.getEncoder().encodeToString(passphrase.getBytes());
+        byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
+        // shared key
 
-        byte[] derivedBytes = session25519(key1, key2);
-        System.out.println("Hex derived bytes " + bytesToHex(derivedBytes).length());
-        System.out.println("Hex encoding is " + bytesToHex(derivedBytes).toLowerCase());
-        System.out.println("------------------------------");
+        encryptDataWithSymmetricKey(str, key);
+//        String encodedString = Base64.getEncoder().encodeToString(str.getBytes());
+//        byte[] decodedBytes = Base64.getDecoder().decode(encodedString);
+//        System.out.println("Encoded " + encodedString);
+//        String decodedString = new String(decodedBytes);
+//        System.out.println("Decoded " + decodedString);
 
-        // Having the seed to the following two key pairs
-        byte[] encryptKeySeed = copyOfRange(derivedBytes, 0, 32);
-        byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
-
-        //should be 32 bytes
-        System.out.println("encryptKeySeed " + encryptKeySeed.length);
-        System.out.println("signKeySeed " + signKeySeed.length);
-        System.out.println("------------------------------");
-        // having the first BOX key pair
-        Box.KeyPair keyPairSK = Box.keyPair_fromSecretKey(encryptKeySeed);
-        System.out.println("Public Box user1 : " + Base58Check.encode(keyPairSK.getPublicKey()));
-        System.out.println("Private Box user1: " + bytesToHex(keyPairSK.getSecretKey()));
-
-        // Having the second key pair Signature
-        Signature.KeyPair keyPairS = TweetNaclFast.Signature.keyPair_fromSeed(signKeySeed);
-        System.out.println("Sign public user1 : " + Base58Check.encode(keyPairS.getPublicKey()));
-        System.out.println("Sign secret user1: " + bytesToHex(keyPairS.getSecretKey()));
-        System.out.println("------------------------------");
-
-        String[] masiv = generateAkKeyPair(passphrase);
-        System.out.println("public " + masiv[0]);
-        System.out.println("private " + masiv[1]);
-        System.out.println("public " + masiv[2]);
-        System.out.println("private " + masiv[3]);
-        System.out.println("phrase " + masiv[4]);
+//        String[] keys = generateAkKeyPair(passphrase);
+//        System.out.println("public " + keys[0]);
+//        System.out.println("private " + keys[1]);
+//        System.out.println("public " + keys[2]);
+//        System.out.println("private " + keys[3]);
+//        System.out.println("phrase " + keys[4]);
 
     }
 
@@ -74,8 +63,16 @@ public class App {
         return Base58Check.decode(toDecode);
     }
 
-    // TODO: Whether this should stay an array or made into an object
-    // For now it will be a string array having all info ... should be converted into object
+    private static int getRandomNumberInRange(int min, int max) {
+
+        if (min >= max) {
+            throw new IllegalArgumentException("max must be greater than min");
+        }
+
+        Random r = new Random();
+        return r.nextInt((max - min) + 1) + min;
+    }
+
     private static byte[] session25519(String key1, String key2) throws GeneralSecurityException {
         int logN = 131072;  // this number is 2^17  CPU/memory cost parameter (1 to 31)
         int r = 8;    // block size parameter
@@ -137,6 +134,7 @@ public class App {
         String publicSignKey = Base58Check.encode(keyPairS.getPublicKey());
         String privateSignKey = bytesToHex(keyPairS.getSecretKey());
 
+        // put all the keys into a String array for better accessibility
         String[] keys = new String[5];
         keys[0] = publicEncKey;
         keys[1] = privateEncKey;
@@ -152,6 +150,75 @@ public class App {
         return phrase;
     }
 
+    public void encryptFileToPublicKey() throws NoSuchAlgorithmException {
+
+        // create random object
+        Random r = new Random();
+
+        // create byte array
+        byte[] bytesFileKey = new byte[32];
+        byte[] bytesSaltKey = new byte[32];
+
+        // put the next byte in the array
+        r.nextBytes(bytesFileKey);
+        r.nextBytes(bytesSaltKey);
+
+        String fileKey = Base64.getEncoder().encodeToString(bytesFileKey);
+        String salt = Base64.getEncoder().encodeToString(bytesSaltKey);
+
+        System.out.println("fileKey " + fileKey);
+        System.out.println("salt " + salt);
+
+        String symKey = Base64.getEncoder().encodeToString((fileKey + salt).getBytes());
+        System.out.println(symKey);
+
+//        let encryptedFile = encryptDataWithSymmetricKey(fileData, symKey);
+//
+
+    }
+
+    public static String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
+        // the key is encoded with Base64, otherwise the decoding won't work.
+        byte[] keyUint8Array = Base64.getDecoder().decode(key);
+
+        byte[] messageUint8 = data.getBytes();
+        // random nonce
+        int nonce = getRandomNumberInRange(0,26000);
+
+        // creating a Secret box object to cipher the data
+        TweetNaclFast.SecretBox sb = new TweetNaclFast.SecretBox(keyUint8Array, nonce);
+        byte[] cipher = sb.box(messageUint8);
+
+        //gets the nonce into String, so that it can be converted into byte[]
+        String nonceString = Integer.toString(nonce);
+        byte[] nonceByte = nonceString.getBytes();
+
+        // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
+        int fullMessageLength = nonceByte.length + cipher.length;
+        byte[] fullMessage = new byte[fullMessageLength];
+        for(int i =0; i<nonceByte.length;i++){
+            fullMessage[i] = nonceByte[i];
+        }
+        for (int i = nonceByte.length, p = 0;i<fullMessageLength;i++, p++){
+            fullMessage[i] = cipher[p];
+        }
+
+        String encodedFullMessage = Base64.getEncoder().encodeToString(fullMessage);
+        return encodedFullMessage;
+    };
+
+
+//        let encryptedPass = await encryptDataToPublicKeyWithKeyPair(fileKey, dstPublicKey);
+//        return {
+//                payload: encryptedFile,
+//                credentials: {
+//            syncPass: fileKey,
+//                    salt: saltKey,
+//                    encryptedPass: encryptedPass.payload,
+//                    encryptingPubKey: encryptedPass.srcPublicEncKey
+//        }
+//    };
+
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
     public static String bytesToHex(byte[] bytes) {
@@ -163,7 +230,6 @@ public class App {
         }
         return new String(hexChars);
     }
-
 
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
