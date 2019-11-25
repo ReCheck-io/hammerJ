@@ -38,10 +38,10 @@ public class App {
 //        System.out.println("Decoded " + decodedString);
 
 //        String[] keys = generateAkKeyPair(passphrase);
-//        System.out.println("public " + keys[0]);
-//        System.out.println("private " + keys[1]);
-//        System.out.println("public " + keys[2]);
-//        System.out.println("private " + keys[3]);
+//        System.out.println("public Enc" + keys[0]);
+//        System.out.println("private Enc " + keys[1]);
+//        System.out.println("public Sign " + keys[2]);
+//        System.out.println("private Sign " + keys[3]);
 //        System.out.println("phrase " + keys[4]);
 
     }
@@ -150,7 +150,7 @@ public class App {
         return phrase;
     }
 
-    public void encryptFileToPublicKey() throws NoSuchAlgorithmException {
+    public String[] encryptFileToPublicKey(String fileData, String dstPublicKey, String[] srcAkPair) throws GeneralSecurityException, UnsupportedEncodingException {
 
         // create random object
         Random r = new Random();
@@ -172,9 +172,29 @@ public class App {
         String symKey = Base64.getEncoder().encodeToString((fileKey + salt).getBytes());
         System.out.println(symKey);
 
-//        let encryptedFile = encryptDataWithSymmetricKey(fileData, symKey);
-//
+        String encryptedFile = encryptDataWithSymmetricKey(fileData, symKey);
+        String[] encryptedPass = encryptDataToPublicKeyWithKeyPair(fileKey, dstPublicKey, srcAkPair);
 
+        String[] encryption = new String[5];
+        encryption[0] = encryptedFile;
+        encryption[1] = fileKey;
+        encryption[2] = salt;
+        // encrypted data
+        encryption[3] = encryptedPass[0];
+        // encrypted Public src key
+        encryption[4] = encryptedPass[2];
+
+        return encryption;
+
+    }
+
+    public boolean isEmptyStringArray(String[] array) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
@@ -183,7 +203,7 @@ public class App {
 
         byte[] messageUint8 = data.getBytes();
         // random nonce
-        int nonce = getRandomNumberInRange(0,26000);
+        int nonce = getRandomNumberInRange(0, 26000);
 
         // creating a Secret box object to cipher the data
         TweetNaclFast.SecretBox sb = new TweetNaclFast.SecretBox(keyUint8Array, nonce);
@@ -196,28 +216,58 @@ public class App {
         // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
         int fullMessageLength = nonceByte.length + cipher.length;
         byte[] fullMessage = new byte[fullMessageLength];
-        for(int i =0; i<nonceByte.length;i++){
+        for (int i = 0; i < nonceByte.length; i++) {
             fullMessage[i] = nonceByte[i];
         }
-        for (int i = nonceByte.length, p = 0;i<fullMessageLength;i++, p++){
+        for (int i = nonceByte.length, p = 0; i < fullMessageLength; i++, p++) {
             fullMessage[i] = cipher[p];
         }
 
         String encodedFullMessage = Base64.getEncoder().encodeToString(fullMessage);
         return encodedFullMessage;
-    };
+    }
 
+    public String encrypt(byte[] sharedKey, String data, Box key) {
 
-//        let encryptedPass = await encryptDataToPublicKeyWithKeyPair(fileKey, dstPublicKey);
-//        return {
-//                payload: encryptedFile,
-//                credentials: {
-//            syncPass: fileKey,
-//                    salt: saltKey,
-//                    encryptedPass: encryptedPass.payload,
-//                    encryptingPubKey: encryptedPass.srcPublicEncKey
-//        }
-//    };
+        byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
+        byte[] messageUint8 = data.getBytes();
+        byte[] encrypted = key.after(messageUint8, theNonce.length,messageUint8.length,theNonce);
+
+        // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
+        int fullMessageLength = theNonce.length + encrypted.length;
+        byte[] fullMessage = new byte[fullMessageLength];
+        for (int i = 0; i < theNonce.length; i++) {
+            fullMessage[i] = theNonce[i];
+        }
+        for (int i = theNonce.length, p = 0; i < fullMessageLength; i++, p++) {
+            fullMessage[i] = encrypted[p];
+        }
+
+        String encodedFullMessage = Base64.getEncoder().encodeToString(fullMessage);
+        return encodedFullMessage;
+    }
+
+    public String[] encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, String[] srcAkPair) throws GeneralSecurityException {
+        if (isEmptyStringArray(srcAkPair)) {
+            //passing a null variable to escape overloading the whole parameter
+            String generate = null;
+            srcAkPair = generateAkKeyPair(generate);
+        }
+        byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
+        byte[] mySecretEncKeyArray = decodeBase58(srcAkPair[1]);
+        // create BOX object to make the .before method
+        TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
+        byte[] sharedKey = sharedKeyBox.before();
+        String encryptedData = encrypt(sharedKey, data, sharedKeyBox);
+
+        String[] encrypted = new String[3];
+        encrypted[0] = encryptedData;
+        encrypted[1] = dstPublicEncKey;
+        // pulic Enc key
+        encrypted[2] = srcAkPair[0];
+
+        return encrypted;
+    }
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
@@ -241,4 +291,39 @@ public class App {
         return data;
     }
 
+    public String[] getFileUploadData(String[] fileObj,String userChainId, String userChainIdPubKey, String[] srcAkPair) throws GeneralSecurityException, UnsupportedEncodingException {
+        String fileContents = fileObj[0];
+        String[] encryptedFile = encryptFileToPublicKey(fileContents, userChainIdPubKey, srcAkPair);
+        String docOriginalHash = hashString(fileContents);
+        String syncPassHash = hashString(encryptedFile[1]);
+        String docChainId = hashString(docOriginalHash);
+
+        String[] upload = new String[11];
+        upload[0] = docChainId;
+        //File name
+        upload[1] = fileObj[1];
+        //File category
+        upload[2] = fileObj[2];
+        //File keywords
+        upload[3] = fileObj[3];
+        upload[4] = userChainId;
+        // Encrypted file
+        upload[5] = encryptedFile[0];
+        upload[6] = docOriginalHash;
+        // Salt
+        upload[7] = encryptedFile[2];
+        upload[8] = syncPassHash;
+        //Encrypted pass
+        upload[9] = encryptedFile[3];
+        //Encrypted Public src key
+        upload[10] = encryptedFile[4];
+
+        return upload;
+
+    }
+
+    public String submitFile(String[] fileObj,String userChainId, String userChainIdPubKey, String[] srcAkPair){
+
+        return null;
+    }
 }
