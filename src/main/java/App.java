@@ -97,7 +97,7 @@ public class App {
         // byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
     }
 
-    private static String[] generateAkKeyPair(String passphrase) throws GeneralSecurityException {
+    private static UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
 
         String key1 = "";
         String key2 = "";
@@ -134,13 +134,8 @@ public class App {
         String publicSignKey = Base58Check.encode(keyPairS.getPublicKey());
         String privateSignKey = bytesToHex(keyPairS.getSecretKey());
 
-        // put all the keys into a String array for better accessibility
-        String[] keys = new String[5];
-        keys[0] = publicEncKey;
-        keys[1] = privateEncKey;
-        keys[2] = publicSignKey;
-        keys[3] = privateSignKey;
-        keys[4] = phrase;
+        // put all the keys in the User keyPair's object
+        UserKeyPair keys = new UserKeyPair(publicEncKey, privateEncKey, publicSignKey, privateSignKey,phrase);
         return keys;
     }
 
@@ -150,7 +145,7 @@ public class App {
         return phrase;
     }
 
-    public String[] encryptFileToPublicKey(String fileData, String dstPublicKey, String[] srcAkPair) throws GeneralSecurityException, UnsupportedEncodingException {
+    public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
         // create random object
         Random r = new Random();
@@ -173,18 +168,17 @@ public class App {
         System.out.println(symKey);
 
         String encryptedFile = encryptDataWithSymmetricKey(fileData, symKey);
-        String[] encryptedPass = encryptDataToPublicKeyWithKeyPair(fileKey, dstPublicKey, srcAkPair);
+        EncryptedDataWithPublicKey encryptedPass = encryptDataToPublicKeyWithKeyPair(fileKey, dstPublicKey);
 
-        String[] encryption = new String[5];
-        encryption[0] = encryptedFile;
-        encryption[1] = fileKey;
-        encryption[2] = salt;
-        // encrypted data
-        encryption[3] = encryptedPass[0];
-        // encrypted Public src key
-        encryption[4] = encryptedPass[2];
+        //Putting the data into a object data struct (JS like)
+        EncryptedFile result = new EncryptedFile();
+        result.setPayload(encryptedFile);
+        result.getCredentials().setSyncPass(fileKey);
+        result.getCredentials().setSalt(salt);
+        result.getCredentials().setEncryptedPass(encryptedPass.getPayload());
+        result.getCredentials().setEncryptedPubKey(encryptedPass.getSrcPublicEncKey());
 
-        return encryption;
+        return result;
 
     }
 
@@ -227,7 +221,7 @@ public class App {
         return encodedFullMessage;
     }
 
-    public String encrypt(byte[] sharedKey, String data, Box key) {
+    public String encrypt(String data, Box key) {
 
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] messageUint8 = data.getBytes();
@@ -247,26 +241,54 @@ public class App {
         return encodedFullMessage;
     }
 
-    public String[] encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, String[] srcAkPair) throws GeneralSecurityException {
-        if (isEmptyStringArray(srcAkPair)) {
+    /**
+     * @params EncryptedFile data
+     *         UserProperties userProps - to have all of the needed properties
+     * @return
+     */
+
+    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserProperties userAkKeyPairs) throws GeneralSecurityException {
+        if (userAkKeyPairs.getKeyPair() == null) {
             //passing a null variable to escape overloading the whole parameter
             String generate = null;
-            srcAkPair = generateAkKeyPair(generate);
+            userAkKeyPairs.setKeyPair(generateAkKeyPair(generate));
         }
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
-        byte[] mySecretEncKeyArray = decodeBase58(srcAkPair[1]);
+        byte[] mySecretEncKeyArray = decodeBase58(userAkKeyPairs.getKeyPair().getPrivateEncKey());
         // create BOX object to make the .before method
         TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
-        byte[] sharedKey = sharedKeyBox.before();
-        String encryptedData = encrypt(sharedKey, data, sharedKeyBox);
+        String encryptedData = encrypt(data, sharedKeyBox);
 
-        String[] encrypted = new String[3];
-        encrypted[0] = encryptedData;
-        encrypted[1] = dstPublicEncKey;
-        // pulic Enc key
-        encrypted[2] = srcAkPair[0];
+        //Putting the data into a object data struct (JS like)
+        EncryptedDataWithPublicKey result = new EncryptedDataWithPublicKey();
+        result.setPayload(encryptedData);
+        result.setDstPublicEncKey(dstPublicEncKey);
+        result.setSrcPublicEncKey(userAkKeyPairs.getKeyPair().getPublicEncKey());
 
-        return encrypted;
+        return result;
+    }
+    /**
+     * @params EncryptedFile data,
+     *
+     * @return
+
+     */
+    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
+        String generate = null;
+        UserKeyPair srcAkPair = generateAkKeyPair(generate);
+        byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
+        byte[] mySecretEncKeyArray = decodeBase58(srcAkPair.getPrivateEncKey());
+        // create BOX object to make the .before method
+        TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
+        String encryptedData = encrypt(data, sharedKeyBox);
+
+        //Putting the data into a object data struct (JS like)
+        EncryptedDataWithPublicKey result = new EncryptedDataWithPublicKey();
+        result.setPayload(encryptedData);
+        result.setDstPublicEncKey(dstPublicEncKey);
+        result.setSrcPublicEncKey(srcAkPair.getPublicEncKey());
+
+        return result;
     }
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
@@ -291,38 +313,31 @@ public class App {
         return data;
     }
 
-    public String[] getFileUploadData(String[] fileObj,String userChainId, String userChainIdPubKey, String[] srcAkPair) throws GeneralSecurityException, UnsupportedEncodingException {
-        String fileContents = fileObj[0];
-        String[] encryptedFile = encryptFileToPublicKey(fileContents, userChainIdPubKey, srcAkPair);
+    public FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey ) throws GeneralSecurityException, UnsupportedEncodingException {
+
+        String fileContents = fileObj.getPayload();
+        EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, userChainIdPubKey);
         String docOriginalHash = hashString(fileContents);
-        String syncPassHash = hashString(encryptedFile[1]);
+        String syncPassHash = hashString(encryptedFile.getCredentials().getSyncPass());
         String docChainId = hashString(docOriginalHash);
 
-        String[] upload = new String[11];
-        upload[0] = docChainId;
-        //File name
-        upload[1] = fileObj[1];
-        //File category
-        upload[2] = fileObj[2];
-        //File keywords
-        upload[3] = fileObj[3];
-        upload[4] = userChainId;
-        // Encrypted file
-        upload[5] = encryptedFile[0];
-        upload[6] = docOriginalHash;
-        // Salt
-        upload[7] = encryptedFile[2];
-        upload[8] = syncPassHash;
-        //Encrypted pass
-        upload[9] = encryptedFile[3];
-        //Encrypted Public src key
-        upload[10] = encryptedFile[4];
+        FileToUpload upload = new FileToUpload();
+        upload.setDocId(docChainId);
+        upload.setDocName(fileObj.getName());
+        upload.setCategory(fileObj.getCategory());
+        upload.setKeywords(fileObj.getKeywords());
+        upload.setUserId(userChainId);
+        upload.setPayload(encryptedFile.getPayload());
+        upload.getEncrypt().setDocHash(docOriginalHash);
+        upload.getEncrypt().setSalt(encryptedFile.getCredentials().getSalt());
+        upload.getEncrypt().setEncryptedPassA(encryptedFile.getCredentials().getEncryptedPass());
+        upload.getEncrypt().setPubKeyA(encryptedFile.getCredentials().getEncryptedPubKey());
 
         return upload;
 
     }
 
-    public String submitFile(String[] fileObj,String userChainId, String userChainIdPubKey, String[] srcAkPair){
+    public String submitFile(EncryptedFile fileObj,UserProperties userProps, FileCredentials fileCredentials){
 
         return null;
     }
