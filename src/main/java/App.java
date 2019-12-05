@@ -35,13 +35,39 @@ public class App {
         String str = "Blake";
         String key = Base64.getEncoder().encodeToString(passphrase.getBytes());
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
+        byte[] destPublicEncKeyArray = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5".getBytes();
+        byte[] mySecretEncKeyArray = "584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354".getBytes();
+
+        TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
         // shared key
 
-        try {
-            encryptDataWithSymmetricKey(str, key);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        /**
+         *  The case of encrypting something with Java and decrypt it with JS
+         *
+         *  Encrypted - aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3krHLUmqe7chMJTTThULNy+u2Gvnk
+         *  Decrypted -
+         *
+         */
+        String encrypted = encrypt(str, sharedKeyBox);
+        System.out.println(encrypted);
+
+        /**
+         *  The case of encrypting something with JS and decrypt it with Java
+         *
+         *  Encrypted -
+         *  Decrypted -
+         *
+         */
+        encrypted = "UfNSxfa0xBxhkf5k/yRBC6ZjuVXxqJm1p68xXJkjtxuYl9re58k4vXRnHRgXczdZNg";
+        String decrypted = decrypt(encrypted, sharedKeyBox);
+        System.out.println(decrypted);
+
+//
+//        try {
+//            encryptDataWithSymmetricKey(str, key);
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
 //        String encodedString = Base64.getEncoder().encodeToString(str.getBytes());
 //        byte[] decodedBytes = Base64.getDecoder().decode(encodedString);
 //        System.out.println("Encoded " + encodedString);
@@ -55,27 +81,27 @@ public class App {
 //        System.out.println("private Sign " + keys[3]);
 //        System.out.println("phrase " + keys[4]);
 
-        JSONObject js = new JSONObject();
-        byte[] array = new byte[0];
-        String fileContent = "";
+//        JSONObject js = new JSONObject();
+//        byte[] array = new byte[0];
+//        String fileContent = "";
 //        try {
 //            array = Files.readAllBytes(Paths.get("ReCheck.pdf"));
-            fileContent = "dsdsa";
+//            fileContent = "dsdsa";
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //            return;
 //        }
 
-
-        js.put("payload", fileContent);
-        js.put("name", "filename");
-        js.put("category", "OTHER");
-        js.put("keywords", "");
-
-        String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
-        String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
-
-        store(js.get("name").toString(),js.get("payload").toString(), userChainId, userChainIdPubKey);
+//
+//        js.put("payload", fileContent);
+//        js.put("name", "filename");
+//        js.put("category", "OTHER");
+//        js.put("keywords", "");
+//
+//        String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
+//        String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
+//
+//        store(js.get("name").toString(),js.get("payload").toString(), userChainId, userChainIdPubKey);
 
     }
 
@@ -264,6 +290,7 @@ public class App {
 
         // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
         int fullMessageLength = theNonce.length + encrypted.length;
+        System.out.println("nonsa "+ theNonce.length);
         byte[] fullMessage = new byte[fullMessageLength];
         for (int i = 0; i < theNonce.length; i++) {
             fullMessage[i] = theNonce[i];
@@ -273,14 +300,34 @@ public class App {
         }
 
         String encodedFullMessage = Base64.getEncoder().encodeToString(fullMessage);
+        System.out.println("Message encryp" + fullMessage.length);
         return encodedFullMessage;
     }
 
-    /**
-     * @params EncryptedFile data
-     *         UserProperties userProps - to have all of the needed properties
-     * @return
-     */
+    public static String decrypt(String messageWithNonce, Box key){
+        System.out.println(messageWithNonce.getBytes().length);
+        byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
+        System.out.println("key.nonce e "+ key.getNonce());
+        byte[] nonce = new byte[24];
+        System.out.println("nonce length" + nonce.length);
+        System.out.println("messagewithnonce" + messageWithNonceAsUint8Array.length);
+        byte[] message = new byte[messageWithNonceAsUint8Array.length - nonce.length];
+        int p =0 ;
+        for(int i = 0; i<24; i++, p++){
+            nonce[i] = messageWithNonceAsUint8Array[i];
+        }
+        for (int i = 0;p<messageWithNonceAsUint8Array.length; i++, p++){
+            message[i] = messageWithNonceAsUint8Array[p];
+        }
+
+        byte[] decrypted = key.open(message, nonce);
+        if(decrypted == null){
+            System.out.println("The decryption failed");
+            System.exit(0);
+        }
+        String decryptedBase64Message = new String(decrypted);
+        return decryptedBase64Message;
+    }
 
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserProperties userAkKeyPairs) throws GeneralSecurityException {
         if (userAkKeyPairs.getKeyPair() == null) {
@@ -302,12 +349,7 @@ public class App {
 
         return result;
     }
-    /**
-     * @params EncryptedFile data,
-     *
-     * @return
 
-     */
     public static EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
         String generate = null;
         UserKeyPair srcAkPair = generateAkKeyPair(generate);
