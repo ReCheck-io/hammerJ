@@ -2,15 +2,21 @@ import com.iwebpp.crypto.TweetNaclFast;
 import com.iwebpp.crypto.TweetNaclFast.Box;
 import com.iwebpp.crypto.TweetNaclFast.Signature;
 import com.lambdaworks.crypto.SCrypt;
+import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.kocakosm.jblake2.Blake2s;
 import org.web3j.crypto.Hash;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static com.iwebpp.crypto.TweetNaclFast.randombytes;
 import static java.util.Arrays.copyOfRange;
@@ -21,16 +27,21 @@ import static java.util.Arrays.copyOfRange;
  */
 
 public class App {
+    private static String token = "";
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
 
-    public static void main(String args[]) throws GeneralSecurityException, UnsupportedEncodingException {
+    public static void main(String args[]) throws GeneralSecurityException {
         String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
         String str = "Blake";
         String key = Base64.getEncoder().encodeToString(passphrase.getBytes());
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         // shared key
 
-        encryptDataWithSymmetricKey(str, key);
+        try {
+            encryptDataWithSymmetricKey(str, key);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
 //        String encodedString = Base64.getEncoder().encodeToString(str.getBytes());
 //        byte[] decodedBytes = Base64.getDecoder().decode(encodedString);
 //        System.out.println("Encoded " + encodedString);
@@ -44,6 +55,28 @@ public class App {
 //        System.out.println("private Sign " + keys[3]);
 //        System.out.println("phrase " + keys[4]);
 
+        JSONObject js = new JSONObject();
+        byte[] array = new byte[0];
+        String fileContent = "";
+//        try {
+//            array = Files.readAllBytes(Paths.get("ReCheck.pdf"));
+            fileContent = "dsdsa";
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return;
+//        }
+
+
+        js.put("payload", fileContent);
+        js.put("name", "filename");
+        js.put("category", "OTHER");
+        js.put("keywords", "");
+
+        String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
+        String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
+
+        store(js.get("name").toString(),js.get("payload").toString(), userChainId, userChainIdPubKey);
+
     }
 
     //non-static method cannot be referenced from a static context
@@ -51,7 +84,7 @@ public class App {
         return signature.detached_verify(file, privateKey);
     }
 
-    private String hashString(String toHash) {
+    private static String hashString(String toHash) {
         return Hash.sha3String(toHash);
     }
 
@@ -59,7 +92,7 @@ public class App {
         return Base58Check.encode(toEncode);
     }
 
-    private byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
+    private static byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
         return Base58Check.decode(toDecode);
     }
 
@@ -145,7 +178,7 @@ public class App {
         return phrase;
     }
 
-    public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
+    public static EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
         // create random object
         Random r = new Random();
@@ -173,10 +206,12 @@ public class App {
         //Putting the data into a object data struct (JS like)
         EncryptedFile result = new EncryptedFile();
         result.setPayload(encryptedFile);
-        result.getCredentials().setSyncPass(fileKey);
-        result.getCredentials().setSalt(salt);
-        result.getCredentials().setEncryptedPass(encryptedPass.getPayload());
-        result.getCredentials().setEncryptedPubKey(encryptedPass.getSrcPublicEncKey());
+        FileCredentials fc = new FileCredentials();
+        fc.setSyncPass(fileKey);
+        fc.setSalt(salt);
+        fc.setEncryptedPass(encryptedPass.getPayload());
+        fc.setEncryptedPubKey(encryptedPass.getSrcPublicEncKey());
+        result.setCredentials(fc);
 
         return result;
 
@@ -204,7 +239,7 @@ public class App {
         byte[] cipher = sb.box(messageUint8);
 
         //gets the nonce into String, so that it can be converted into byte[]
-        String nonceString = Integer.toString(nonce);
+        String nonceString = hashString(Integer.toString(nonce)).substring(0,32);
         byte[] nonceByte = nonceString.getBytes();
 
         // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
@@ -221,11 +256,11 @@ public class App {
         return encodedFullMessage;
     }
 
-    public String encrypt(String data, Box key) {
+    public static String encrypt(String data, Box key) {
 
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] messageUint8 = data.getBytes();
-        byte[] encrypted = key.after(messageUint8, theNonce.length,messageUint8.length,theNonce);
+        byte[] encrypted = key.after(messageUint8, 0,messageUint8.length,theNonce);
 
         // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
         int fullMessageLength = theNonce.length + encrypted.length;
@@ -273,11 +308,14 @@ public class App {
      * @return
 
      */
-    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
+    public static EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
         String generate = null;
         UserKeyPair srcAkPair = generateAkKeyPair(generate);
+
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
-        byte[] mySecretEncKeyArray = decodeBase58(srcAkPair.getPrivateEncKey());
+        System.out.println("tva  "+  dstPublicEncKey);
+        byte[] mySecretEncKeyArray = hexStringToByteArray(srcAkPair.getPrivateEncKey());
+
         // create BOX object to make the .before method
         TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
         String encryptedData = encrypt(data, sharedKeyBox);
@@ -313,7 +351,7 @@ public class App {
         return data;
     }
 
-    public FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey ) throws GeneralSecurityException, UnsupportedEncodingException {
+    public static FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
         String fileContents = fileObj.getPayload();
         EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, userChainIdPubKey);
@@ -324,21 +362,85 @@ public class App {
         FileToUpload upload = new FileToUpload();
         upload.setDocId(docChainId);
         upload.setDocName(fileObj.getName());
-        upload.setCategory(fileObj.getCategory());
-        upload.setKeywords(fileObj.getKeywords());
+        if (fileObj.getCategory()==null){
+            upload.setCategory("OTHERS");
+        }
+        if (fileObj.getKeywords() == null){
+            upload.setKeywords("Daka");
+        }
         upload.setUserId(userChainId);
         upload.setPayload(encryptedFile.getPayload());
-        upload.getEncrypt().setDocHash(docOriginalHash);
-        upload.getEncrypt().setSalt(encryptedFile.getCredentials().getSalt());
-        upload.getEncrypt().setEncryptedPassA(encryptedFile.getCredentials().getEncryptedPass());
-        upload.getEncrypt().setPubKeyA(encryptedFile.getCredentials().getEncryptedPubKey());
+
+        Encryption encrpt = new Encryption();
+
+        encrpt.setDocHash(docOriginalHash);
+        encrpt.setSalt(encryptedFile.getCredentials().getSalt());
+        encrpt.setEncryptedPassA(encryptedFile.getCredentials().getEncryptedPass());
+        encrpt.setPubKeyA(encryptedFile.getCredentials().getEncryptedPubKey());
+        encrpt.setPassHash(syncPassHash);
+
+        upload.setEncrypt(encrpt);
 
         return upload;
 
     }
 
-    public String submitFile(EncryptedFile fileObj,UserProperties userProps, FileCredentials fileCredentials){
+    public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
-        return null;
+    static OkHttpClient client = new OkHttpClient().newBuilder().connectTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(100, TimeUnit.SECONDS)
+            .readTimeout(300, TimeUnit.SECONDS)
+            .build();;
+    private void init (String token){
+
+    }
+    public static String post(String url, JSONObject json) throws IOException {
+        RequestBody body = RequestBody.create(json.toString(), JSON);
+        Request request = new Request.Builder()
+
+                .url(url)
+                .post(body)
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            return response.body().string();
+        }
+    }
+
+    private static String uploadFile(FileToUpload file) throws IOException {
+        JSONObject js = new JSONObject();
+        String token = "6ce48d47-70c5-4484-82ad-754adfa75294";
+        js.put("docId", file.getDocId());
+        js.put("docName", file.getDocName());
+        js.put("category", file.getCategory());
+        js.put("keywords", file.getKeywords());
+        js.put("userId", file.getUserId());
+        js.put("payload", file.getPayload());
+
+        JSONObject encryption = new JSONObject();
+        encryption.put("docHash", file.getEncrypt().getDocHash());
+        encryption.put("salt", file.getEncrypt().getSalt());
+        encryption.put("passHash", file.getEncrypt().getPassHash());
+        encryption.put("encryptedPassA",file.getEncrypt().getEncryptedPassA());
+        encryption.put("pubKeyA", file.getEncrypt().getPubKeyA());
+
+        js.put("encryption", encryption);
+        System.out.println(js.toString());
+       String responce = post("http://localhost:3000/uploadencrypted?api=1&token="+token, js);
+       System.out.println(responce);
+       return responce;
+    }
+
+    public static String store(String name, String content, String userChainId, String userChainIdPubKey) {
+        FileObj obj = new FileObj();
+        obj.setPayload(content);
+        obj.setName(name);
+        try {
+            FileToUpload file = getFileUploadData(obj, userChainId, userChainIdPubKey);
+            return uploadFile(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error. " + e.getMessage());
+        }
+            return null;
     }
 }

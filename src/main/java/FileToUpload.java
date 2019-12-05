@@ -2,8 +2,8 @@ public class FileToUpload {
 
     private String docId;
     private String docName;
-    private String category;
-    private String keywords;
+    private String category = "OTHERS";
+    private String keywords = "Daka";
     private String userId;
     private String payload;
     private Encryption encrypt;
