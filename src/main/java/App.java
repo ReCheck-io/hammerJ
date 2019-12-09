@@ -18,6 +18,7 @@ import java.util.Base64;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static com.iwebpp.crypto.TweetNaclFast.hexEncodeToString;
 import static com.iwebpp.crypto.TweetNaclFast.randombytes;
 import static java.util.Arrays.copyOfRange;
 
@@ -36,9 +37,18 @@ public class App {
         String key = Base64.getEncoder().encodeToString(passphrase.getBytes());
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] destPublicEncKeyArray = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5".getBytes();
-        byte[] mySecretEncKeyArray = "584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354".getBytes();
+        byte[] mySecretEncKeyArray = hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
 
-        TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
+        TweetNaclFast.Box.KeyPair kp = new Box.KeyPair();
+        kp =Box.keyPair_fromSecretKey(mySecretEncKeyArray);
+        System.out.println("Public: " + Base58Check.encode(kp.getPublicKey()));
+        System.out.println("Private: " + bytesToHex(kp.getSecretKey()).toLowerCase());
+
+        TweetNaclFast.Box kpFromSecret = new TweetNaclFast.Box(kp.getPublicKey(),kp.getSecretKey());
+        System.out.println("kp shared key "+ Base58Check.encode(kpFromSecret.toString().getBytes()).length());
+        System.out.println("secret " + Base58Check.encode(kp.getSecretKey()));
+        System.out.println("kp key "+ Base58Check.encode(kpFromSecret.toString().getBytes()));
+
         // shared key
 
         /**
@@ -48,8 +58,8 @@ public class App {
          *  Decrypted -
          *
          */
-        String encrypted = encrypt(str, sharedKeyBox);
-        System.out.println(encrypted);
+        String encrypted = encrypt(str, kpFromSecret);
+        System.out.println("ei tva" +  encrypted);
 
         /**
          *  The case of encrypting something with JS and decrypt it with Java
@@ -59,7 +69,7 @@ public class App {
          *
          */
         encrypted = "UfNSxfa0xBxhkf5k/yRBC6ZjuVXxqJm1p68xXJkjtxuYl9re58k4vXRnHRgXczdZNg";
-        String decrypted = decrypt(encrypted, sharedKeyBox);
+        String decrypted = decrypt(encrypted, kpFromSecret);
         System.out.println(decrypted);
 
 //
@@ -336,7 +346,7 @@ public class App {
             userAkKeyPairs.setKeyPair(generateAkKeyPair(generate));
         }
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
-        byte[] mySecretEncKeyArray = decodeBase58(userAkKeyPairs.getKeyPair().getPrivateEncKey());
+        byte[] mySecretEncKeyArray = decodeBase58(userAkKeyPairs    .getKeyPair().getPrivateEncKey());
         // create BOX object to make the .before method
         TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
         String encryptedData = encrypt(data, sharedKeyBox);
