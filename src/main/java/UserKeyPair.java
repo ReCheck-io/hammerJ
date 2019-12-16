@@ -14,6 +14,9 @@ public class UserKeyPair {
         setPhrase(phrase);
     }
 
+    public UserKeyPair(String s, String s1, String s2, String s3) {
+    }
+
     public String getPublicEncKey() {
         return publicEncKey;
     }

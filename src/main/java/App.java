@@ -10,20 +10,15 @@ import org.web3j.crypto.Hash;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
-import static com.iwebpp.crypto.TweetNaclFast.randombytes;
 import static java.util.Arrays.copyOfRange;
+import static jdk.nashorn.internal.objects.NativeMath.log;
 
 /*
  Hash.sha3String(String a) is the equivalent to hash() / return '0x' + keccak256(src).toString('hex'); /
@@ -33,6 +28,9 @@ import static java.util.Arrays.copyOfRange;
 public class App {
     private static String token = "";
     private static String baseUrl = "http://localhost:3000";
+//    private static String doc = "0x3fb9d3b44685884339f0d56f2ca1e8c08042cc598358d6c280342314a0ac2736";
+    private static String doc =  "0x21b58ea9235e2abb89c47f2cee5b8eb7b80d7db2f9bdf4958886d0938b87a445";
+    private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "");
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
 
     public static void main(String args[]) throws GeneralSecurityException {
@@ -103,32 +101,39 @@ public class App {
 
         // get their input as a String
 //        String challenge = scanner.nextLine();
-        String challenge ="";
-        String logi =  login(keys, challenge);
+        String challenge = "0xb553fac3f69a111842c2d800e97cdeb740ac638e8d12c9378e6ce57a1a01ca8f";
+        String logi = login(keys, challenge);
         System.out.println(logi);
 
-        JSONObject js = new JSONObject();
-        byte[] array = new byte[0];
-        String fileContent = "";
-        try {
-            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
-            fileContent = Base64.getEncoder().encodeToString(array);
-//            fileContent = new String(array, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-
-        js.put("payload", fileContent);
-        js.put("name", "filenamed");
-        js.put("category", "OTHER");
-        js.put("keywords", "");
-
         String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
-        String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
 
-        store(js.get("name").toString(),js.get("payload").toString(), userChainId, userChainIdPubKey);
+        JSONObject js = openFile(doc,userChainId,keys);
+        System.out.println(js.toString(1));
+        System.out.println("----------");
+        System.out.println(js.get("payload").toString());
+        System.out.println("----------");
+        //          JSONObject js = new JSONObject();
+//        byte[] array = new byte[0];
+//        String fileContent = "";
+//        try {
+////            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
+////            fileContent = Base64.getEncoder().encodeToString(array);
+//            fileContent = Base64.getEncoder().encodeToString("sdaasaaaa".getBytes());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return;
+//        }
+//
+//
+//        js.put("payload", fileContent);
+//        js.put("name", "filenamed");
+//        js.put("category", "OTHER");
+//        js.put("keywords", "");
+//
+//
+//        String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
+//
+//        store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
 
     }
 
@@ -190,7 +195,7 @@ public class App {
         String key1 = "";
         String key2 = "";
 
-        if ((passphrase != null) && (passphrase != "")) {
+        if ((passphrase != null) && !(passphrase.equals(""))) {
             passphrase = passphrase.trim();
             String[] words = StringUtils.split(passphrase);
             if (words.length < 12) {
@@ -223,7 +228,7 @@ public class App {
         String privateSignKey = bytesToHex(keyPairS.getSecretKey());
 
         // put all the keys in the User keyPair's object
-        UserKeyPair keys = new UserKeyPair(publicEncKey, privateEncKey, publicSignKey, privateSignKey,phrase);
+        UserKeyPair keys = new UserKeyPair(publicEncKey, privateEncKey, publicSignKey, privateSignKey, phrase);
         return keys;
     }
 
@@ -252,7 +257,7 @@ public class App {
         System.out.println("fileKey " + fileKey);
         System.out.println("salt " + salt);
 
-        String symKey = Base64.getEncoder().encodeToString(hexStringToByteArray(hashString(fileKey + salt).replaceFirst("0x","")));
+        String symKey = Base64.getEncoder().encodeToString(hexStringToByteArray(hashString(fileKey + salt).replaceFirst("0x", "")));
 
         System.out.println(symKey);
 
@@ -286,20 +291,10 @@ public class App {
         // the key is encoded with Base64, otherwise the decoding won't work.
         byte[] keyUint8Array = Base64.getDecoder().decode(key);
         byte[] nonceBytes = TweetNaclFast.makeSecretBoxNonce();
-        System.out.println( "secret nonce length " + nonceBytes.length);
         byte[] messageUint8 = data.getBytes();
 
-        byte[] boxBytes = new TweetNaclFast.SecretBox(keyUint8Array).box(messageUint8,nonceBytes);
-        // random nonce
-//        int nonce = getRandomNumberInRange(0, 26000);
-
-        // creating a Secret box object to cipher the data
-//        TweetNaclFast.SecretBox sb = new TweetNaclFast.SecretBox(keyUint8Array, nonce);
-//        byte[] cipher = sb.box(messageUint8);
-        System.out.println("toz cipher" +  boxBytes);
-
-        //gets the nonce into String, so that it can be converted into byte[]
-        System.out.println("nonce base64 " +  Base64.getEncoder().encodeToString(nonceBytes));
+        // Creating the cipher (boxBytes) with key, message and nonce
+        byte[] boxBytes = new TweetNaclFast.SecretBox(keyUint8Array).box(messageUint8, nonceBytes);
 
         // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
         int fullMessageLength = nonceBytes.length + boxBytes.length;
@@ -315,15 +310,38 @@ public class App {
         return encodedFullMessage;
     }
 
+    public static String decryptDataWithSymmetricKey ( String messageWithNonce, String key) {
+
+    byte[] keyUint8Array = Base64.getDecoder().decode(key);
+    byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
+    byte[] nonce = new byte[24];
+    byte[] message = new byte[messageWithNonceAsUint8Array.length - nonce.length];
+
+    // extracts the nonce
+    for(int i=0; i<nonce.length; i++){
+        nonce[i] = messageWithNonceAsUint8Array[i];
+    }
+    // extracts the message
+    for(int i = nonce.length, p=0; i<messageWithNonceAsUint8Array.length; i++, p++){
+        message[p] = messageWithNonceAsUint8Array[i];
+    }
+
+    byte[] decrypted = new TweetNaclFast.SecretBox(keyUint8Array).open(message, nonce);
+        if (decrypted == null) {
+            throw new Error("Decryption failed");
+        }
+
+        return new String(decrypted); //base64DecryptedMessage
+    };
+
     public static String encrypt(String data, Box key) {
 
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] messageUint8 = data.getBytes();
-        byte[] encrypted = key.after(messageUint8, 0,messageUint8.length,theNonce);
+        byte[] encrypted = key.after(messageUint8, 0, messageUint8.length, theNonce);
 
         // creating a new byte[] with the length of nonceByte and cipher, so that i can be packed into one variable
         int fullMessageLength = theNonce.length + encrypted.length;
-        System.out.println("nonsa "+ theNonce.length);
         byte[] fullMessage = new byte[fullMessageLength];
         for (int i = 0; i < theNonce.length; i++) {
             fullMessage[i] = theNonce[i];
@@ -333,28 +351,23 @@ public class App {
         }
 
         String encodedFullMessage = Base64.getEncoder().encodeToString(fullMessage);
-        System.out.println("Message encryp" + fullMessage.length);
         return encodedFullMessage;
     }
 
-    public static String decrypt(String messageWithNonce, Box key){
-        System.out.println(messageWithNonce.getBytes().length);
+    public static String decrypt(String messageWithNonce, Box key) {
         byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
-        System.out.println("key.nonce e "+ key.getNonce());
         byte[] nonce = new byte[24];
-        System.out.println("nonce length" + nonce.length);
-        System.out.println("messagewithnonce" + messageWithNonceAsUint8Array.length);
         byte[] message = new byte[messageWithNonceAsUint8Array.length - nonce.length];
-        int p =0 ;
-        for(int i = 0; i<24; i++, p++){
+        int p = 0;
+        for (int i = 0; i < 24; i++, p++) {
             nonce[i] = messageWithNonceAsUint8Array[i];
         }
-        for (int i = 0;p<messageWithNonceAsUint8Array.length; i++, p++){
+        for (int i = 0; p < messageWithNonceAsUint8Array.length; i++, p++) {
             message[i] = messageWithNonceAsUint8Array[p];
         }
 
         byte[] decrypted = key.open(message, nonce);
-        if(decrypted == null){
+        if (decrypted == null) {
             System.out.println("The decryption failed");
             System.exit(0);
         }
@@ -362,14 +375,14 @@ public class App {
         return decryptedBase64Message;
     }
 
-    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserProperties userAkKeyPairs) throws GeneralSecurityException {
-        if (userAkKeyPairs.getKeyPair() == null) {
+    public static EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException {
+        if (userAkKeyPairs == null) {
             //passing a null variable to escape overloading the whole parameter
             String generate = null;
-            userAkKeyPairs.setKeyPair(generateAkKeyPair(generate));
+            userAkKeyPairs = generateAkKeyPair(generate);
         }
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
-        byte[] mySecretEncKeyArray = decodeBase58(userAkKeyPairs    .getKeyPair().getPrivateEncKey());
+        byte[] mySecretEncKeyArray = hexStringToByteArray(userAkKeyPairs.getPrivateEncKey());
         // create BOX object to make the .before method
         TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
         String encryptedData = encrypt(data, sharedKeyBox);
@@ -378,7 +391,7 @@ public class App {
         EncryptedDataWithPublicKey result = new EncryptedDataWithPublicKey();
         result.setPayload(encryptedData);
         result.setDstPublicEncKey(dstPublicEncKey);
-        result.setSrcPublicEncKey(userAkKeyPairs.getKeyPair().getPublicEncKey());
+        result.setSrcPublicEncKey(userAkKeyPairs.getPublicEncKey());
 
         return result;
     }
@@ -388,7 +401,6 @@ public class App {
         UserKeyPair srcAkPair = generateAkKeyPair(generate);
 
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
-        System.out.println("tva  "+  dstPublicEncKey);
         byte[] mySecretEncKeyArray = hexStringToByteArray(srcAkPair.getPrivateEncKey());
 
         // create BOX object to make the .before method
@@ -437,10 +449,10 @@ public class App {
         FileToUpload upload = new FileToUpload();
         upload.setDocId(docChainId);
         upload.setDocName(fileObj.getName());
-        if (fileObj.getCategory()==null){
+        if (fileObj.getCategory() == null) {
             upload.setCategory("OTHERS");
         }
-        if (fileObj.getKeywords() == null){
+        if (fileObj.getKeywords() == null) {
             upload.setKeywords("Daka");
         }
         upload.setUserId(userChainId);
@@ -450,7 +462,6 @@ public class App {
 
         encrpt.setDocHash(docOriginalHash);
         encrpt.setSalt(encryptedFile.getCredentials().getSalt());
-        System.out.println("taz sol " + encryptedFile.getCredentials().getSalt());
         encrpt.setEncryptedPassA(encryptedFile.getCredentials().getEncryptedPass());
         encrpt.setPubKeyA(encryptedFile.getCredentials().getEncryptedPubKey());
         encrpt.setPassHash(syncPassHash);
@@ -468,56 +479,47 @@ public class App {
             .readTimeout(300, TimeUnit.SECONDS)
             .build();
 
-    private void init (String token, String baseUrl){
+    private void init(String token, String baseUrl) {
         this.token = token;
         this.baseUrl = baseUrl;
     }
 
     //gets the challange and pass it down to another function to do the actual login, then callbacks it here
-    private static String login(UserKeyPair kp, String ch){
+    private static String login(UserKeyPair kp, String ch) {
         String getChallangeUrl = getEndpointUrl("login/challenge");
         String challangeResponce = getRequest(getChallangeUrl);
         JSONObject js = new JSONObject(challangeResponce);
         String challenge = js.get("challenge").toString();
         ch = ch.trim();
-        if (ch.length()>31){
+        if (ch.length() > 31) {
             challenge = ch;
         }
-        System.out.println("challenge responce "+ challangeResponce);
+        System.out.println("challenge responce " + challangeResponce);
         return loginWithChallenge(challenge, kp);
     }
-    private static String loginWithChallenge(String challenge, UserKeyPair keyPair){
-       byte[] signature;
-       System.out.println(challenge);
+
+    private static String loginWithChallenge(String challenge, UserKeyPair keyPair) {
+        byte[] signature;
         try {
-            signature = sign(challenge.getBytes(),keyPair);
+            signature = sign(challenge.getBytes(), keyPair);
             String sig58 = Base58Check.encode(signature);
             String pubEncKey = keyPair.getPublicSignKey();
-            String pubKey = "ak_" +  keyPair.getPublicSignKey();
+            String pubKey = "ak_" + keyPair.getPublicSignKey();
 
             JSONObject payload = new JSONObject();
 
             payload.put("action", "login");
             payload.put("pubKey", pubKey);
-            System.out.println("kp pub "+ keyPair.getPublicSignKey());
             payload.put("pubEncKey", pubEncKey);
-            System.out.println("kpEnc pub "+ keyPair.getPublicEncKey());
             payload.put("firebaseToken", "notoken");
             payload.put("challenge", challenge);
-            System.out.println("challenge "+ challenge);
             payload.put("challengeSignature", sig58);
-            System.out.println("sig58 "+ sig58);
 
             String loginURL = getEndpointUrl("mobilelogin");
-            String loginPostResult = post(loginURL,payload);
-            System.out.println("-------------------------------");
-//            System.out.println("logPostRes" + loginPostResult);
+            String loginPostResult = post(loginURL, payload);
             JSONObject result = new JSONObject(loginPostResult);
             String tokenRes = result.get("rtnToken").toString();
             token = tokenRes;
-            System.out.println("-------");
-            System.out.println("toz tokeen " + token);
-            System.out.println("-------");
             return tokenRes;
         } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
@@ -526,18 +528,18 @@ public class App {
 
     }
 
-    private static String getEndpointUrl(String action){
+    private static String getEndpointUrl(String action) {
         String url = baseUrl + "/" + action + "?noapi=1";
         if (!(token == null || token.trim() == "")) {
-            url = baseUrl +"/" + action + "?api=1&token=" + token;
+            url = baseUrl + "/" + action + "?api=1&token=" + token;
         }
         return url;
     }
 
-    private String getEndpointUrl(String action, String appendix) {
+    private static String getEndpointUrl(String action, String appendix) {
         String url = baseUrl + "/" + action + "noapi=1";
         if (!(token == null && token.trim() == "")) {
-            url = baseUrl +"/" + action + "?api=1&token=" + token;
+            url = baseUrl + "/" + action + "?api=1&token=" + token;
         }
         if (!(appendix == null && appendix.trim() == "")) {
             url = url + appendix;
@@ -545,7 +547,7 @@ public class App {
         return url;
     }
 
-    private static String getRequest(String url){
+    private static String getRequest(String url) {
 
         Request request = new Request.Builder()
                 .url(url)
@@ -582,18 +584,199 @@ public class App {
         JSONObject encryption = new JSONObject();
         encryption.put("docHash", file.getEncrypt().getDocHash());
         encryption.put("salt", file.getEncrypt().getSalt());
-        System.out.println("taaaaz sol "+ file.getEncrypt().getSalt() );
         encryption.put("passHash", file.getEncrypt().getPassHash());
-        encryption.put("encryptedPassA",file.getEncrypt().getEncryptedPassA());
+        encryption.put("encryptedPassA", file.getEncrypt().getEncryptedPassA());
         encryption.put("pubKeyA", file.getEncrypt().getPubKeyA());
 
         js.put("encryption", encryption);
-//        System.out.println(js.toString());
-       String responce = post("http://localhost:3000/uploadencrypted?api=1&token="+token, js);
-//       System.out.println(responce);
-       return responce;
+        String responce = post("http://localhost:3000/uploadencrypted?api=1&token=" + token, js);
+        return responce;
     }
 
+    private static JSONObject submitCredentials(String docChainId,String userChainId){
+        if (browserKeyPair.getPublicEncKey() == null) {
+            try {
+                browserKeyPair = generateAkKeyPair("");
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Browser has key: " + browserKeyPair.getPublicSignKey());
+        JSONObject browserPubKeySubmit = new JSONObject();
+
+        browserPubKeySubmit.put("docId", docChainId);
+        browserPubKeySubmit.put("userId", userChainId);
+
+        JSONObject encryption = new JSONObject();
+        encryption.put("pubKeyB",  browserKeyPair.getPublicEncKey());
+
+        browserPubKeySubmit.put("encryption", encryption);
+
+        System.out.println("submit pubkey payload " +  browserPubKeySubmit);
+
+        String browserPubKeySubmitUrl = getEndpointUrl("browsercredentials");
+        System.out.println("browser poll post submit pubKeyB " + browserPubKeySubmitUrl);
+
+        String browserPubKeySubmitRes = null;
+        try {
+            browserPubKeySubmitRes = post(browserPubKeySubmitUrl, browserPubKeySubmit);
+            JSONObject js = new JSONObject(browserPubKeySubmitRes);
+            return js;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+
+    }
+
+    private static String decryptDataWithPublicAndPrivateKey(String payload,String srcPublicEncKey, String secretKey) {
+        byte[] srcPublicEncKeyArray = null;
+        try {
+            srcPublicEncKeyArray = decodeBase58(srcPublicEncKey);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        byte[] secretKeyArray = hexStringToByteArray(secretKey);
+        TweetNaclFast.Box decryptedBox = new TweetNaclFast.Box(srcPublicEncKeyArray, secretKeyArray);
+        return decrypt(payload, decryptedBox);//decrypted
+    }
+
+    private static JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair){
+        System.out.println("User device requests decryption info from server "+ docChainId + "  " + userId);
+        String getUrl = getEndpointUrl("exchangecredentials", "&userId=" + userId + "&docId=" + docChainId);
+        System.out.println("decryptWithKeyPair get request " + getUrl);
+        String serverEncryptionInfo = getRequest(getUrl);
+
+        JSONObject serverEncrptInfo = new JSONObject(serverEncryptionInfo);
+        JSONObject encrpt = new JSONObject(serverEncrptInfo.get("encryption").toString());
+
+        System.out.println("Server responds to device with encryption info "+ serverEncrptInfo);
+
+        if (encrpt == null || browserKeyPair.getPublicEncKey() == null) {
+            throw new Error("Unable to retrieve intermediate public key B.");
+        }
+        String decryptedPassword = decryptDataWithPublicAndPrivateKey(encrpt.get("encryptedPassA").toString(), encrpt.get("pubKeyA").toString(), keyPair.getPrivateEncKey());
+        System.out.println("User device decrypts the sym password " + decryptedPassword);
+        String syncPassHash = hashString(decryptedPassword);
+        EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
+        try {
+            reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword,browserKeyPair.getPublicEncKey(), keyPair);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+        System.out.println("User device re-encrypts password for browser " + reEncryptedPasswordInfo);
+
+        JSONObject devicePost = new JSONObject();
+        devicePost.put("docId",docChainId );
+        devicePost.put("userId","ak_" + keyPair.getPublicSignKey());
+
+        JSONObject encryption = new JSONObject();
+        encryption.put("syncPassHash", syncPassHash);
+        encryption.put("encryptedPassB",reEncryptedPasswordInfo.getPayload());
+
+        devicePost.put("encryption", encryption);
+
+        System.out.println("devicePost "+ devicePost);
+        String postUrl = getEndpointUrl("exchangecredentials");
+        System.out.println("decryptWithKeyPair post "+ postUrl);
+
+        String serverPostResponse = null;
+        try {
+            serverPostResponse = post(postUrl, devicePost);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        JSONObject serverResponse = new JSONObject(serverPostResponse);
+
+        System.out.println("User device POST to server encryption info "+ devicePost);
+        System.out.println("Server responds to user device POST "+ serverResponse.toString());
+        return serverResponse;
+    }
+
+    private static JSONObject processEncryptedFileInfo(JSONObject encryptedFileInfo, String devicePublicKey, String browserPrivateKey) {
+        JSONObject encryption = new JSONObject(encryptedFileInfo.get("encryption").toString());
+        System.out.println("ei toz encryption" + encryption);
+        System.out.println("ei toz parametar" + encryptedFileInfo);
+        String decryptedSymPassword = decryptDataWithPublicAndPrivateKey(encryption.get("encryptedPassB").toString(), devicePublicKey, browserPrivateKey);
+        System.out.println("Browser decrypts sym password " + decryptedSymPassword);
+
+        String fullPassword = Base64.getEncoder().encodeToString(hexStringToByteArray(hashString(decryptedSymPassword + encryption.get("salt").toString()).replaceFirst("0x", "")));
+        System.out.println("Browser composes full password " + fullPassword);
+
+        String decryptedFile = decryptDataWithSymmetricKey(encryptedFileInfo.get("payload").toString(), fullPassword);
+        System.out.println("Browser decrypts the file with the full password "+ decryptedFile);
+
+        JSONObject resultFileInfo = encryptedFileInfo;
+        resultFileInfo.put("payload",decryptedFile);
+        resultFileInfo.put("encryption", "");
+        return resultFileInfo;
+    }
+
+    private static JSONObject validateFile(String fileContents, String userId, String docId){
+        String fileHash = hashString(fileContents);
+        String validateUrl = getEndpointUrl("validate");
+
+        JSONObject file = new JSONObject();
+        file.put("userId", userId);
+        file.put("docId", docId);
+
+        JSONObject encryption = new JSONObject();
+        encryption.put("decryptedDocHash",fileHash);
+
+        file.put("encryption", encryption);
+
+        String result = null;
+        try {
+            result = post(validateUrl, file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JSONObject res = new JSONObject(result);
+        System.out.println(res.toString());
+        if (res.toString() == null) {
+            System.out.println("Unable to verify file.");
+        } else {
+            System.out.println("File contents validated.");
+        }
+
+        return res;
+    }
+
+    private static JSONObject pollForFile(JSONObject credentialsResponse, String receiverPubKey){
+        if (credentialsResponse.get("userId").toString() != null) {
+            String pollUrl = getEndpointUrl("docencrypted", "&userId=" + credentialsResponse.get("userId").toString()+ "&docId=" + credentialsResponse.get("docId").toString());
+
+            for (int i = 0; i < 50; i++) {
+                String pollRes = getRequest(pollUrl);
+
+                JSONObject pollResult = new JSONObject(pollRes);
+                JSONObject encryption = new JSONObject(pollResult.get("encryption").toString());
+
+                System.out.println("browser poll result "+ pollResult.toString());
+
+                if (encryption.toString() != null) {
+                    System.out.println("Server responds to polling with " + pollResult.toString());
+                    JSONObject decryptedFile = processEncryptedFileInfo(pollResult, receiverPubKey, browserKeyPair.getPrivateEncKey());
+                    JSONObject validationResult = validateFile(decryptedFile.get("payload").toString(), decryptedFile.get("userId").toString(), decryptedFile.get("docId").toString());
+                    System.out.println("toz validation" + validationResult.toString());
+                    // TODO: Better check !
+                    if (validationResult.toString() == null) {
+                        return validationResult;
+                    }
+                    return decryptedFile;
+                }
+            }
+            throw new Error("Polling timeout.");
+        } else if (credentialsResponse.get("status").toString().equals("ERROR")) {
+            throw new Error("Intermediate public key B submission error. Details: " + credentialsResponse.toString());
+        } else {
+            throw new Error("Server did not return userId. Details: " + credentialsResponse);
+        }
+    }
+
+    // End-functions
     public static String store(String name, String content, String userChainId, String userChainIdPubKey) {
         FileObj obj = new FileObj();
         obj.setPayload(content);
@@ -605,6 +788,17 @@ public class App {
             e.printStackTrace();
             System.out.println("Error. " + e.getMessage());
         }
-            return null;
+        return null;
+    }
+
+    public static JSONObject openFile(String docChainId, String userChainId, UserKeyPair keyPair){
+        JSONObject credentialsResponse = submitCredentials(docChainId,userChainId);
+        JSONObject scanResult = decryptWithKeyPair(userChainId, docChainId, keyPair);
+        if (scanResult.get("userId").toString() != null) {
+            //polling server for pass to decrypt message
+            return pollForFile(credentialsResponse, keyPair.getPublicEncKey());
+        } else {
+            throw new Error("Unable to decrypt file");
+        }
     }
 }
