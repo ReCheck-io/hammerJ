@@ -28,9 +28,9 @@ import static jdk.nashorn.internal.objects.NativeMath.log;
 public class App {
     private static String token = "";
     private static String baseUrl = "http://localhost:3000";
-//    private static String doc = "0x3fb9d3b44685884339f0d56f2ca1e8c08042cc598358d6c280342314a0ac2736";
-    private static String doc =  "0x21b58ea9235e2abb89c47f2cee5b8eb7b80d7db2f9bdf4958886d0938b87a445";
-    private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "");
+    private static String doc = "0x3fb9d3b44685884339f0d56f2ca1e8c08042cc598358d6c280342314a0ac2736";
+//    private static String doc =  "0x21b58ea9235e2abb89c47f2cee5b8eb7b80d7db2f9bdf4958886d0938b87a445";
+    public static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "");
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
 
     public static void main(String args[]) throws GeneralSecurityException {
@@ -104,37 +104,6 @@ public class App {
         String challenge = "0xb553fac3f69a111842c2d800e97cdeb740ac638e8d12c9378e6ce57a1a01ca8f";
         String logi = login(keys, challenge);
         System.out.println(logi);
-
-        String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
-
-        JSONObject js = openFile(doc,userChainId,keys);
-        System.out.println(js.toString(1));
-        System.out.println("----------");
-        System.out.println(js.get("payload").toString());
-        System.out.println("----------");
-        //          JSONObject js = new JSONObject();
-//        byte[] array = new byte[0];
-//        String fileContent = "";
-//        try {
-////            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
-////            fileContent = Base64.getEncoder().encodeToString(array);
-//            fileContent = Base64.getEncoder().encodeToString("sdaasaaaa".getBytes());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return;
-//        }
-//
-//
-//        js.put("payload", fileContent);
-//        js.put("name", "filenamed");
-//        js.put("category", "OTHER");
-//        js.put("keywords", "");
-//
-//
-//        String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
-//
-//        store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
-
     }
 
     //non-static method cannot be referenced from a static context
@@ -190,7 +159,7 @@ public class App {
         // byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
     }
 
-    private static UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
+    public static UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
 
         String key1 = "";
         String key2 = "";
@@ -485,7 +454,7 @@ public class App {
     }
 
     //gets the challange and pass it down to another function to do the actual login, then callbacks it here
-    private static String login(UserKeyPair kp, String ch) {
+    public static String login(UserKeyPair kp, String ch) {
         String getChallangeUrl = getEndpointUrl("login/challenge");
         String challangeResponce = getRequest(getChallangeUrl);
         JSONObject js = new JSONObject(challangeResponce);
@@ -560,7 +529,7 @@ public class App {
         }
     }
 
-    public static String post(String url, JSONObject json) throws IOException {
+    private static String post(String url, JSONObject json) throws IOException {
         RequestBody body = RequestBody.create(json.toString(), JSON);
         Request request = new Request.Builder()
                 .url(url)
@@ -630,7 +599,7 @@ public class App {
 
     }
 
-    private static String decryptDataWithPublicAndPrivateKey(String payload,String srcPublicEncKey, String secretKey) {
+    public static String decryptDataWithPublicAndPrivateKey(String payload,String srcPublicEncKey, String secretKey) {
         byte[] srcPublicEncKeyArray = null;
         try {
             srcPublicEncKeyArray = decodeBase58(srcPublicEncKey);
@@ -642,7 +611,7 @@ public class App {
         return decrypt(payload, decryptedBox);//decrypted
     }
 
-    private static JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair){
+    public static JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair){
         System.out.println("User device requests decryption info from server "+ docChainId + "  " + userId);
         String getUrl = getEndpointUrl("exchangecredentials", "&userId=" + userId + "&docId=" + docChainId);
         System.out.println("decryptWithKeyPair get request " + getUrl);
@@ -651,9 +620,10 @@ public class App {
         JSONObject serverEncrptInfo = new JSONObject(serverEncryptionInfo);
         JSONObject encrpt = new JSONObject(serverEncrptInfo.get("encryption").toString());
 
+        System.out.println("toz encrpt" + encrpt.toString(1));
         System.out.println("Server responds to device with encryption info "+ serverEncrptInfo);
 
-        if (encrpt == null || browserKeyPair.getPublicEncKey() == null) {
+        if (encrpt == null || encrpt.get("pubKeyB").toString() == null) {
             throw new Error("Unable to retrieve intermediate public key B.");
         }
         String decryptedPassword = decryptDataWithPublicAndPrivateKey(encrpt.get("encryptedPassA").toString(), encrpt.get("pubKeyA").toString(), keyPair.getPrivateEncKey());
@@ -661,7 +631,7 @@ public class App {
         String syncPassHash = hashString(decryptedPassword);
         EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
         try {
-            reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword,browserKeyPair.getPublicEncKey(), keyPair);
+            reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword,encrpt.get("pubKeyB").toString(), keyPair);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -776,6 +746,19 @@ public class App {
         }
     }
 
+    private static String getSelectedFiles(String selectionHash) {
+        String getUrl = getEndpointUrl("selection", "&selectionHash=" + selectionHash);
+        System.out.println("getSelectedFiles get request "+ getUrl);
+        String selectionResponse = getRequest(getUrl);
+
+        JSONObject selectionRes = new JSONObject(selectionResponse);
+
+        System.out.println("toz selRes");
+
+        return selectionRes.get("data").toString();
+    }
+
+
     // End-functions
     public static String store(String name, String content, String userChainId, String userChainIdPubKey) {
         FileObj obj = new FileObj();
@@ -801,4 +784,77 @@ public class App {
             throw new Error("Unable to decrypt file");
         }
     }
+
+//    public static void execSelection(String selection, UserKeyPair keyPair){
+//        String[] result;
+//        // check if we have a selection or an id
+//        if (selection.indexOf(":") > 0) {
+//
+//            String[] actionSelectionHash = selection.split(":");
+//            String action = actionSelectionHash[0];
+//            String selectionHash = actionSelectionHash[1];
+//            String selectionResult = getSelectedFiles(selectionHash);
+//
+//            System.out.println('selection result', selectionResult);
+//
+//            if (selectionResult.selectionHash) {
+//                let recipients = selectionResult.usersIds;
+//                let files = selectionResult.docsIds;
+//                if (recipients.length !== files.length) {   // the array sizes must be equal
+//                    throw new Error('Invalid selection format.');
+//                }
+//                for (let i = 0; i < files.length; i++) {  // iterate open each entry from the array
+//                    if (action === 'o') {
+//                        if (keyPair.publicKey !== recipients[i]) {
+//                            log('selection entry omitted', recipients[i] + ':' + files[i]);
+//                            continue;                             // skip entries that are not for that keypair
+//                        }
+//                        if (keyPair.secretEncKey) {
+//                            log('selection entry added', recipients[i] + ':' + files[i]);
+//                            let fileContent = await openFile(files[i], keyPair.publicKey, keyPair);
+//                            let fileObj = {
+//                                    docId: files[i],
+//                                    data: fileContent
+//                        };
+//                            result.push(fileObj);
+//                        } else {
+//                            let fileContent = await pollForFile({
+//                                    docId: files[i],
+//                                    userId: recipients[i]
+//                        }, keyPair.publicEncKey);
+//                            let fileObj = {
+//                                    docId: files[i],
+//                                    data: fileContent
+//                        };
+//                            result.push(fileObj);
+//                        }
+//                    } else if (action === 's') {
+//                        let shareResult = await shareFile(files[i], recipients[i], keyPair);
+//                        let shareObj = {
+//                                docId: files[i],
+//                                data: shareResult
+//                    };
+//                        result.push(shareObj);
+//                    } else if (action === 'mo') {
+//                        if (keyPair.publicKey !== recipients[i]) {
+//                            log('selection entry omitted', recipients[i] + ':' + files[i]);
+//                            continue;                      // skip entries that are not for that keypair
+//                        }
+//                        log('selection entry added', recipients[i] + ':' + files[i]);
+//                        let scanResult = await decryptWithKeyPair(recipients[i], files[i], keyPair);
+//                        let scanObj = {
+//                                docId: files[i],
+//                                data: scanResult
+//                    };
+//                        result.push(scanObj);
+//                    } else {
+//                        throw new Error('Unsupported selection operation code.');
+//                    }
+//                }
+//            }
+//        } else {
+//            throw new Error('Missing selection operation code.');
+//        }
+//        return result;
+//    }
 }
