@@ -12,13 +12,13 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.copyOfRange;
-import static jdk.nashorn.internal.objects.NativeMath.log;
+
 
 /*
  Hash.sha3String(String a) is the equivalent to hash() / return '0x' + keccak256(src).toString('hex'); /
@@ -40,70 +40,6 @@ public class App {
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] destPublicEncKeyArray = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5".getBytes();
         byte[] mySecretEncKeyArray = hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
-
-//        TweetNaclFast.Box.KeyPair kp = new Box.KeyPair();
-//        kp =Box.keyPair_fromSecretKey(mySecretEncKeyArray);
-//        System.out.println("Public: " + Base58Check.encode(kp.getPublicKey()));
-//        System.out.println("Private: " + bytesToHex(kp.getSecretKey()).toLowerCase());
-//
-//        TweetNaclFast.Box kpFromSecret = new TweetNaclFast.Box(kp.getPublicKey(),kp.getSecretKey());
-//        System.out.println("kp shared key "+ Base58Check.encode(kpFromSecret.toString().getBytes()).length());
-//        System.out.println("secret " + Base58Check.encode(kp.getSecretKey()));
-//        System.out.println("kp key "+ Base58Check.encode(kpFromSecret.toString().getBytes()));
-//
-//        // shared key
-//
-//        /**
-//         *  The case of encrypting something with Java and decrypt it with JS
-//         *
-//         *  Encrypted - aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3krHLUmqe7chMJTTThULNy+u2Gvnk
-//         *  Decrypted -
-//         *
-//         */
-//        String encrypted = encrypt(str, kpFromSecret);
-//        System.out.println("ei tva" +  encrypted);
-//
-//        /**
-//         *  The case of encrypting something with JS and decrypt it with Java
-//         *
-//         *  Encrypted -
-//         *  Decrypted -
-//         *
-//         */
-//        encrypted = "UfNSxfa0xBxhkf5k/yRBC6ZjuVXxqJm1p68xXJkjtxuYl9re58k4vXRnHRgXczdZNg";
-//        String decrypted = decrypt(encrypted, kpFromSecret);
-//        System.out.println(decrypted);
-
-//
-//        try {
-//            encryptDataWithSymmetricKey(str, key);
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//        }
-//        String encodedString = Base64.getEncoder().encodeToString(str.getBytes());
-//        byte[] decodedBytes = Base64.getDecoder().decode(encodedString);
-//        System.out.println("Encoded " + encodedString);
-//        String decodedString = new String(decodedBytes);
-//        System.out.println("Decoded " + decodedString);
-
-        UserKeyPair keys = generateAkKeyPair(passphrase);
-//        System.out.println("public Enc " + keys.getPublicEncKey());
-//        System.out.println("private Enc " + keys.getPrivateEncKey());
-//        System.out.println("public Sign " + keys.getPublicSignKey());
-//        System.out.println("private Sign " + keys.getPrivateSignKey());
-//        System.out.println("phrase " + keys.getPhrase());
-
-        /**
-         * Testing the get URL stuff
-         */
-        System.out.print("gimme that challenge");
-        Scanner scanner = new Scanner(System.in);
-
-        // get their input as a String
-//        String challenge = scanner.nextLine();
-        String challenge = "0xb553fac3f69a111842c2d800e97cdeb740ac638e8d12c9378e6ce57a1a01ca8f";
-        String logi = login(keys, challenge);
-        System.out.println(logi);
     }
 
     //non-static method cannot be referenced from a static context
@@ -511,6 +447,7 @@ public class App {
             url = baseUrl + "/" + action + "?api=1&token=" + token;
         }
         if (!(appendix == null && appendix.trim() == "")) {
+            System.out.println("toz apendics" + appendix);
             url = url + appendix;
         }
         return url;
@@ -714,9 +651,9 @@ public class App {
         return res;
     }
 
-    private static JSONObject pollForFile(JSONObject credentialsResponse, String receiverPubKey){
+    private static JSONObject pollForFile(JSONObject credentialsResponse, String receiverPubKey) {
         if (credentialsResponse.get("userId").toString() != null) {
-            String pollUrl = getEndpointUrl("docencrypted", "&userId=" + credentialsResponse.get("userId").toString()+ "&docId=" + credentialsResponse.get("docId").toString());
+            String pollUrl = getEndpointUrl("docencrypted", "&userId=" + credentialsResponse.get("userId").toString() + "&docId=" + credentialsResponse.get("docId").toString());
 
             for (int i = 0; i < 50; i++) {
                 String pollRes = getRequest(pollUrl);
@@ -724,7 +661,7 @@ public class App {
                 JSONObject pollResult = new JSONObject(pollRes);
                 JSONObject encryption = new JSONObject(pollResult.get("encryption").toString());
 
-                System.out.println("browser poll result "+ pollResult.toString());
+                System.out.println("browser poll result " + pollResult.toString());
 
                 if (encryption.toString() != null) {
                     System.out.println("Server responds to polling with " + pollResult.toString());
@@ -750,16 +687,82 @@ public class App {
         String getUrl = getEndpointUrl("selection", "&selectionHash=" + selectionHash);
         System.out.println("getSelectedFiles get request "+ getUrl);
         String selectionResponse = getRequest(getUrl);
-
+        System.out.println(selectionResponse);
         JSONObject selectionRes = new JSONObject(selectionResponse);
 
-        System.out.println("toz selRes");
+        System.out.println("toz selRes" + selectionRes.toString());
 
-        return selectionRes.get("data").toString();
+        return selectionRes.toString();
+    }
+
+    private static JSONObject shareFile(String docId, String recipientId, UserKeyPair keyPair) {
+        String getUrl = getEndpointUrl("shareencrypted", "&docId="+docId+"&recipientId="+recipientId);
+        System.out.println("shareencrypted get request " + getUrl);
+        String getShareResponse = getRequest(getUrl);
+        System.out.println("Share res " + getShareResponse);
+
+        JSONObject shareRes = new JSONObject(getShareResponse);
+
+
+        if (shareRes.get("docId").toString().equals(docId)) {
+
+            JSONObject encryption = new JSONObject(shareRes.get("encryption").toString());
+
+            String recipientEncrKey = encryption.get("recipientEncrKey").toString();
+            String encryptedPassA = encryption.get("encryptedPassA").toString();
+            String pubKeyA = encryption.get("pubKeyA").toString();
+            String decryptedPassword = decryptDataWithPublicAndPrivateKey(encryptedPassA, pubKeyA, keyPair.getPrivateEncKey());
+            String syncPassHash = hashString(decryptedPassword).replaceFirst("0x", "");
+            EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
+            try {
+                reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword, recipientEncrKey, keyPair);
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
+
+            JSONObject createShare = new JSONObject();
+            createShare.put("docId", shareRes.get("docId").toString());
+            createShare.put("userId", "ak_"+keyPair.getPublicSignKey());
+            createShare.put("recipientId", shareRes.get("recipientId").toString());
+
+            JSONObject encrpt = new JSONObject();
+            encrpt.put("senderEncrKey", keyPair.getPublicEncKey());
+            encrpt.put("syncPassHash",syncPassHash);
+            encrpt.put("encryptedPassA", reEncryptedPasswordInfo.getPayload());
+
+            createShare.put("encryption", encrpt);
+
+            String postUrl = getEndpointUrl("shareencrypted");
+            String serverPostResponse = null;
+            try {
+                serverPostResponse = post(postUrl, createShare);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            JSONObject postResponse = new JSONObject(serverPostResponse);
+
+            System.out.println("Share POST to server encryption info "+ createShare);
+            System.out.println("Server responds to user device POST "+ postResponse.toString());
+            JSONObject result = new JSONObject(postResponse.toString());
+
+            return result;
+        }
+        throw new Error("Unable to create share. Doc id mismatch.");
     }
 
 
+
     // End-functions
+    /**
+     * This function is going to be called upon uploading a document and 'store' it on the blockchain
+     *
+     * @param name - this will be the name stored on the platform
+     * @param content - the content of the file
+     * @param userChainId - user's blockchain ID (in the AE blockchain this is ak_publicSignKey
+     * @param userChainIdPubKey - user's publicEncKey
+     *
+     * @return
+     */
     public static String store(String name, String content, String userChainId, String userChainIdPubKey) {
         FileObj obj = new FileObj();
         obj.setPayload(content);
@@ -775,6 +778,7 @@ public class App {
     }
 
     public static JSONObject openFile(String docChainId, String userChainId, UserKeyPair keyPair){
+
         JSONObject credentialsResponse = submitCredentials(docChainId,userChainId);
         JSONObject scanResult = decryptWithKeyPair(userChainId, docChainId, keyPair);
         if (scanResult.get("userId").toString() != null) {
@@ -785,76 +789,86 @@ public class App {
         }
     }
 
-//    public static void execSelection(String selection, UserKeyPair keyPair){
-//        String[] result;
-//        // check if we have a selection or an id
-//        if (selection.indexOf(":") > 0) {
-//
-//            String[] actionSelectionHash = selection.split(":");
-//            String action = actionSelectionHash[0];
-//            String selectionHash = actionSelectionHash[1];
-//            String selectionResult = getSelectedFiles(selectionHash);
-//
-//            System.out.println('selection result', selectionResult);
-//
-//            if (selectionResult.selectionHash) {
-//                let recipients = selectionResult.usersIds;
-//                let files = selectionResult.docsIds;
-//                if (recipients.length !== files.length) {   // the array sizes must be equal
-//                    throw new Error('Invalid selection format.');
-//                }
-//                for (let i = 0; i < files.length; i++) {  // iterate open each entry from the array
-//                    if (action === 'o') {
-//                        if (keyPair.publicKey !== recipients[i]) {
-//                            log('selection entry omitted', recipients[i] + ':' + files[i]);
-//                            continue;                             // skip entries that are not for that keypair
-//                        }
-//                        if (keyPair.secretEncKey) {
-//                            log('selection entry added', recipients[i] + ':' + files[i]);
-//                            let fileContent = await openFile(files[i], keyPair.publicKey, keyPair);
-//                            let fileObj = {
-//                                    docId: files[i],
-//                                    data: fileContent
-//                        };
-//                            result.push(fileObj);
-//                        } else {
-//                            let fileContent = await pollForFile({
-//                                    docId: files[i],
-//                                    userId: recipients[i]
-//                        }, keyPair.publicEncKey);
-//                            let fileObj = {
-//                                    docId: files[i],
-//                                    data: fileContent
-//                        };
-//                            result.push(fileObj);
-//                        }
-//                    } else if (action === 's') {
-//                        let shareResult = await shareFile(files[i], recipients[i], keyPair);
-//                        let shareObj = {
-//                                docId: files[i],
-//                                data: shareResult
-//                    };
-//                        result.push(shareObj);
-//                    } else if (action === 'mo') {
-//                        if (keyPair.publicKey !== recipients[i]) {
-//                            log('selection entry omitted', recipients[i] + ':' + files[i]);
-//                            continue;                      // skip entries that are not for that keypair
-//                        }
-//                        log('selection entry added', recipients[i] + ':' + files[i]);
-//                        let scanResult = await decryptWithKeyPair(recipients[i], files[i], keyPair);
-//                        let scanObj = {
-//                                docId: files[i],
-//                                data: scanResult
-//                    };
-//                        result.push(scanObj);
-//                    } else {
-//                        throw new Error('Unsupported selection operation code.');
-//                    }
-//                }
-//            }
-//        } else {
-//            throw new Error('Missing selection operation code.');
-//        }
-//        return result;
-//    }
+    public static ArrayList<ResultFileObj> execSelection(String selection, UserKeyPair keyPair){
+        ArrayList<ResultFileObj> result = new ArrayList<>();
+        // check if we have a selection or an id
+        if (selection.indexOf(":") > 0) {
+
+            String[] actionSelectionHash = selection.split(":");
+            String action = actionSelectionHash[0];
+            String selectionHash = actionSelectionHash[1];
+            String selectionResult = getSelectedFiles(selectionHash);
+
+            System.out.println("selection result "+ selectionResult);
+
+            JSONObject selectionRes = new JSONObject(selectionResult);
+            System.out.println("--------");
+            System.out.println(selectionRes.toString(1));
+            System.out.println("-------");
+
+
+            if (selectionRes.get("selectionHash").toString() != null) {
+
+                String[] recipients = selectionRes.get("usersIds").toString().split(",");
+                for (int i =0; i<recipients.length; i++){
+                    recipients[i] = recipients[i].replace("[","");
+                    recipients[i] = recipients[i].replace("]","");
+                    recipients[i] = recipients[i].replace("\"","");
+                }
+
+                String[] files = selectionRes.get("docsIds").toString().split(",");
+                for (int i =0; i<files.length; i++){
+                    files[i] = files[i].replace("[","");
+                    files[i] = files[i].replace("]","");
+                    files[i] = files[i].replace("\"","");
+                }
+
+                if (recipients.length != files.length) {   // the array sizes must be equal
+                    throw new Error("Invalid selection format.");
+                }
+                for (int i = 0; i < files.length; i++) {  // iterate open each entry from the array
+                    if (action.equals("o")) {
+                        if (keyPair.getPublicSignKey().equals(recipients[i])) {
+                            System.out.println("selection entry omitted "+ recipients[i] + ":" + files[i]);
+                            continue;                             // skip entries that are not for that keypair
+                        }
+                        if (keyPair.getPrivateEncKey() != null) {
+                            System.out.println("selection entry added "+ recipients[i] + ":" + files[i]);
+                            JSONObject fileContent = openFile(files[i], "ak_"+keyPair.getPublicSignKey(), keyPair);
+                            result.add(new ResultFileObj(files[i],fileContent));
+                        } else {
+                            //creating the json object to pass to pollForFile
+                            JSONObject fileCont = new JSONObject();
+                            fileCont.put("docId", files[i]);
+                            fileCont.put("userId", recipients[i]);
+
+                            JSONObject fileContent = pollForFile( fileCont, keyPair.getPublicEncKey());
+
+                            result.add(new ResultFileObj(files[i], fileContent));
+
+                        }
+                    } else if (action.equals("s")) {
+                        JSONObject shareResult = shareFile(files[i], recipients[i], keyPair);
+
+                        result.add(new ResultFileObj(files[i], shareResult));
+                    } else if (action.equals("mo")) {
+                        if (!("ak_"+keyPair.getPublicSignKey()).equals(recipients[i])) {
+                            System.out.println("selection entry omitted "+ recipients[i] + ":" + files[i]);
+                            continue;                      // skip entries that are not for that keypair
+                        }
+                        System.out.println("selection entry added "+ recipients[i] + ":" + files[i]);
+                        JSONObject scanResult = decryptWithKeyPair(recipients[i], files[i], keyPair);
+
+                        result.add(new ResultFileObj(files[i],scanResult));
+
+                    } else {
+                        throw new Error("Unsupported selection operation code.");
+                    }
+                }
+            }
+        } else {
+            throw new Error("Missing selection operation code.");
+        }
+        return result;
+    }
 }
