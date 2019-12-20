@@ -7,10 +7,11 @@ import java.util.Scanner;
 public class Test {
 
     public static void main(String[] args){
-        String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
+//        String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
+        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
         String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
         String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
-        String ch="0xcdf59e67c29790c84420bb4f4ce455e634c6e452d5e0b0cae43dcf3cca3d5d3a";
+        String ch="0xd1a8e9d01667a8a4eb4b015318d6dceef808739ba5183e575d155c6a4646346a";
         String doc = "0x978c1c0bc5729e7b0753ae60440f201a66d6e96eb0666e75306d44e08a2153c8";
 
         UserKeyPair keys = null;
@@ -49,7 +50,7 @@ public class Test {
 
         // String input
 //        String selection = sc.nextLine();
-        String selection= "s:0x423061e18dc77cb77489180e0c5a4deb5349a597a2147ae7d9e55d07c153a4d7";
-        App.execSelection(selection, keys);
+        String selection= "s:0x2b1b9c5c1a24a1e77cb33a205f033ca80ca7cd8450940ed4852b945d85b7a402";
+//        App.execSelection(selection, keys);
     }
 }
