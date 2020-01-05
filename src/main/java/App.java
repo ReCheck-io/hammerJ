@@ -28,28 +28,26 @@ import static java.util.Arrays.copyOfRange;
 public class App {
     private static String token = "";
     private static String baseUrl = "http://localhost:3000";
-    private static String doc = "0x3fb9d3b44685884339f0d56f2ca1e8c08042cc598358d6c280342314a0ac2736";
-//    private static String doc =  "0x21b58ea9235e2abb89c47f2cee5b8eb7b80d7db2f9bdf4958886d0938b87a445";
     public static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "");
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
 
-    public static void main(String args[]) throws GeneralSecurityException {
-        String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
-        String str = "Blake";
-        String key = Base64.getEncoder().encodeToString(passphrase.getBytes());
-        byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
-        byte[] destPublicEncKeyArray = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5".getBytes();
-        byte[] mySecretEncKeyArray = hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
-    }
+//    public static void main(String args[]) throws GeneralSecurityException {
+//        String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
+//        String str = "Blake";
+//        String key = Base64.getEncoder().encodeToString(passphrase.getBytes());
+//        byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
+//        byte[] destPublicEncKeyArray = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5".getBytes();
+//        byte[] mySecretEncKeyArray = hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
+//    }
 
     //non-static method cannot be referenced from a static context
-    private static byte[] sign(byte[] file, UserKeyPair kp) throws NoSuchAlgorithmException {
+    private byte[] sign(byte[] file, UserKeyPair kp) throws NoSuchAlgorithmException {
         Signature sig = new Signature(decodeBase58(kp.getPublicSignKey()), hexStringToByteArray(kp.getPrivateSignKey()));
         //sig.detached_verify(file, hexStringToByteArray(kp.getPrivateSignKey()));
         return sig.detached(file);
     }
 
-    private static String hashString(String toHash) {
+    private String hashString(String toHash) {
         return Hash.sha3String(toHash);
     }
 
@@ -57,21 +55,11 @@ public class App {
         return Base58Check.encode(toEncode);
     }
 
-    private static byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
+    private byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
         return Base58Check.decode(toDecode);
     }
 
-    private static int getRandomNumberInRange(int min, int max) {
-
-        if (min >= max) {
-            throw new IllegalArgumentException("max must be greater than min");
-        }
-
-        Random r = new Random();
-        return r.nextInt((max - min) + 1) + min;
-    }
-
-    private static byte[] session25519(String key1, String key2) throws GeneralSecurityException {
+    private byte[] session25519(String key1, String key2) throws GeneralSecurityException {
         int logN = 131072;  // this number is 2^17  CPU/memory cost parameter (1 to 31)
         int r = 8;    // block size parameter
         int p = 1;   // Parallelization parameter.
@@ -95,7 +83,7 @@ public class App {
         // byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
     }
 
-    public static UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
+    public UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
 
         String key1 = "";
         String key2 = "";
@@ -137,13 +125,13 @@ public class App {
         return keys;
     }
 
-    private static String diceware() {
+    private String diceware() {
         RollDice rd = new RollDice();
         String phrase = rd.phrase();
         return phrase;
     }
 
-    public static EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
+    public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
         // create random object
         Random r = new Random();
@@ -183,16 +171,8 @@ public class App {
 
     }
 
-    public boolean isEmptyStringArray(String[] array) {
-        for (int i = 0; i < array.length; i++) {
-            if (array[i] != null) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    public static String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
+    public String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
         // the key is encoded with Base64, otherwise the decoding won't work.
         byte[] keyUint8Array = Base64.getDecoder().decode(key);
         byte[] nonceBytes = TweetNaclFast.makeSecretBoxNonce();
@@ -215,7 +195,7 @@ public class App {
         return encodedFullMessage;
     }
 
-    public static String decryptDataWithSymmetricKey ( String messageWithNonce, String key) {
+    public String decryptDataWithSymmetricKey ( String messageWithNonce, String key) {
 
     byte[] keyUint8Array = Base64.getDecoder().decode(key);
     byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
@@ -239,7 +219,7 @@ public class App {
         return new String(decrypted); //base64DecryptedMessage
     };
 
-    public static String encrypt(String data, Box key) {
+    public String encrypt(String data, Box key) {
 
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] messageUint8 = data.getBytes();
@@ -259,7 +239,7 @@ public class App {
         return encodedFullMessage;
     }
 
-    public static String decrypt(String messageWithNonce, Box key) {
+    public String decrypt(String messageWithNonce, Box key) {
         byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
         byte[] nonce = new byte[24];
         byte[] message = new byte[messageWithNonceAsUint8Array.length - nonce.length];
@@ -280,7 +260,7 @@ public class App {
         return decryptedBase64Message;
     }
 
-    public static EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException {
+    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException {
         if (userAkKeyPairs == null) {
             //passing a null variable to escape overloading the whole parameter
             String generate = null;
@@ -301,7 +281,7 @@ public class App {
         return result;
     }
 
-    public static EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
+    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
         String generate = null;
         UserKeyPair srcAkPair = generateAkKeyPair(generate);
 
@@ -323,7 +303,7 @@ public class App {
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
-    public static String bytesToHex(byte[] bytes) {
+    public String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
@@ -333,7 +313,7 @@ public class App {
         return new String(hexChars);
     }
 
-    public static byte[] hexStringToByteArray(String s) {
+    public byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
@@ -343,7 +323,7 @@ public class App {
         return data;
     }
 
-    public static FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey) throws GeneralSecurityException, UnsupportedEncodingException {
+    public FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
         String fileContents = fileObj.getPayload();
         EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, userChainIdPubKey);
@@ -377,7 +357,7 @@ public class App {
 
     }
 
-    public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+    public final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     static OkHttpClient client = new OkHttpClient().newBuilder().connectTimeout(100, TimeUnit.SECONDS)
             .writeTimeout(100, TimeUnit.SECONDS)
@@ -390,7 +370,7 @@ public class App {
     }
 
     //gets the challange and pass it down to another function to do the actual login, then callbacks it here
-    public static String login(UserKeyPair kp, String ch) {
+    public String login(UserKeyPair kp, String ch) {
         String getChallangeUrl = getEndpointUrl("login/challenge");
         String challangeResponce = getRequest(getChallangeUrl);
         JSONObject js = new JSONObject(challangeResponce);
@@ -403,7 +383,7 @@ public class App {
         return loginWithChallenge(challenge, kp);
     }
 
-    private static String loginWithChallenge(String challenge, UserKeyPair keyPair) {
+    private String loginWithChallenge(String challenge, UserKeyPair keyPair) {
         byte[] signature;
         try {
             signature = sign(challenge.getBytes(), keyPair);
@@ -433,7 +413,7 @@ public class App {
 
     }
 
-    private static String getEndpointUrl(String action) {
+    private String getEndpointUrl(String action) {
         String url = baseUrl + "/" + action + "?noapi=1";
         if (!(token == null || token.trim() == "")) {
             url = baseUrl + "/" + action + "?api=1&token=" + token;
@@ -441,7 +421,7 @@ public class App {
         return url;
     }
 
-    private static String getEndpointUrl(String action, String appendix) {
+    private String getEndpointUrl(String action, String appendix) {
         String url = baseUrl + "/" + action + "noapi=1";
         if (!(token == null && token.trim() == "")) {
             url = baseUrl + "/" + action + "?api=1&token=" + token;
@@ -453,7 +433,7 @@ public class App {
         return url;
     }
 
-    private static String getRequest(String url) {
+    private String getRequest(String url) {
 
         Request request = new Request.Builder()
                 .url(url)
@@ -466,7 +446,7 @@ public class App {
         }
     }
 
-    private static String post(String url, JSONObject json) throws IOException {
+    private String post(String url, JSONObject json) throws IOException {
         RequestBody body = RequestBody.create(json.toString(), JSON);
         Request request = new Request.Builder()
                 .url(url)
@@ -477,7 +457,7 @@ public class App {
         }
     }
 
-    private static String uploadFile(FileToUpload file) throws IOException {
+    private String uploadFile(FileToUpload file) throws IOException {
         JSONObject js = new JSONObject();
 //        String token = "6ce48d47-70c5-4484-82ad-754adfa75294";
         js.put("docId", file.getDocId());
@@ -499,7 +479,7 @@ public class App {
         return responce;
     }
 
-    private static JSONObject submitCredentials(String docChainId,String userChainId){
+    private JSONObject submitCredentials(String docChainId,String userChainId){
         if (browserKeyPair.getPublicEncKey() == null) {
             try {
                 browserKeyPair = generateAkKeyPair("");
@@ -536,7 +516,7 @@ public class App {
 
     }
 
-    public static String decryptDataWithPublicAndPrivateKey(String payload,String srcPublicEncKey, String secretKey) {
+    public String decryptDataWithPublicAndPrivateKey(String payload,String srcPublicEncKey, String secretKey) {
         byte[] srcPublicEncKeyArray = null;
         try {
             srcPublicEncKeyArray = decodeBase58(srcPublicEncKey);
@@ -548,7 +528,7 @@ public class App {
         return decrypt(payload, decryptedBox);//decrypted
     }
 
-    public static JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair){
+    public JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair){
         System.out.println("User device requests decryption info from server "+ docChainId + "  " + userId);
         String getUrl = getEndpointUrl("exchangecredentials", "&userId=" + userId + "&docId=" + docChainId);
         System.out.println("decryptWithKeyPair get request " + getUrl);
@@ -602,7 +582,7 @@ public class App {
         return serverResponse;
     }
 
-    private static JSONObject processEncryptedFileInfo(JSONObject encryptedFileInfo, String devicePublicKey, String browserPrivateKey) {
+    private JSONObject processEncryptedFileInfo(JSONObject encryptedFileInfo, String devicePublicKey, String browserPrivateKey) {
         JSONObject encryption = new JSONObject(encryptedFileInfo.get("encryption").toString());
         System.out.println("ei toz encryption" + encryption);
         System.out.println("ei toz parametar" + encryptedFileInfo);
@@ -621,7 +601,7 @@ public class App {
         return resultFileInfo;
     }
 
-    private static JSONObject validateFile(String fileContents, String userId, String docId){
+    private JSONObject validateFile(String fileContents, String userId, String docId){
         String fileHash = hashString(fileContents);
         String validateUrl = getEndpointUrl("validate");
 
@@ -651,7 +631,7 @@ public class App {
         return res;
     }
 
-    private static JSONObject pollForFile(JSONObject credentialsResponse, String receiverPubKey) {
+    private JSONObject pollForFile(JSONObject credentialsResponse, String receiverPubKey) {
         if (credentialsResponse.get("userId").toString() != null) {
             String pollUrl = getEndpointUrl("docencrypted", "&userId=" + credentialsResponse.get("userId").toString() + "&docId=" + credentialsResponse.get("docId").toString());
 
@@ -683,7 +663,7 @@ public class App {
         }
     }
 
-    private static String getSelectedFiles(String selectionHash) {
+    private String getSelectedFiles(String selectionHash) {
         String getUrl = getEndpointUrl("selection", "&selectionHash=" + selectionHash);
         System.out.println("getSelectedFiles get request "+ getUrl);
         String selectionResponse = getRequest(getUrl);
@@ -695,7 +675,7 @@ public class App {
         return selectionRes.toString();
     }
 
-    private static JSONObject shareFile(String docId, String recipientId, UserKeyPair keyPair) {
+    private JSONObject shareFile(String docId, String recipientId, UserKeyPair keyPair) {
         String getUrl = getEndpointUrl("shareencrypted", "&docId="+docId+"&recipientId="+recipientId);
         System.out.println("shareencrypted get request " + getUrl);
         String getShareResponse = getRequest(getUrl);
@@ -763,7 +743,7 @@ public class App {
      *
      * @return
      */
-    public static String store(String name, String content, String userChainId, String userChainIdPubKey) {
+    public String store(String name, String content, String userChainId, String userChainIdPubKey) {
         FileObj obj = new FileObj();
         obj.setPayload(content);
         obj.setName(name);
@@ -777,7 +757,7 @@ public class App {
         return null;
     }
 
-    public static JSONObject openFile(String docChainId, String userChainId, UserKeyPair keyPair){
+    public JSONObject openFile(String docChainId, String userChainId, UserKeyPair keyPair){
 
         JSONObject credentialsResponse = submitCredentials(docChainId,userChainId);
         JSONObject scanResult = decryptWithKeyPair(userChainId, docChainId, keyPair);
@@ -789,7 +769,7 @@ public class App {
         }
     }
 
-    public static ArrayList<ResultFileObj> execSelection(String selection, UserKeyPair keyPair){
+    public ArrayList<ResultFileObj> execSelection(String selection, UserKeyPair keyPair){
         ArrayList<ResultFileObj> result = new ArrayList<>();
         // check if we have a selection or an id
         if (selection.indexOf(":") > 0) {

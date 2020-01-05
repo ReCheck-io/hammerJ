@@ -7,6 +7,7 @@ import java.util.Scanner;
 public class Test {
 
     public static void main(String[] args){
+        App ap = new App();
 //        String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
         String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
         String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
@@ -16,7 +17,7 @@ public class Test {
 
         UserKeyPair keys = null;
         try {
-          keys = App.generateAkKeyPair(passphrase);
+          keys = ap.generateAkKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -39,7 +40,7 @@ public class Test {
         js.put("keywords", "");
 
         //login will either have a challenge from the browser QR, or will create a new one, without entering the browser GUI
-        App.login(keys,ch);
+        ap.login(keys,ch);
 
 //       App.store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
 
