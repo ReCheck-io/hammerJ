@@ -57,13 +57,17 @@ public class App {
         return sig.detached(file);
     }
 
+    /**
+     * @param toHash
+     * @return sha3 hash with 0x
+     */
     private String getHash(String toHash) {
         return Hash.sha3String(toHash);
     }
 
     /**
      * @param toHash
-     * @return the hash without 0x
+     * @return sha3 hash without 0x
      */
     private String keccak256(String toHash) {
         return Hash.sha3String(toHash).replaceFirst("0x", "");
@@ -96,14 +100,40 @@ public class App {
 //        return getHash(requestString);
 //    }
 
+    /**
+     * Gets a byte array and coverts it into String on the Base58 scheme.
+     *
+     * @param toEncode
+     * @return Base58 encoded String
+     * @throws NoSuchAlgorithmException
+     */
     private String encodeBase58(byte[] toEncode) throws NoSuchAlgorithmException {
         return Base58Check.encode(toEncode);
     }
 
+    /**
+     * Takes a Base58 encoded String and returns a byte array.
+     *
+     * @param toDecode
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
     private byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
         return Base58Check.decode(toDecode);
     }
 
+    /**
+     * session25519 is a public key cryptography library for the generation of Curve25519 encryption and ed25519 digital signature keys.
+     *
+     * The encryption and signing keys are created with TweetNaCl.js, a port of TweetNaCl / NaCl.
+     * The encryption keys are for the Public-key authenticated encryption box construction which implements
+     * curve25519-xsalsa20-poly1305. The signing keys are for the ed25519 digital signature system.
+     *
+     * @param key1 - six random words concatenated into a String with a space delimiter
+     * @param key2 - six random words concatenated into a String with a space delimiter
+     * @return byte array that is going to be used for the creation of Sign and Encryption keys
+     * @throws GeneralSecurityException
+     */
     private byte[] session25519(String key1, String key2) throws GeneralSecurityException {
         int logN = 131072;  // this number is 2^17  CPU/memory cost parameter (1 to 31)
         int r = 8;    // block size parameter
@@ -128,6 +158,21 @@ public class App {
         // byte[] signKeySeed = copyOfRange(derivedBytes, 32, 64);
     }
 
+    /**
+     *
+     * @param passphrase - the secret 12 random words, which the user should be keeping secret and save in order to
+     *                   recover their account in case something happens.
+     *
+     *                   In case this parameter is null or empty, it means that there is a new account to be created. It
+     *                   happens by using diceware method to choose the random 12 words.
+     *
+     *                   It keyPair containing one address, public and private Sign keys,
+     *                   public and private Encryption keys and the security phrase.
+     *
+     * @return UserKeyPair object, containing the important information.
+     * @throws GeneralSecurityException
+     */
+
     public UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
 
         System.out.println("toz phrase " + passphrase);
@@ -137,8 +182,9 @@ public class App {
         if ((passphrase != null) && !(passphrase.equals(""))) {
             passphrase = passphrase.trim();
             String[] words = StringUtils.split(passphrase);
-            if (words.length < 12) {
-                System.err.println("Invalid passphrase. Must be 12 words long.");
+            if (words.length != 12) {
+                System.err.println("Invalid passphrase. Your input is " + words.length + " words. It must be 12 words long.");
+                System.exit(0);
             }
             key1 = words[0] + " " + words[1] + " " + words[2] + " " + words[3] + " " + words[4] + " " + words[5];
             key2 = words[6] + " " + words[7] + " " + words[8] + " " + words[9] + " " + words[10] + " " + words[11];
@@ -151,7 +197,7 @@ public class App {
 
         //gets the 64 byte for the creation of the two key pairs
         /**
-            NB! IN ORDER FOR JAVA AND JS TO BE THE SAME, THE KEYS HERE ARE SWITCHED
+         NB! IN ORDER FOR JAVA AND JS TO BE THE SAME, THE KEYS HERE ARE SWITCHED
          */
         byte[] derivedBytes = session25519(key2, key1);
 
@@ -185,7 +231,6 @@ public class App {
                 Credentials cs = Credentials.create(privateSignKey);
 
                 publicSignKey = cs.getEcKeyPair().getPublicKey().toString(16);
-                ;
                 address = cs.getAddress();
                 break;
         }
@@ -195,12 +240,26 @@ public class App {
         return keys;
     }
 
+    /**
+     * This method is used to choose 12 random, easy to remember, words for a pass phrase. This phrase has to be saved by
+     * the user on a save place, so that when something bad happens, they will be able to recover their account.
+     *
+     * @return String containing 12 words.
+     */
     private String diceware() {
         RollDice rd = new RollDice();
         String phrase = rd.phrase();
         return phrase;
     }
 
+    /**
+     *
+     * @param fileData
+     * @param dstPublicKey
+     * @return
+     * @throws GeneralSecurityException
+     * @throws UnsupportedEncodingException
+     */
     public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
         // create random object
@@ -241,6 +300,13 @@ public class App {
 
     }
 
+    /**
+     *
+     * @param data
+     * @param key
+     * @return
+     * @throws UnsupportedEncodingException
+     */
     public String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
         // the key is encoded with Base64, otherwise the decoding won't work.
         byte[] keyUint8Array = Base64.getDecoder().decode(key);
@@ -264,6 +330,12 @@ public class App {
         return encodedFullMessage;
     }
 
+    /**
+     *
+     * @param messageWithNonce
+     * @param key
+     * @return
+     */
     public String decryptDataWithSymmetricKey(String messageWithNonce, String key) {
 
         byte[] keyUint8Array = Base64.getDecoder().decode(key);
@@ -288,6 +360,15 @@ public class App {
         return new String(decrypted); //base64DecryptedMessage
     }
 
+    /**
+     * Takes as input secret or shared key and the data as a hash of type String that needs to be encrypted.
+     * Using asymmetric public key encryption.
+     *
+     * Taken from TweetNaCl Box example
+     * @param data String data payload
+     * @param key Shared key - Box TweetNacl - that will be used for encryption of the data
+     * @return
+     */
     public String encrypt(String data, Box key) {
 
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
@@ -833,7 +914,7 @@ public class App {
 
                 String v = bytesToHex(signature.getV());
                 String r = Numeric.toHexString(signature.getR());
-                String s = Numeric.toHexString(signature.getS()).replaceFirst("0x","");
+                String s = Numeric.toHexString(signature.getS()).replaceFirst("0x", "");
 
                 String sig = r + s + v;
                 return sig;
