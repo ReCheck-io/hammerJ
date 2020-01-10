@@ -1,12 +1,14 @@
 public class UserKeyPair {
     // The Enc keys are the normal public 32 bytes, the Sign are to be used with AEternity, for the moment.
+    private String address;
     private String publicEncKey;
     private String privateEncKey;
     private String publicSignKey;
     private String privateSignKey;
     private String phrase;
 
-    UserKeyPair(String publicEncKey, String privateEncKey, String publicSignKey, String privateSignKey, String phrase){
+    UserKeyPair(String address, String publicEncKey, String privateEncKey, String publicSignKey, String privateSignKey, String phrase){
+        setAddress(address);
         setPublicEncKey(publicEncKey);
         setPrivateEncKey(privateEncKey);
         setPublicSignKey(publicSignKey);
@@ -14,9 +16,16 @@ public class UserKeyPair {
         setPhrase(phrase);
     }
 
-    public UserKeyPair(String s, String s1, String s2, String s3) {
+    public UserKeyPair(String s, String s1, String s2, String s3, String s4) {
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
     public String getPublicEncKey() {
         return publicEncKey;
     }

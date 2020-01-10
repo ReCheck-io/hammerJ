@@ -7,6 +7,60 @@ public class FileToUpload {
     private String userId;
     private String payload;
     private Encryption encrypt;
+    private String userChainId;
+    private String requestId;
+    private String requestType;
+    private String requestBodyHashSignature;
+    private String trailHash;
+    private String trailHashSignatureHash;
+
+    public String getUserChainId() {
+        return userChainId;
+    }
+
+    public void setUserChainId(String userChainId) {
+        this.userChainId = userChainId;
+    }
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
+    public String getRequestBodyHashSignature() {
+        return requestBodyHashSignature;
+    }
+
+    public void setRequestBodyHashSignature(String requestBodyHashSignature) {
+        this.requestBodyHashSignature = requestBodyHashSignature;
+    }
+
+    public String getTrailHash() {
+        return trailHash;
+    }
+
+    public void setTrailHash(String trailHash) {
+        this.trailHash = trailHash;
+    }
+
+    public String getTrailHashSignatureHash() {
+        return trailHashSignatureHash;
+    }
+
+    public void setTrailHashSignatureHash(String trailHashSignatureHash) {
+        this.trailHashSignatureHash = trailHashSignatureHash;
+    }
 
     public Encryption getEncrypt() {
         return encrypt;
