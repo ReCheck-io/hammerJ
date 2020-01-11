@@ -251,6 +251,13 @@ public class App {
         String phrase = rd.phrase();
         return phrase;
     }
+    public String  getNetwork(){
+        return network;
+    }
+
+    public void setNetwork(String net){
+        network = net ;
+    }
 
     /**
      *
