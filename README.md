@@ -14,8 +14,11 @@
 - Origin: https://github.com/InstantWebP2P/tweetnacl-java
 - License: **MIT Copyright(2014-2017) by tom zhou, iwebpp@gmail.com**
 
-## Web3J (mainly using keccak256)
+## Web3J
 - Origin: https://github.com/web3j/web3j
 - License: **Apache License 2.0** 
 
-### Created by Recheck BV. 
+
+### Created by Recheck BV.
+
+### License: MIT 

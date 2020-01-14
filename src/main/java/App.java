@@ -175,7 +175,6 @@ public class App {
 
     public UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
 
-        System.out.println("toz phrase " + passphrase);
         String key1 = "";
         String key2 = "";
 
