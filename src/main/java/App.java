@@ -35,7 +35,7 @@ public class App {
     private static String baseUrl = "http://localhost:3000";
     public static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
-    
+
 
     /**
      * Function to sign the bytes of a file using TweetNacl Signature class.
@@ -244,9 +244,21 @@ public class App {
         String phrase = rd.phrase();
         return phrase;
     }
+
+    /**
+     * A function to return the blockchain currently used. It is to be used only in JUnit tests.
+     *
+     * @return a string with the value of either eth for Ethereum or ae for Aeternity blockchain
+     */
     public String  getNetwork(){
         return network;
     }
+
+    /**
+     * A function to set the blockchain currently used. It is to be used only in JUnit tests.
+     *
+     * @param net - setting the blockchain to be used
+     */
 
     public void setNetwork(String net){
         network = net ;
