@@ -266,9 +266,17 @@ public class App {
 
     /**
      *
+     * Creates a key and salt in order to create symmetric key. This Sym key is going to be used for the file encryption.
+     *
+     * On the other hand the newly created key is encrypted with another, so that it can be sent along with the salt to
+     * the receiver who has the means to decrypt the key, re-create the Sym key and decrypt the file.
+     *
+     * As final step encapsulates the credentials of the file and its encrypted hash to pass them to the caller.
+     *
+     *
      * @param fileData
      * @param dstPublicKey
-     * @return
+     * @return an object with encapsulated file's credentials
      * @throws GeneralSecurityException
      * @throws UnsupportedEncodingException
      */
@@ -314,9 +322,11 @@ public class App {
 
     /**
      *
+     * Encrypts the String data with TweetNaclFast Box type.
+     *
      * @param data
      * @param key
-     * @return
+     * @return String encrypted message then encoded in Base64
      * @throws UnsupportedEncodingException
      */
     public String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
@@ -344,9 +354,11 @@ public class App {
 
     /**
      *
+     * Takes the Base64 encoded secret message, decodes it and then decrypts it.
+     *
      * @param messageWithNonce
      * @param key
-     * @return
+     * @return decrypted String message
      */
     public String decryptDataWithSymmetricKey(String messageWithNonce, String key) {
 
@@ -622,6 +634,8 @@ public class App {
 
     /**
      *
+     * Creates a JSON object to put into post request in order for the user to log into the system.
+     *
      * @param challenge
      * @param keyPair
      * @return
@@ -656,6 +670,13 @@ public class App {
 
     }
 
+    /**
+     * Helper function to redirect to the correct http address
+     *
+     * @param action
+     * @return String with correct http address
+     */
+
     private String getEndpointUrl(String action) {
         String url = baseUrl + "/" + action + "?noapi=1";
         if (!(token == null || token.trim() == "")) {
@@ -663,6 +684,14 @@ public class App {
         }
         return url;
     }
+
+    /**
+     * Overloading of the function with the addition of an appendix.
+     *
+     * @param action
+     * @param appendix
+     * @return String with correct http address
+     */
 
     private String getEndpointUrl(String action, String appendix) {
         String url = baseUrl + "/" + action + "noapi=1";
@@ -676,6 +705,13 @@ public class App {
         return url;
     }
 
+    /**
+     *
+     * Function to send get request to the server
+     *
+     * @param url
+     * @return JSON object in the form of a String
+     */
     private String getRequest(String url) {
 
         Request request = new Request.Builder()
@@ -689,6 +725,15 @@ public class App {
         }
     }
 
+    /**
+     *
+     * Method to send post request to the given url and json
+     *
+     * @param url
+     * @param json
+     * @return String with the result of the request
+     * @throws IOException
+     */
     private String post(String url, JSONObject json) throws IOException {
         RequestBody body = RequestBody.create(json.toString(), JSON);
         Request request = new Request.Builder()
@@ -700,9 +745,17 @@ public class App {
         }
     }
 
+    /**
+     *
+     * Method that gets a file and encapsulates it into JSON file in order to post the details on the blockchain.
+     *
+     * @param file
+     * @return
+     * @throws IOException
+     */
+
     private String uploadFile(FileToUpload file) throws IOException {
         JSONObject js = new JSONObject();
-//        String token = "6ce48d47-70c5-4484-82ad-754adfa75294";
         js.put("docId", file.getDocId());
         js.put("docName", file.getDocName());
         js.put("category", file.getCategory());
@@ -721,6 +774,13 @@ public class App {
         String responce = post("http://localhost:3000/uploadencrypted?api=1&token=" + token, js);
         return responce;
     }
+
+    /**
+     *
+     * @param docChainId
+     * @param userChainId
+     * @return
+     */
 
     private JSONObject submitCredentials(String docChainId, String userChainId) {
         if (browserKeyPair.getPublicEncKey() == null) {
