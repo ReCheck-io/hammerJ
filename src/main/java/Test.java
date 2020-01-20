@@ -13,18 +13,6 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Base64;
 
-/*
-user 3-eth credentials
-
-Public address: 0xFbC5af5F69b2CA77C43190d58F75A47574F38187
-Public signing key: 13c6f2b1c6ba3c1dc6e6a51fdee08bb26e18e72a4ba608991193364e6f78609a06383e0d44d1db5d6de78d107b00d8d7bffcaf5d77f8f6a6ff83c6735ae60c0a
-Private signing key: 0xd16ab98dcdf2bdb2538b069f14da5ec6c057c10e058ba6a439dd3ea59e6259ba
-Public encryption key: mQURuMzyH1VQv4ZYab2kb8cnsU7jg4nQQBoFvEoCbYL3SWJ6V
-Private encryption key: d16ab98dcdf2bdb2538b069f14da5ec6c057c10e058ba6a439dd3ea59e6259ba
-Recovery phrase: night hewitt stub ding tot viet heard hoi funny aver trout arrear
-
- */
-
 public class Test {
     private static String keccak256(String toHash) {
         return Hash.sha3String(toHash).replaceFirst("0x","");

@@ -59,7 +59,7 @@ public class JUnitTesting {
     }
 
     @Test //Ethereum account
-    void generateAkKeyPairTestEth() {
+    void generateAkKeyPairTestEth1() {
         ap.setNetwork("eth");
         String publicAddress = "0xFbC5af5F69b2CA77C43190d58F75A47574F38187";
         String publicSigningKey = "13c6f2b1c6ba3c1dc6e6a51fdee08bb26e18e72a4ba608991193364e6f78609a06383e0d44d1db5d6de78d107b00d8d7bffcaf5d77f8f6a6ff83c6735ae60c0a";
@@ -83,4 +83,28 @@ public class JUnitTesting {
 
     }
 
+    @Test //Ethereum account
+    void generateAkKeyPairTestEth2() {
+        ap.setNetwork("eth");
+        String publicAddress = "0x94B3Eb02a1d2706413068259c8677b01e774dEac";
+        String publicSigningKey = "82e6006202a4f61ea63bc5c565e6140902c3355fd118cb39687f995a8c22a51c68bd8973479ae6aaa8ead4cc8e4bed97e7a1a6dd80f7707038845b85233b576f";
+        String privateSigningKey = "0xbfd9343792f81a2969078c67302f9361178f5e2d36af3b8c3ec18e19e532583e";
+        String publicEncryptionKey = "2kUm5oPRn5g8FUYXecvK9ozCCwCUJbthXG5D1Sb6ECkGMbFpeL";
+        String privateEncryptionKey = "bfd9343792f81a2969078c67302f9361178f5e2d36af3b8c3ec18e19e532583e";
+        String passphrase ="beggar naomi qb ck debris vita can't billow gumbo 6 roost scam";
+
+        UserKeyPair keyPair = null;
+        try {
+            keyPair = ap.generateAkKeyPair(passphrase);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+        assertEquals(keyPair.getPhrase(), passphrase, "Phrase");
+        assertEquals(keyPair.getPublicSignKey(), publicSigningKey, "Public Key");
+        assertEquals(keyPair.getPrivateSignKey().toLowerCase(), privateSigningKey.toLowerCase(), "Private Key");
+        assertEquals(keyPair.getPublicEncKey(), publicEncryptionKey, "Public Encryption Key");
+        assertEquals(keyPair.getPrivateEncKey().toLowerCase(), privateEncryptionKey.toLowerCase(), "Private Encryption Key");
+        assertEquals(keyPair.getAddress().toLowerCase(),publicAddress.toLowerCase(),"Address");
+
+    }
 }

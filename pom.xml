@@ -4,9 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>JavaLib</groupId>
-    <artifactId>JavaLib</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>io.github.recheck-io</groupId>
+    <artifactId>hammerJ</artifactId>
+    <version>0.0.1</version>
+
     <dependencies>
         <dependency>
             <groupId>com.lambdaworks</groupId>
@@ -27,11 +28,6 @@
             <groupId>org.web3j</groupId>
             <artifactId>core</artifactId>
             <version>4.5.5</version>
-        </dependency>
-        <dependency>
-            <groupId>net.consensys.cava</groupId>
-            <artifactId>cava</artifactId>
-            <version>0.6.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
@@ -58,6 +54,11 @@
             <version>4.5.1</version>
         </dependency>
         <dependency>
+            <groupId>com.iwebpp.crypto</groupId>
+            <artifactId>tweetnacl-java</artifactId>
+            <version>1.1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>RELEASE</version>
@@ -70,6 +71,56 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <name>hammerJ</name>
+    <description> This is a Java API library,
+        created by ReCheck BV, for encryption of data.
+        Asymmetric and symmetric exchange of information. </description>
+    <url>https://github.com/ReCheck-io/hammerJ</url>
+
+    <organization>
+        <name>com.github.ReCheck-io</name>
+        <url>https://github.com/ReCheck-io</url>
+    </organization>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/ReCheck-io/hammerJ/issues</url>
+    </issueManagement>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <scm>
+        <url>https://github.com/ReCheck-io/hammerJ</url>
+        <connection>
+            scm:git:git://github.com/ReCheck-io/hammerJ.git
+        </connection>
+        <developerConnection>
+            scm:git:ssh://git@github.com:ReCheck-io/hammerJ.git
+        </developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <name>ReCheck team</name>
+        </developer>
+    </developers>
+
     <build>
         <plugins>
             <plugin>
@@ -78,6 +129,57 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
         </plugins>

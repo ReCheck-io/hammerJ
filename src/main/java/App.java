@@ -6,17 +6,13 @@ import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.kocakosm.jblake2.Blake2s;
-import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
-import org.web3j.protocol.Web3j;
 import org.web3j.crypto.Credentials;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -39,18 +35,16 @@ public class App {
     private static String baseUrl = "http://localhost:3000";
     public static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
     public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
+    
 
-
-//    public static void main(String args[]) throws GeneralSecurityException {
-//        String passphrase = "clod sg grata image nelsen gsa bode boxy 1992 deacon keep free";
-//        String str = "Blake";
-//        String key = Base64.getEncoder().encodeToString(passphrase.getBytes());
-//        byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
-//        byte[] destPublicEncKeyArray = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5".getBytes();
-//        byte[] mySecretEncKeyArray = hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
-//    }
-
-    //non-static method cannot be referenced from a static context
+    /**
+     * Function to sign the bytes of a file using TweetNacl Signature class.
+     *
+     * @param file
+     * @param kp
+     * @return a byte array with the signature of the signature
+     * @throws NoSuchAlgorithmException
+     */
     private byte[] sign(byte[] file, UserKeyPair kp) throws NoSuchAlgorithmException {
         Signature sig = new Signature(decodeBase58(kp.getPublicSignKey()), hexStringToByteArray(kp.getPrivateSignKey()));
         //sig.detached_verify(file, hexStringToByteArray(kp.getPrivateSignKey()));
@@ -370,10 +364,9 @@ public class App {
      * Takes as input secret or shared key and the data as a hash of type String that needs to be encrypted.
      * Using asymmetric public key encryption.
      *
-     * Taken from TweetNaCl Box example
      * @param data String data payload
      * @param key Shared key - Box TweetNacl - that will be used for encryption of the data
-     * @return
+     * @return base64 String private key encrypted message
      */
     public String encrypt(String data, Box key) {
 
@@ -395,6 +388,14 @@ public class App {
         return encodedFullMessage;
     }
 
+    /**
+     *  Takes as input secret or shared key and an encrypted data as a hash of type String that needs to be decrypted.
+     *  Using asymmetric public key encryption.
+     *
+     * @param messageWithNonce
+     * @param key
+     * @return decrypted String message
+     */
     public String decrypt(String messageWithNonce, Box key) {
         byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
         byte[] nonce = new byte[24];
@@ -416,6 +417,16 @@ public class App {
         return decryptedBase64Message;
     }
 
+    /**
+     * This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
+     *
+     * @param data
+     * @param dstPublicEncKey
+     * @param userAkKeyPairs
+     * @return an object encapsulating the payload of the encrypted file along with the private and public key needed
+     * for the encryption
+     * @throws GeneralSecurityException
+     */
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException {
         if (userAkKeyPairs == null) {
             //passing a null variable to escape overloading the whole parameter
@@ -424,6 +435,7 @@ public class App {
         }
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
         byte[] mySecretEncKeyArray = hexStringToByteArray(userAkKeyPairs.getPrivateEncKey());
+
         // create BOX object to make the .before method
         TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
         String encryptedData = encrypt(data, sharedKeyBox);
@@ -437,6 +449,16 @@ public class App {
         return result;
     }
 
+    /**
+     *This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
+     *
+     * @override the previous function, when there is no specified private key.
+     * @param data
+     * @param dstPublicEncKey
+     * @return an object encapsulating the payload of the encrypted file along with the private and public key needed
+     * for the encryption
+     * @throws GeneralSecurityException
+     */
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
         String generate = null;
         UserKeyPair srcAkPair = generateAkKeyPair(generate);
@@ -459,6 +481,12 @@ public class App {
 
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
+    /**
+     * function to convert byte array to hex String
+     *
+     * @param bytes
+     * @return String with hex Chars
+     */
     public String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
@@ -469,6 +497,12 @@ public class App {
         return new String(hexChars);
     }
 
+    /**
+     * function to convert a hex String into byte[]
+     *
+     * @param s - hex String
+     * @return
+     */
     public byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
@@ -479,6 +513,17 @@ public class App {
         return data;
     }
 
+    /**
+     * This function takes as input the file, user's id and their pubKey. Prepares the data and needed to indentify the file
+     * upon uploading into the system.
+     *
+     * @param fileObj
+     * @param userChainId
+     * @param userChainIdPubKey
+     * @return an object encapsulating the data needed to be stored per single file
+     * @throws GeneralSecurityException
+     * @throws UnsupportedEncodingException
+     */
     public FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
         String fileContents = fileObj.getPayload();
@@ -524,6 +569,9 @@ public class App {
 
     public final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
+    /**
+     * OKHttpClient settings for get and post requests.
+     */
     static OkHttpClient client = new OkHttpClient().newBuilder().connectTimeout(100, TimeUnit.SECONDS)
             .writeTimeout(100, TimeUnit.SECONDS)
             .readTimeout(300, TimeUnit.SECONDS)
@@ -535,6 +583,18 @@ public class App {
     }
 
     //gets the challange and pass it down to another function to do the actual login, then callbacks it here
+
+    /**
+     * This function checks if the user is having a challenge or not and then redirects to loginWithChallenge function.
+     * If there is, then the user is also logged in the browser GUI. Otherwise, the user just
+     * have access to the backend's APIs.
+     *
+     * TODO check if wrong challenge is going to give me access
+     * @param kp - user's key Pair
+     * @param ch - challenge, what would be represented as QR in the website
+     * @return
+     */
+
     public String login(UserKeyPair kp, String ch) {
         String getChallangeUrl = getEndpointUrl("login/challenge");
         String challangeResponce = getRequest(getChallangeUrl);
@@ -548,6 +608,12 @@ public class App {
         return loginWithChallenge(challenge, kp);
     }
 
+    /**
+     *
+     * @param challenge
+     * @param keyPair
+     * @return
+     */
     private String loginWithChallenge(String challenge, UserKeyPair keyPair) {
         byte[] signature;
         try {
