@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import com.iwebpp.crypto.TweetNaclFast;
 import com.iwebpp.crypto.TweetNaclFast.Box;
 import com.iwebpp.crypto.TweetNaclFast.Signature;
@@ -15,9 +16,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.copyOfRange;
@@ -33,8 +32,8 @@ public class App {
     private static String requestId = "ReCheck";
     private static String network = "eth"; //ae or eth
     private static String baseUrl = "http://localhost:3000";
-    public static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
-    public static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
+    private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
+    private static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
 
 
     /**
@@ -55,7 +54,7 @@ public class App {
      * @param toHash
      * @return sha3 hash with 0x
      */
-    private String getHash(String toHash) {
+    public String getHash(String toHash) {
         return Hash.sha3String(toHash);
     }
 
@@ -67,32 +66,29 @@ public class App {
         return Hash.sha3String(toHash).replaceFirst("0x", "");
     }
 
-//    function getRequestHash(requestBodyOrUrl) {
-//        let requestString = '';
-//
-//        if (typeof requestBodyOrUrl === "object") {
-//            let orderedObj = {};
-//            Object.keys(requestBodyOrUrl).sort().forEach(function (key) {
-//                switch (key) {
-//                    case'payload':
-//                        orderedObj[key] = '';
-//                        break;
-//                    case'requestBodyHashSignature':
-//                        orderedObj[key] = 'NULL';
-//                        break;
-//                    default:
-//                        orderedObj[key] = requestBodyOrUrl[key];
-//                        break;
-//                }
-//            });
-//
-//            requestString = JSON.stringify(orderedObj).replace(/\s/g, "");
-//        } else {
-//            requestString = requestBodyOrUrl.replace(/([&|?]requestBodyHashSignature=)(.*?)([&]|$)/g, '$1NULL$3');
-//        }
-//
-//        return getHash(requestString);
-//    }
+    /**
+     * It will sing the contents of the object, without the payload, passed to the backend
+     *
+     * @param requestJSON
+     * @return
+     */
+    private String getRequestHashJSON(SortedMap requestJSON) {
+        Gson gson = new Gson();
+
+        // Convert the ordered map into an ordered string.
+        String requestString = gson.toJson(requestJSON, LinkedHashMap.class);
+
+        return getHash(requestString);
+    }
+
+    private String getRequestHashURL(String url, UserKeyPair keyPair){
+        String hashedURL = getHash(url);
+        String signedUrl = signMessage(hashedURL, keyPair);
+
+        url = url.replace("NULL", signedUrl);
+
+        return url;
+    }
 
     /**
      * Gets a byte array and coverts it into String on the Base58 scheme.
@@ -564,26 +560,26 @@ public class App {
         upload.setDocId(docChainId);
         upload.setRequestId(requestId);
         upload.setRequestType(requestType);
-        upload.setRequestBodyHashSignature(null);
+        upload.setRequestBodyHashSignature("NULL");
         upload.setTrailHash(trailHash);
         upload.setTrailHashSignatureHash(getHash(trailHash));
         upload.setDocName(fileObj.getName());
+        //TODO: Change once these are realised
         if (fileObj.getCategory() == null) {
             upload.setCategory("OTHERS");
         }
         if (fileObj.getKeywords() == null) {
             upload.setKeywords("Daka");
         }
-        upload.setUserId(userChainId);
         upload.setPayload(encryptedFile.getPayload());
 
         Encryption encrpt = new Encryption();
 
         encrpt.setDocHash(docOriginalHash);
         encrpt.setSalt(encryptedFile.getCredentials().getSalt());
+        encrpt.setPassHash(syncPassHash);
         encrpt.setEncryptedPassA(encryptedFile.getCredentials().getEncryptedPass());
         encrpt.setPubKeyA(encryptedFile.getCredentials().getEncryptedPubKey());
-        encrpt.setPassHash(syncPassHash);
 
         upload.setEncrypt(encrpt);
 
@@ -620,15 +616,15 @@ public class App {
      */
 
     public String login(UserKeyPair kp, String ch) {
-        String getChallangeUrl = getEndpointUrl("login/challenge");
-        String challangeResponce = getRequest(getChallangeUrl);
-        JSONObject js = new JSONObject(challangeResponce);
+        String getChallengeUrl = getEndpointUrl("login/challenge");
+        String challengeResponce = getRequest(getChallengeUrl);
+        JSONObject js = new JSONObject(challengeResponce);
         String challenge = js.get("challenge").toString();
         ch = ch.trim();
         if (ch.length() > 31) {
             challenge = ch;
         }
-        System.out.println("challenge responce " + challangeResponce);
+        System.out.println("challenge responce " + challengeResponce);
         return loginWithChallenge(challenge, kp);
     }
 
@@ -643,6 +639,7 @@ public class App {
     private String loginWithChallenge(String challenge, UserKeyPair keyPair) {
         byte[] signature;
         try {
+            //TODO: change the sig with singMessage()
             signature = sign(challenge.getBytes(), keyPair);
             String sig58 = Base58Check.encode(signature);
             String pubEncKey = keyPair.getPublicSignKey();
@@ -706,8 +703,7 @@ public class App {
     }
 
     /**
-     *
-     * Function to send get request to the server
+     * Method to send get request to the server
      *
      * @param url
      * @return JSON object in the form of a String
@@ -755,15 +751,21 @@ public class App {
      */
 
     private String uploadFile(FileToUpload file) throws IOException {
-        JSONObject js = new JSONObject();
+        SortedMap<String, Object> js = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+        js.put("userId", file.getUserId());
         js.put("docId", file.getDocId());
+        js.put("requestId", file.getRequestId());
+        js.put("requestType", file.getRequestType());
+        js.put("requestBodyHashSignature", file.getRequestBodyHashSignature());
+        js.put("trailHash", file.getTrailHash());
+        js.put("trailHashSignatureHash", file.getTrailHashSignatureHash());
         js.put("docName", file.getDocName());
         js.put("category", file.getCategory());
         js.put("keywords", file.getKeywords());
-        js.put("userId", file.getUserId());
-        js.put("payload", file.getPayload());
+        js.put("payload", "");
 
-        JSONObject encryption = new JSONObject();
+        SortedMap<String,Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         encryption.put("docHash", file.getEncrypt().getDocHash());
         encryption.put("salt", file.getEncrypt().getSalt());
         encryption.put("passHash", file.getEncrypt().getPassHash());
@@ -771,7 +773,16 @@ public class App {
         encryption.put("pubKeyA", file.getEncrypt().getPubKeyA());
 
         js.put("encryption", encryption);
-        String responce = post("http://localhost:3000/uploadencrypted?api=1&token=" + token, js);
+
+        String requestBodySig = getRequestHashJSON(js);
+
+        js.put("payload", file.getPayload());
+        js.put("requestBodyHashSignature", requestBodySig);
+
+        JSONObject upload = new JSONObject(js);
+
+        String responce = post("http://localhost:3000/uploadencrypted?api=1&token=" + token, upload);
+
         return responce;
     }
 
@@ -835,18 +846,20 @@ public class App {
         System.out.println("User device requests decryption info from server " + docChainId + "  " + userId);
         String requestType = "download";
         String trailHash = getHash(docChainId + userId + requestType + userId);
-        // TODO: fix this
-        // String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair.secretKey));
-        // String query = "&userId="+ userId +"&docId=" + docChainId + "&requestId="+ requestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
+        String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
-        String getUrl = getEndpointUrl("exchangecredentials", "&userId=" + userId + "&docId=" + docChainId);
+        String query = "&userId="+ userId +"&docId=" + docChainId + "&requestId="+ requestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
+        String getUrl = getEndpointUrl("exchangecredentials", query);
+
+        //hashes the request, and puts it as a value inside the url
+        getUrl = getRequestHashURL(getUrl, keyPair);
+
         System.out.println("decryptWithKeyPair get request " + getUrl);
         String serverEncryptionInfo = getRequest(getUrl);
 
         JSONObject serverEncrptInfo = new JSONObject(serverEncryptionInfo);
         JSONObject encrpt = new JSONObject(serverEncrptInfo.get("encryption").toString());
 
-        System.out.println("toz encrpt" + encrpt.toString(1));
         System.out.println("Server responds to device with encryption info " + serverEncrptInfo);
 
         if (encrpt == null || encrpt.get("pubKeyB").toString() == null) {
@@ -893,8 +906,7 @@ public class App {
 
     private JSONObject processEncryptedFileInfo(JSONObject encryptedFileInfo, String devicePublicKey, String browserPrivateKey) {
         JSONObject encryption = new JSONObject(encryptedFileInfo.get("encryption").toString());
-        System.out.println("ei toz encryption" + encryption);
-        System.out.println("ei toz parametar" + encryptedFileInfo);
+
         String decryptedSymPassword = decryptDataWithPublicAndPrivateKey(encryption.get("encryptedPassB").toString(), devicePublicKey, browserPrivateKey);
         System.out.println("Browser decrypts sym password " + decryptedSymPassword);
 
@@ -910,25 +922,42 @@ public class App {
         return resultFileInfo;
     }
 
-    private JSONObject validateFile(String fileContents, String userId, String docId) {
+    private JSONObject verifyFileDecryption(String fileContents, String userId, String docId) {
         String fileHash = getHash(fileContents);
-        String validateUrl = getEndpointUrl("validate");
+        String validateUrl = getEndpointUrl("verify");
 
-        JSONObject file = new JSONObject();
+        String requestType = "verify";
+        String trailHash = getHash(docId + userId + requestType + userId);
+
+
+        SortedMap<String,Object> file = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         file.put("userId", userId);
         file.put("docId", docId);
+        file.put("requestId", requestId);
+        file.put("requestType", requestType);
+        file.put("requestBodyHashSignature", "NULL");
+        file.put("trailHash", trailHash);
+        file.put("trailHashSignatureHash", getHash(trailHash));
 
-        JSONObject encryption = new JSONObject();
+        SortedMap<String,Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         encryption.put("decryptedDocHash", fileHash);
 
         file.put("encryption", encryption);
+        String requestBodSig = getRequestHashJSON(file);
+        file.put("requestBodyHashSignature", requestBodSig);
+
+
+        JSONObject upload = new JSONObject(file);
 
         String result = null;
         try {
-            result = post(validateUrl, file);
+            result = post(validateUrl, upload);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+        //TODO: write a good condition if result is NULL
         JSONObject res = new JSONObject(result);
         System.out.println(res.toString());
         if (res.toString() == null) {
@@ -955,7 +984,7 @@ public class App {
                 if (encryption.toString() != null) {
                     System.out.println("Server responds to polling with " + pollResult.toString());
                     JSONObject decryptedFile = processEncryptedFileInfo(pollResult, receiverPubKey, browserKeyPair.getPrivateEncKey());
-                    JSONObject validationResult = validateFile(decryptedFile.get("payload").toString(), decryptedFile.get("userId").toString(), decryptedFile.get("docId").toString());
+                    JSONObject validationResult = verifyFileDecryption(decryptedFile.get("payload").toString(), decryptedFile.get("userId").toString(), decryptedFile.get("docId").toString());
                     System.out.println("toz validation" + validationResult.toString());
                     // TODO: Better check !
                     if (validationResult.toString() == null) {

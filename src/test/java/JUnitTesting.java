@@ -107,4 +107,7 @@ public class JUnitTesting {
         assertEquals(keyPair.getAddress().toLowerCase(),publicAddress.toLowerCase(),"Address");
 
     }
+
+    //tests with encrypt/decrypt
+    //tests with encryptDataWithSymmetricKey / decryptDataWithSymmetricKey
 }

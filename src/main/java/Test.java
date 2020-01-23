@@ -1,17 +1,16 @@
-import org.bouncycastle.util.encoders.Hex;
+import com.google.gson.Gson;
 import org.json.JSONObject;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
+import sun.awt.X11.XSystemTrayPeer;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.Base64;
+import java.util.*;
 
 public class Test {
     private static String keccak256(String toHash) {
@@ -87,8 +86,8 @@ public class Test {
         String msg = "hello";
         byte[] msgHash = Hash.sha3(msg.getBytes());
         Sign.SignatureData signature = Sign.signMessage(msgHash, cs.getEcKeyPair(), false);
-        System.out.println("Msg: " + msg);
-        System.out.println("Msg hash: " + Hex.toHexString(msgHash));
+//        System.out.println("Msg: " + msg);
+//        System.out.println("Msg hash: " + Hex.toHexString(msgHash));
 
         String v = bytesToHex(signature.getV());
         String r = Numeric.toHexString(signature.getR());
@@ -96,7 +95,7 @@ public class Test {
 
         String sig = r + s + v;
 
-        System.out.println(sig);
+//        System.out.println(sig);
 
         JSONObject js = new JSONObject();
         byte[] array = new byte[0];
@@ -114,6 +113,64 @@ public class Test {
         js.put("name", "filenamed");
         js.put("category", "OTHER");
         js.put("keywords", "");
+//        System.out.println(js.get("payload"));
+        String cat =(String) js.get("category");
+        String key = (String)js.get("keywords");
+        String name = (String) js.get("name") ;
+        String pay = "";
+
+//        {"category":"OTHER","keywords":"","name":"filenamed","payload":""}
+//        {"category":"OTHER","keywords":"","name":"filenamed","payload":""}
+        String query = "&userId="+ "userId" +"&docId=" + "docChainId" + "&requestId="+ "requestId" + "&requestType=" +"requestType"+ "&requestBodyHashSignature=NULL&trailHash="+ "trailHash"+ "&trailHashSignatureHash=" +"trailHashSignatureHash";
+
+        System.out.println(query);
+//    &userId=userId&docId=docChainId&requestId=requestId&requestType=requestType&requestBodyHashSignature=NULL&trailHash=trailHash&trailHashSignatureHash=trailHashSignatureHash
+//    &userId=userId&docId=docChainId&requestId=requestId&requestType=requestType&requestBodyHashSignature=NULL&trailHash=trailHash&trailHashSignatureHash=trailHashSignatureHash
+//        System.out.println(js.toString());
+//        ObjectMapper mapper = new ObjectMapper();
+//
+//        Map<String, String> myLinkedHashMap = new LinkedHashMap<String, String>();
+//        myLinkedHashMap.put("1", "first");
+//        myLinkedHashMap.put("2", "second");
+//        myLinkedHashMap.put("3", "third");
+//
+//        try {
+//            System.out.println(mapper.writeValueAsString(myLinkedHashMap));
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
+//        SortedMap<String, Object> myLinkedHashMap =  new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+//
+//        Gson gson = new Gson();
+//        SortedMap<String, Object> LinkedHashMap =  new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+//
+//        LinkedHashMap.put("Something2", "");
+//        LinkedHashMap.put("protect", "tva");
+//        LinkedHashMap.put("something", "dsa");
+//
+//
+//        String daTaIba = gson.toJson(LinkedHashMap, TreeMap.class);
+//
+//        myLinkedHashMap.put("keywords", "");
+//        myLinkedHashMap.put("name", "filenamed");
+//        myLinkedHashMap.put("category", "OTHER");
+//        myLinkedHashMap.put("encryption", LinkedHashMap);
+//
+//        myLinkedHashMap.put("payload", "");
+//
+//
+//        // Convert the ordered map into an ordered string.
+//        String json = gson.toJson(myLinkedHashMap, TreeMap.class);
+//        myLinkedHashMap.put("payload", fileContent);
+//        JSONObject jss = new JSONObject(myLinkedHashMap);
+//        System.out.println(jss.get("encryption"));
+//        JSONObject test = new JSONObject(jss.get("encryption").toString());
+//        System.out.println(test.get("something").toString());
+//        System.out.println(json);
+//        System.out.println(ap.getHash(json));
+
+//        System.out.println(ap.getHash(res));
+//        System.out.println(ap.getHash((String) js.get("category") + js.get("keywords") + js.get("name") + js.get("payload")));
 
         //login will either have a challenge from the browser QR, or will create a new one, without entering the browser GUI
 //        ap.login(keys,ch);
