@@ -212,7 +212,7 @@ public class App {
             case "ae":
                 publicSignKey = Base58Check.encode(keyPairS.getPublicKey());
                 privateSignKey = bytesToHex(keyPairS.getSecretKey());
-                address = publicSignKey;
+                address = "ak_" + publicSignKey;
                 break;
 
             case "eth":
@@ -878,7 +878,7 @@ public class App {
 
         JSONObject devicePost = new JSONObject();
         devicePost.put("docId", docChainId);
-        devicePost.put("userId", "ak_" + keyPair.getPublicSignKey());
+        devicePost.put("userId", keyPair.getAddress());
 
         JSONObject encryption = new JSONObject();
         encryption.put("syncPassHash", syncPassHash);
@@ -1008,8 +1008,6 @@ public class App {
         System.out.println(selectionResponse);
         JSONObject selectionRes = new JSONObject(selectionResponse);
 
-        System.out.println("toz selRes" + selectionRes.toString());
-
         return selectionRes.toString();
     }
 
@@ -1037,26 +1035,45 @@ public class App {
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
             }
+            String userId = keyPair.getAddress();
+            //recepientId
+            //docId
+            String requestType = "share";
+            String trailHash = getHash(docId + userId + requestType + recipientId);
+            String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
-            JSONObject createShare = new JSONObject();
+
+            SortedMap<String,Object> createShare = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            createShare.put("userId", userId);
             createShare.put("docId", shareRes.get("docId").toString());
-            createShare.put("userId", "ak_" + keyPair.getPublicSignKey());
+            createShare.put("requestId", requestId);
+            createShare.put("requestType", requestType);
+            createShare.put("requestBodyHashSignature", "NULL");
+            createShare.put("trailHash", trailHash);
+            createShare.put("trailHashSignatureHash", trailHashSignatureHash);
             createShare.put("recipientId", shareRes.get("recipientId").toString());
 
-            JSONObject encrpt = new JSONObject();
+            SortedMap<String, Object> encrpt = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             encrpt.put("senderEncrKey", keyPair.getPublicEncKey());
             encrpt.put("syncPassHash", syncPassHash);
             encrpt.put("encryptedPassA", reEncryptedPasswordInfo.getPayload());
 
             createShare.put("encryption", encrpt);
 
+            String requestBodyHash = signMessage(getRequestHashJSON(createShare), keyPair);
+
+            createShare.put("requestBodyHashSignature", requestBodyHash);
+
+            JSONObject jsCreateShare = new JSONObject(createShare);
+
             String postUrl = getEndpointUrl("shareencrypted");
             String serverPostResponse = null;
             try {
-                serverPostResponse = post(postUrl, createShare);
+                serverPostResponse = post(postUrl, jsCreateShare);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            //TODO: serverPostResponce and result could be null
             JSONObject postResponse = new JSONObject(serverPostResponse);
 
             System.out.println("Share POST to server encryption info " + createShare);
