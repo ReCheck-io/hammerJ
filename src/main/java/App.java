@@ -11,7 +11,9 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.crypto.Credentials;
 import org.web3j.utils.Numeric;
+import sun.rmi.runtime.Log;
 
+import java.util.logging.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -21,19 +23,16 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.copyOfRange;
 
-
-/*
- Hash.sha3String(String a) is the equivalent to hash() / return '0x' + keccak256(src).toString('hex'); /
-  in hammerJS
- */
-
 public class App {
+
     private static String token = "";
     private static String requestId = "ReCheck";
-    private static String network = "eth"; //ae or eth
+    private static String network = "ae"; //ae or eth
     private static String baseUrl = "http://localhost:3000";
     private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
+
     private static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
+    public final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
 
     /**
@@ -46,7 +45,6 @@ public class App {
      */
     private byte[] sign(byte[] file, UserKeyPair kp) throws NoSuchAlgorithmException {
         Signature sig = new Signature(decodeBase58(kp.getPublicSignKey()), hexStringToByteArray(kp.getPrivateSignKey()));
-        //sig.detached_verify(file, hexStringToByteArray(kp.getPrivateSignKey()));
         return sig.detached(file);
     }
 
@@ -74,10 +72,14 @@ public class App {
      */
     private String getRequestHashJSON(SortedMap requestJSON) {
         Gson gson = new Gson();
-
+        System.out.println(requestJSON);
         // Convert the ordered map into an ordered string.
-        String requestString = gson.toJson(requestJSON, LinkedHashMap.class);
-
+        String requestString = gson.toJson(requestJSON);
+        requestString = requestString.replace("\\u003d","=");
+        System.out.println(requestString);
+//      {"category":"OTHERS","docId":"0x149fb9e20deb386e2fc8e0e65895ff3de2145c691c2459f8c3c5cc65999dd675","docName":"filename","encryption":{"docHash":"0x7a61799ef6e6face9c0fd5936495f24a6be1f98edd54c94ae421d84c620c491c","encryptedPassA":"aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3ZNNcDoGKwp/cEzHP3upmbNlAH2G7uZOiDYt+U8JuZbNOwY5oxXYDOaCMWtTSZCl/l0gnDFgExTZzlI55","passHash":"0xc19da63e14e408a02ae5e941ce58f0ba8af07f86d509f14ce260aca52dcce49f","pubKeyA":"sXN4QtnVfQkXyovfsf7n4hmDMU9zApJjiPmtSgcvmhKssh33V","salt":"A7iagh/CB6cUnmIKkOgnLdh4COYcB6bbHJAwr+rtmpM\u003d"},"keywords":"Daka","payload":"","requestBodyHashSignature":"NULL","requestId":"ReCheck","requestType":"upload","trailHash":"0xebc35e744fd4183e151b2ebf8906eceb43d3f0667d82673104a41062619385a8","trailHashSignatureHash":"0xcb4c9d29e4dbe5a49cf55f5db97afaae5d8bfdfb29a3ffc0767d0a173661261f","userId":"ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5"}
+//      {"category":"OTHERS","docId":"0x149fb9e20deb386e2fc8e0e65895ff3de2145c691c2459f8c3c5cc65999dd675","docName":"filename","encryption":{"docHash":"0x7a61799ef6e6face9c0fd5936495f24a6be1f98edd54c94ae421d84c620c491c","encryptedPassA":"aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3ZNNcDoGKwp/cEzHP3upmbNlAH2G7uZOiDYt+U8JuZbNOwY5oxXYDOaCMWtTSZCl/l0gnDFgExTZzlI55","passHash":"0xc19da63e14e408a02ae5e941ce58f0ba8af07f86d509f14ce260aca52dcce49f","pubKeyA":"sXN4QtnVfQkXyovfsf7n4hmDMU9zApJjiPmtSgcvmhKssh33V","salt":"A7iagh/CB6cUnmIKkOgnLdh4COYcB6bbHJAwr+rtmpM="},"keywords":"Daka","payload":"","requestBodyHashSignature":"NULL","requestId":"ReCheck","requestType":"upload","trailHash":"0xebc35e744fd4183e151b2ebf8906eceb43d3f0667d82673104a41062619385a8","trailHashSignatureHash":"0xcb4c9d29e4dbe5a49cf55f5db97afaae5d8bfdfb29a3ffc0767d0a173661261f","userId":"ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5"}
+//      {"category":"OTHERS","docId":"0x149fb9e20deb386e2fc8e0e65895ff3de2145c691c2459f8c3c5cc65999dd675","docName":"filename","encryption":{"docHash":"0x7a61799ef6e6face9c0fd5936495f24a6be1f98edd54c94ae421d84c620c491c","encryptedPassA":"aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3ZNNcDoGKwp/cEzHP3upmbNlAH2G7uZOiDYt+U8JuZbNOwY5oxXYDOaCMWtTSZCl/l0gnDFgExTZzlI55","passHash":"0xc19da63e14e408a02ae5e941ce58f0ba8af07f86d509f14ce260aca52dcce49f","salt":"A7iagh/CB6cUnmIKkOgnLdh4COYcB6bbHJAwr+rtmpM=","pubKeyA":"sXN4QtnVfQkXyovfsf7n4hmDMU9zApJjiPmtSgcvmhKssh33V"},"keywords":"Daka","payload":"","requestBodyHashSignature":"NULL","requestId":"ReCheck","requestType":"upload","trailHash":"0xebc35e744fd4183e151b2ebf8906eceb43d3f0667d82673104a41062619385a8","trailHashSignatureHash":"0xcb4c9d29e4dbe5a49cf55f5db97afaae5d8bfdfb29a3ffc0767d0a173661261f","userId":"ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5"}
         return getHash(requestString);
     }
 
@@ -292,12 +294,12 @@ public class App {
         String fileKey = Base64.getEncoder().encodeToString(bytesFileKey);
         String salt = Base64.getEncoder().encodeToString(bytesSaltKey);
 
-        System.out.println("fileKey " + fileKey);
-        System.out.println("salt " + salt);
+        LOGGER.fine("fileKey " + fileKey);
+        LOGGER.fine("salt " + salt);
 
         String symKey = Base64.getEncoder().encodeToString(hexStringToByteArray(keccak256(fileKey + salt)));
 
-        System.out.println(symKey);
+        LOGGER.fine(symKey);
 
         String encryptedFile = encryptDataWithSymmetricKey(fileData, symKey);
         EncryptedDataWithPublicKey encryptedPass = encryptDataToPublicKeyWithKeyPair(fileKey, dstPublicKey);
@@ -430,7 +432,7 @@ public class App {
 
         byte[] decrypted = key.open(message, nonce);
         if (decrypted == null) {
-            System.out.println("The decryption failed");
+            LOGGER.severe("The decryption failed");
             System.exit(0);
         }
         String decryptedBase64Message = new String(decrypted);
@@ -624,7 +626,7 @@ public class App {
         if (ch.length() > 31) {
             challenge = ch;
         }
-        System.out.println("challenge responce " + challengeResponce);
+        LOGGER.severe("challenge responce " + challengeResponce);
         return loginWithChallenge(challenge, kp);
     }
 
@@ -696,7 +698,7 @@ public class App {
             url = baseUrl + "/" + action + "?api=1&token=" + token;
         }
         if (!(appendix == null && appendix.trim() == "")) {
-            System.out.println("toz apendics" + appendix);
+            LOGGER.fine("appendix" + appendix);
             url = url + appendix;
         }
         return url;
@@ -757,7 +759,7 @@ public class App {
         js.put("docId", file.getDocId());
         js.put("requestId", file.getRequestId());
         js.put("requestType", file.getRequestType());
-        js.put("requestBodyHashSignature", file.getRequestBodyHashSignature());
+        js.put("requestBodyHashSignature", "NULL");
         js.put("trailHash", file.getTrailHash());
         js.put("trailHashSignatureHash", file.getTrailHashSignatureHash());
         js.put("docName", file.getDocName());
@@ -781,6 +783,7 @@ public class App {
 
         JSONObject upload = new JSONObject(js);
 
+        LOGGER.severe("ei tva da go eba" + upload.toString(1));
         String responce = post("http://localhost:3000/uploadencrypted?api=1&token=" + token, upload);
 
         return responce;
@@ -801,7 +804,7 @@ public class App {
                 e.printStackTrace();
             }
         }
-        System.out.println("Browser has key: " + browserKeyPair.getPublicSignKey());
+        LOGGER.fine("Browser has key: " + browserKeyPair.getPublicSignKey());
         JSONObject browserPubKeySubmit = new JSONObject();
 
         browserPubKeySubmit.put("docId", docChainId);
@@ -812,10 +815,10 @@ public class App {
 
         browserPubKeySubmit.put("encryption", encryption);
 
-        System.out.println("submit pubkey payload " + browserPubKeySubmit);
+        LOGGER.fine("submit pubkey payload " + browserPubKeySubmit);
 
         String browserPubKeySubmitUrl = getEndpointUrl("browsercredentials");
-        System.out.println("browser poll post submit pubKeyB " + browserPubKeySubmitUrl);
+        LOGGER.fine("browser poll post submit pubKeyB " + browserPubKeySubmitUrl);
 
         String browserPubKeySubmitRes = null;
         try {
@@ -843,7 +846,7 @@ public class App {
     }
 
     public JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair) {
-        System.out.println("User device requests decryption info from server " + docChainId + "  " + userId);
+        LOGGER.fine("User device requests decryption info from server " + docChainId + "  " + userId);
         String requestType = "download";
         String trailHash = getHash(docChainId + userId + requestType + userId);
         String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
@@ -854,19 +857,20 @@ public class App {
         //hashes the request, and puts it as a value inside the url
         getUrl = getRequestHashURL(getUrl, keyPair);
 
-        System.out.println("decryptWithKeyPair get request " + getUrl);
+        LOGGER.fine("decryptWithKeyPair get request " + getUrl);
         String serverEncryptionInfo = getRequest(getUrl);
 
         JSONObject serverEncrptInfo = new JSONObject(serverEncryptionInfo);
+
         JSONObject encrpt = new JSONObject(serverEncrptInfo.get("encryption").toString());
 
-        System.out.println("Server responds to device with encryption info " + serverEncrptInfo);
+        LOGGER.fine("Server responds to device with encryption info " + serverEncrptInfo);
 
         if (encrpt == null || encrpt.get("pubKeyB").toString() == null) {
             throw new Error("Unable to retrieve intermediate public key B.");
         }
         String decryptedPassword = decryptDataWithPublicAndPrivateKey(encrpt.get("encryptedPassA").toString(), encrpt.get("pubKeyA").toString(), keyPair.getPrivateEncKey());
-        System.out.println("User device decrypts the sym password " + decryptedPassword);
+        LOGGER.fine("User device decrypts the sym password " + decryptedPassword);
         String syncPassHash = getHash(decryptedPassword);
         EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
         try {
@@ -874,7 +878,7 @@ public class App {
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
-        System.out.println("User device re-encrypts password for browser " + reEncryptedPasswordInfo);
+        LOGGER.fine("User device re-encrypts password for browser " + reEncryptedPasswordInfo);
 
         JSONObject devicePost = new JSONObject();
         devicePost.put("docId", docChainId);
@@ -886,9 +890,9 @@ public class App {
 
         devicePost.put("encryption", encryption);
 
-        System.out.println("devicePost " + devicePost);
+        LOGGER.fine("devicePost " + devicePost);
         String postUrl = getEndpointUrl("exchangecredentials");
-        System.out.println("decryptWithKeyPair post " + postUrl);
+        LOGGER.fine("decryptWithKeyPair post " + postUrl);
 
         String serverPostResponse = null;
         try {
@@ -899,8 +903,8 @@ public class App {
 
         JSONObject serverResponse = new JSONObject(serverPostResponse);
 
-        System.out.println("User device POST to server encryption info " + devicePost);
-        System.out.println("Server responds to user device POST " + serverResponse.toString());
+        LOGGER.fine("User device POST to server encryption info " + devicePost);
+        LOGGER.fine("Server responds to user device POST " + serverResponse.toString());
         return serverResponse;
     }
 
@@ -908,13 +912,13 @@ public class App {
         JSONObject encryption = new JSONObject(encryptedFileInfo.get("encryption").toString());
 
         String decryptedSymPassword = decryptDataWithPublicAndPrivateKey(encryption.get("encryptedPassB").toString(), devicePublicKey, browserPrivateKey);
-        System.out.println("Browser decrypts sym password " + decryptedSymPassword);
+        LOGGER.fine("Browser decrypts sym password " + decryptedSymPassword);
 
         String fullPassword = Base64.getEncoder().encodeToString(hexStringToByteArray(keccak256(decryptedSymPassword + encryption.get("salt").toString())));
-        System.out.println("Browser composes full password " + fullPassword);
+        LOGGER.fine("Browser composes full password " + fullPassword);
 
         String decryptedFile = decryptDataWithSymmetricKey(encryptedFileInfo.get("payload").toString(), fullPassword);
-        System.out.println("Browser decrypts the file with the full password " + decryptedFile);
+        LOGGER.fine("Browser decrypts the file with the full password " + decryptedFile);
 
         JSONObject resultFileInfo = encryptedFileInfo;
         resultFileInfo.put("payload", decryptedFile);
@@ -959,11 +963,11 @@ public class App {
 
         //TODO: write a good condition if result is NULL
         JSONObject res = new JSONObject(result);
-        System.out.println(res.toString());
+        LOGGER.fine(res.toString());
         if (res.toString() == null) {
-            System.out.println("Unable to verify file.");
+            LOGGER.severe("Unable to verify file.");
         } else {
-            System.out.println("File contents validated.");
+            LOGGER.fine("File contents validated.");
         }
 
         return res;
@@ -979,13 +983,13 @@ public class App {
                 JSONObject pollResult = new JSONObject(pollRes);
                 JSONObject encryption = new JSONObject(pollResult.get("encryption").toString());
 
-                System.out.println("browser poll result " + pollResult.toString());
+                LOGGER.fine("browser poll result " + pollResult.toString());
 
                 if (encryption.toString() != null) {
-                    System.out.println("Server responds to polling with " + pollResult.toString());
+                    LOGGER.fine("Server responds to polling with " + pollResult.toString());
                     JSONObject decryptedFile = processEncryptedFileInfo(pollResult, receiverPubKey, browserKeyPair.getPrivateEncKey());
                     JSONObject validationResult = verifyFileDecryption(decryptedFile.get("payload").toString(), decryptedFile.get("userId").toString(), decryptedFile.get("docId").toString());
-                    System.out.println("toz validation" + validationResult.toString());
+                    LOGGER.fine("validation object " + validationResult.toString());
                     // TODO: Better check !
                     if (validationResult.toString() == null) {
                         return validationResult;
@@ -1003,9 +1007,9 @@ public class App {
 
     private String getSelectedFiles(String selectionHash) {
         String getUrl = getEndpointUrl("selection", "&selectionHash=" + selectionHash);
-        System.out.println("getSelectedFiles get request " + getUrl);
+        LOGGER.fine("getSelectedFiles get request " + getUrl);
         String selectionResponse = getRequest(getUrl);
-        System.out.println(selectionResponse);
+        LOGGER.fine("selection obj: " + selectionResponse);
         JSONObject selectionRes = new JSONObject(selectionResponse);
 
         return selectionRes.toString();
@@ -1013,9 +1017,9 @@ public class App {
 
     private JSONObject shareFile(String docId, String recipientId, UserKeyPair keyPair) {
         String getUrl = getEndpointUrl("shareencrypted", "&docId=" + docId + "&recipientId=" + recipientId);
-        System.out.println("shareencrypted get request " + getUrl);
+        LOGGER.fine("shareencrypted get request " + getUrl);
         String getShareResponse = getRequest(getUrl);
-        System.out.println("Share res " + getShareResponse);
+        LOGGER.fine("Share res " + getShareResponse);
 
         JSONObject shareRes = new JSONObject(getShareResponse);
 
@@ -1076,8 +1080,8 @@ public class App {
             //TODO: serverPostResponce and result could be null
             JSONObject postResponse = new JSONObject(serverPostResponse);
 
-            System.out.println("Share POST to server encryption info " + createShare);
-            System.out.println("Server responds to user device POST " + postResponse.toString());
+            LOGGER.fine("Share POST to server encryption info " + createShare);
+            LOGGER.fine("Server responds to user device POST " + postResponse.toString());
             JSONObject result = new JSONObject(postResponse.toString());
 
             return result;
@@ -1133,7 +1137,7 @@ public class App {
             return uploadFile(file);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error. " + e.getMessage());
+            LOGGER.severe("Error. " + e.getMessage());
         }
         return null;
     }
@@ -1160,12 +1164,12 @@ public class App {
             String selectionHash = actionSelectionHash[1];
             String selectionResult = getSelectedFiles(selectionHash);
 
-            System.out.println("selection result " + selectionResult);
+            LOGGER.fine("selection result " + selectionResult);
 
             JSONObject selectionRes = new JSONObject(selectionResult);
-            System.out.println("--------");
-            System.out.println(selectionRes.toString(1));
-            System.out.println("-------");
+            LOGGER.fine("--------");
+            LOGGER.fine(selectionRes.toString(1));
+            LOGGER.fine("-------");
 
 
             if (selectionRes.get("selectionHash").toString() != null) {
@@ -1190,11 +1194,11 @@ public class App {
                 for (int i = 0; i < files.length; i++) {  // iterate open each entry from the array
                     if (action.equals("o")) {
                         if (keyPair.getPublicSignKey().equals(recipients[i])) {
-                            System.out.println("selection entry omitted " + recipients[i] + ":" + files[i]);
+                            LOGGER.fine("selection entry omitted " + recipients[i] + ":" + files[i]);
                             continue;                             // skip entries that are not for that keypair
                         }
                         if (keyPair.getPrivateEncKey() != null) {
-                            System.out.println("selection entry added " + recipients[i] + ":" + files[i]);
+                            LOGGER.fine("selection entry added " + recipients[i] + ":" + files[i]);
                             JSONObject fileContent = openFile(files[i], "ak_" + keyPair.getPublicSignKey(), keyPair);
                             result.add(new ResultFileObj(files[i], fileContent));
                         } else {
@@ -1214,10 +1218,10 @@ public class App {
                         result.add(new ResultFileObj(files[i], shareResult));
                     } else if (action.equals("mo")) {
                         if (!("ak_" + keyPair.getPublicSignKey()).equals(recipients[i])) {
-                            System.out.println("selection entry omitted " + recipients[i] + ":" + files[i]);
+                            LOGGER.fine("selection entry omitted " + recipients[i] + ":" + files[i]);
                             continue;                      // skip entries that are not for that keypair
                         }
-                        System.out.println("selection entry added " + recipients[i] + ":" + files[i]);
+                        LOGGER.fine("selection entry added " + recipients[i] + ":" + files[i]);
                         JSONObject scanResult = decryptWithKeyPair(recipients[i], files[i], keyPair);
 
                         result.add(new ResultFileObj(files[i], scanResult));

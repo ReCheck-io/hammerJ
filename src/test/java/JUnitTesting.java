@@ -1,4 +1,5 @@
 
+import com.iwebpp.crypto.TweetNaclFast;
 import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
@@ -109,5 +110,28 @@ public class JUnitTesting {
     }
 
     //tests with encrypt/decrypt
+    @Test
+    void basicEncryption(){
+        ap.setNetwork("ae");
+        String message = "ei tui";
+        String message2 = "mn0go m0lya v! m@d@M";
+
+        byte[] mySecretEncKeyArray = ap.hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
+
+        TweetNaclFast.Box.KeyPair kp = new TweetNaclFast.Box.KeyPair();
+        kp = TweetNaclFast.Box.keyPair_fromSecretKey(mySecretEncKeyArray);
+
+        TweetNaclFast.Box kpFromSecret = new TweetNaclFast.Box(kp.getPublicKey(),kp.getSecretKey());
+
+        String firstEncryptedMessage = ap.encrypt(message,kpFromSecret);
+        String firstDecryptedMessage = ap.decrypt(firstEncryptedMessage, kpFromSecret);
+
+        String secondEncryptedMessage = ap.encrypt(message2,kpFromSecret);
+        String secondDecryptedMessage = ap.decrypt(secondEncryptedMessage, kpFromSecret);
+
+        assertEquals(message, firstDecryptedMessage, "First decrypted message");
+        assertEquals(message2, secondDecryptedMessage, "Second decrypted message");
+
+    }
     //tests with encryptDataWithSymmetricKey / decryptDataWithSymmetricKey
 }

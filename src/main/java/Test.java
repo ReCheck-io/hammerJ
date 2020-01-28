@@ -9,8 +9,13 @@ import sun.awt.X11.XSystemTrayPeer;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 public class Test {
     private static String keccak256(String toHash) {
@@ -57,12 +62,20 @@ public class Test {
 
     public static void main(String[] args){
         App ap = new App();
-//        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
-        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
+
+        LogManager.getLogManager().reset();
+        ap.LOGGER.setLevel(Level.ALL);
+
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        ap.LOGGER.addHandler(handler);
+
+        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
+//        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
         String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
         String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
-        String ch="0xd1a8e9d01667a8a4eb4b015318d6dceef808739ba5183e575d155c6a4646346a";
+        String ch="0xe7cdb7d88357579983ef75304a7b6f429910a8157dd8c2353cfbd141f6831fcc";
         String doc = "0x978c1c0bc5729e7b0753ae60440f201a66d6e96eb0666e75306d44e08a2153c8";
         String privateKey = "0xd16ab98dcdf2bdb2538b069f14da5ec6c057c10e058ba6a439dd3ea59e6259ba";
 
@@ -81,29 +94,13 @@ public class Test {
 //        System.out.println("Private enc key: " + keys.getPrivateEncKey());
 //        System.out.println("Phrase: "+ keys.getPhrase());
 
-        Credentials cs = Credentials.create(keys.getPrivateEncKey());
-        cs.getEcKeyPair();
-        String msg = "hello";
-        byte[] msgHash = Hash.sha3(msg.getBytes());
-        Sign.SignatureData signature = Sign.signMessage(msgHash, cs.getEcKeyPair(), false);
-//        System.out.println("Msg: " + msg);
-//        System.out.println("Msg hash: " + Hex.toHexString(msgHash));
-
-        String v = bytesToHex(signature.getV());
-        String r = Numeric.toHexString(signature.getR());
-        String s = Numeric.toHexString(signature.getS()).replaceFirst("0x","");
-
-        String sig = r + s + v;
-
-//        System.out.println(sig);
-
         JSONObject js = new JSONObject();
         byte[] array = new byte[0];
         String fileContent = "";
         try {
 //            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
 //            fileContent = Base64.getEncoder().encodeToString(array);
-            fileContent = Base64.getEncoder().encodeToString("sdaaasaaaaa".getBytes());
+            fileContent = Base64.getEncoder().encodeToString("sdaaaasaaaaaa".getBytes());
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -113,72 +110,17 @@ public class Test {
         js.put("name", "filenamed");
         js.put("category", "OTHER");
         js.put("keywords", "");
-//        System.out.println(js.get("payload"));
-        String cat =(String) js.get("category");
-        String key = (String)js.get("keywords");
-        String name = (String) js.get("name") ;
-        String pay = "";
 
-//        {"category":"OTHER","keywords":"","name":"filenamed","payload":""}
-//        {"category":"OTHER","keywords":"","name":"filenamed","payload":""}
-        String query = "&userId="+ "userId" +"&docId=" + "docChainId" + "&requestId="+ "requestId" + "&requestType=" +"requestType"+ "&requestBodyHashSignature=NULL&trailHash="+ "trailHash"+ "&trailHashSignatureHash=" +"trailHashSignatureHash";
-
-        System.out.println(query);
-//    &userId=userId&docId=docChainId&requestId=requestId&requestType=requestType&requestBodyHashSignature=NULL&trailHash=trailHash&trailHashSignatureHash=trailHashSignatureHash
-//    &userId=userId&docId=docChainId&requestId=requestId&requestType=requestType&requestBodyHashSignature=NULL&trailHash=trailHash&trailHashSignatureHash=trailHashSignatureHash
-//        System.out.println(js.toString());
-//        ObjectMapper mapper = new ObjectMapper();
-//
-//        Map<String, String> myLinkedHashMap = new LinkedHashMap<String, String>();
-//        myLinkedHashMap.put("1", "first");
-//        myLinkedHashMap.put("2", "second");
-//        myLinkedHashMap.put("3", "third");
-//
-//        try {
-//            System.out.println(mapper.writeValueAsString(myLinkedHashMap));
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//        }
-//        SortedMap<String, Object> myLinkedHashMap =  new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-//
-//        Gson gson = new Gson();
-//        SortedMap<String, Object> LinkedHashMap =  new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-//
-//        LinkedHashMap.put("Something2", "");
-//        LinkedHashMap.put("protect", "tva");
-//        LinkedHashMap.put("something", "dsa");
-//
-//
-//        String daTaIba = gson.toJson(LinkedHashMap, TreeMap.class);
-//
-//        myLinkedHashMap.put("keywords", "");
-//        myLinkedHashMap.put("name", "filenamed");
-//        myLinkedHashMap.put("category", "OTHER");
-//        myLinkedHashMap.put("encryption", LinkedHashMap);
-//
-//        myLinkedHashMap.put("payload", "");
-//
-//
-//        // Convert the ordered map into an ordered string.
-//        String json = gson.toJson(myLinkedHashMap, TreeMap.class);
-//        myLinkedHashMap.put("payload", fileContent);
-//        JSONObject jss = new JSONObject(myLinkedHashMap);
-//        System.out.println(jss.get("encryption"));
-//        JSONObject test = new JSONObject(jss.get("encryption").toString());
-//        System.out.println(test.get("something").toString());
-//        System.out.println(json);
-//        System.out.println(ap.getHash(json));
-
-//        System.out.println(ap.getHash(res));
-//        System.out.println(ap.getHash((String) js.get("category") + js.get("keywords") + js.get("name") + js.get("payload")));
 
         //login will either have a challenge from the browser QR, or will create a new one, without entering the browser GUI
-//        ap.login(keys,ch);
+        ap.login(keys,ch);
 //
-//       App.store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
+//       String bl =  ap.store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
 
-//        JSONObject jss = App.openFile(doc,userChainId,keys);
-//         App.decryptWithKeyPair(userChainId, doc, keys);
+//       System.out.println(bl);
+
+//        JSONObject jss = ap.openFile(doc,userChainId,keys);
+//         ap.decryptWithKeyPair(userChainId, doc, keys);
 
 //        Scanner sc = new Scanner(System.in);
 
