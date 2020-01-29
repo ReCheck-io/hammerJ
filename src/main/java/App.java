@@ -1,7 +1,5 @@
 import com.google.gson.Gson;
 import com.iwebpp.crypto.TweetNaclFast;
-import com.iwebpp.crypto.TweetNaclFast.Box;
-import com.iwebpp.crypto.TweetNaclFast.Signature;
 import com.lambdaworks.crypto.SCrypt;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +42,7 @@ public class App {
      * @throws NoSuchAlgorithmException
      */
     private byte[] sign(byte[] file, UserKeyPair kp) throws NoSuchAlgorithmException {
-        Signature sig = new Signature(decodeBase58(kp.getPublicSignKey()), hexStringToByteArray(kp.getPrivateSignKey()));
+        TweetNaclFast.Signature sig = new TweetNaclFast.Signature(decodeBase58(kp.getPublicSignKey()), hexStringToByteArray(kp.getPrivateSignKey()));
         return sig.detached(file);
     }
 
@@ -198,10 +196,10 @@ public class App {
 
 
         // creating a TweetNacl Box object for the encrypt pair
-        Box.KeyPair keyPairSK = Box.keyPair_fromSecretKey(encryptKeySeed);
+        TweetNaclFast.Box.KeyPair keyPairSK = TweetNaclFast.Box.keyPair_fromSecretKey(encryptKeySeed);
 
         // Having the second key pair TweetNacl Signature
-        Signature.KeyPair keyPairS = TweetNaclFast.Signature.keyPair_fromSeed(signKeySeed);
+        TweetNaclFast.Signature.KeyPair keyPairS = TweetNaclFast.Signature.keyPair_fromSeed(signKeySeed);
 
         String publicEncKey = Base58Check.encode(keyPairSK.getPublicKey());
         String privateEncKey = bytesToHex(keyPairSK.getSecretKey());
@@ -390,7 +388,7 @@ public class App {
      * @param key Shared key - Box TweetNacl - that will be used for encryption of the data
      * @return base64 String private key encrypted message
      */
-    public String encrypt(String data, Box key) {
+    public String encrypt(String data, TweetNaclFast.Box key) {
 
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] messageUint8 = data.getBytes();
@@ -418,7 +416,7 @@ public class App {
      * @param key
      * @return decrypted String message
      */
-    public String decrypt(String messageWithNonce, Box key) {
+    public String decrypt(String messageWithNonce, TweetNaclFast.Box key) {
         byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
         byte[] nonce = new byte[24];
         byte[] message = new byte[messageWithNonceAsUint8Array.length - nonce.length];
