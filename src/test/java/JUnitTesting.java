@@ -1,5 +1,4 @@
 
-import com.iwebpp.crypto.TweetNaclFast;
 import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;

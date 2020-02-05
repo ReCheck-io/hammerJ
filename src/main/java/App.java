@@ -1,5 +1,4 @@
 import com.google.gson.Gson;
-import com.iwebpp.crypto.TweetNaclFast;
 import com.lambdaworks.crypto.SCrypt;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
