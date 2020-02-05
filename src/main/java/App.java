@@ -5,19 +5,18 @@ import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.kocakosm.jblake2.Blake2s;
+import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
-import org.web3j.crypto.Credentials;
 import org.web3j.utils.Numeric;
-import sun.rmi.runtime.Log;
 
-import java.util.logging.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import static java.util.Arrays.copyOfRange;
 
