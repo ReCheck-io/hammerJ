@@ -1,4 +1,8 @@
 
+import io.recheck.client.App;
+import io.recheck.client.TweetNaclFast;
+import io.recheck.client.UserKeyPair;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
@@ -7,6 +11,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JUnitTesting {
     private App ap = new App();
+
+    @Test
+    void generateAkKeyPairTestAE0() {
+        ap.setNetwork("ae");
+        String passphrase ="";
+
+        UserKeyPair keyPair = null;
+        try {
+            keyPair = ap.generateAkKeyPair(passphrase);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+
+        String[] fullphrase = StringUtils.split(keyPair.getPhrase());
+        assertEquals(fullphrase.length, 12, "Phrase words");
+    }
 
     @Test
         //AEthernity keypair
@@ -56,6 +76,22 @@ public class JUnitTesting {
         assertEquals(keyPair.getPrivateEncKey().toLowerCase(), secretEncKey.toLowerCase(), "Private Encryption Key");
 //        assertEquals(keyPair.getAddress(),,"Address");
 
+    }
+
+    @Test
+    void generateAkKeyPairTestEth0() {
+        ap.setNetwork("eth");
+        String passphrase ="";
+
+        UserKeyPair keyPair = null;
+        try {
+            keyPair = ap.generateAkKeyPair(passphrase);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+
+        String[] fullphrase = StringUtils.split(keyPair.getPhrase());
+        assertEquals(fullphrase.length, 12, "Phrase words");
     }
 
     @Test //Ethereum account

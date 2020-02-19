@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class UserKeyPair {
     // The Enc keys are the normal public 32 bytes, the Sign are to be used with AEternity, for the moment.
     private String address;

@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class EncryptedDataWithPublicKey {
     private String payload;
     private String dstPublicEncKey;

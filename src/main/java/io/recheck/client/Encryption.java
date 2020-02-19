@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class Encryption {
     private String docHash;
     private String salt;

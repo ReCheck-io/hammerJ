@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class FileCredentials {
     private String syncPass;
     private String syncPassHash;

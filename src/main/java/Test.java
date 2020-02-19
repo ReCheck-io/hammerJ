@@ -1,16 +1,11 @@
-import com.google.gson.Gson;
+import io.recheck.client.App;
+import io.recheck.client.UserKeyPair;
 import org.json.JSONObject;
-import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Hash;
-import org.web3j.crypto.Sign;
-import org.web3j.utils.Numeric;
-import sun.awt.X11.XSystemTrayPeer;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.logging.ConsoleHandler;
@@ -75,7 +70,7 @@ public class Test {
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
         String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
         String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
-        String ch="0xe7cdb7d88357579983ef75304a7b6f429910a8157dd8c2353cfbd141f6831fcc";
+        String ch="0x4b8151700cc9982b3ea929a013258b6fbfd32f5919524f339b50c3d67e7e377e";
         String doc = "0x978c1c0bc5729e7b0753ae60440f201a66d6e96eb0666e75306d44e08a2153c8";
         String privateKey = "0xd16ab98dcdf2bdb2538b069f14da5ec6c057c10e058ba6a439dd3ea59e6259ba";
 

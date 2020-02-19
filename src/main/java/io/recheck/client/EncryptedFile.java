@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class EncryptedFile {
     private String payload;
     private FileCredentials credentials;

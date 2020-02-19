@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class FileToUpload {
 
     private String docId;

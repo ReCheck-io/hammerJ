@@ -1,4 +1,4 @@
-/*
+package io.recheck.client;/*
 Return a random number
 from a six-sided die
  */

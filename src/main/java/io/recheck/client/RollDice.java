@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class RollDice {
     public static void main(String[] args) {
         phrase();

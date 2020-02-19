@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 import com.google.gson.Gson;
 import com.lambdaworks.crypto.SCrypt;
 import okhttp3.*;
@@ -68,14 +70,11 @@ public class App {
      */
     private String getRequestHashJSON(SortedMap requestJSON) {
         Gson gson = new Gson();
-        System.out.println(requestJSON);
+
         // Convert the ordered map into an ordered string.
         String requestString = gson.toJson(requestJSON);
         requestString = requestString.replace("\\u003d","=");
-        System.out.println(requestString);
-//      {"category":"OTHERS","docId":"0x149fb9e20deb386e2fc8e0e65895ff3de2145c691c2459f8c3c5cc65999dd675","docName":"filename","encryption":{"docHash":"0x7a61799ef6e6face9c0fd5936495f24a6be1f98edd54c94ae421d84c620c491c","encryptedPassA":"aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3ZNNcDoGKwp/cEzHP3upmbNlAH2G7uZOiDYt+U8JuZbNOwY5oxXYDOaCMWtTSZCl/l0gnDFgExTZzlI55","passHash":"0xc19da63e14e408a02ae5e941ce58f0ba8af07f86d509f14ce260aca52dcce49f","pubKeyA":"sXN4QtnVfQkXyovfsf7n4hmDMU9zApJjiPmtSgcvmhKssh33V","salt":"A7iagh/CB6cUnmIKkOgnLdh4COYcB6bbHJAwr+rtmpM\u003d"},"keywords":"Daka","payload":"","requestBodyHashSignature":"NULL","requestId":"ReCheck","requestType":"upload","trailHash":"0xebc35e744fd4183e151b2ebf8906eceb43d3f0667d82673104a41062619385a8","trailHashSignatureHash":"0xcb4c9d29e4dbe5a49cf55f5db97afaae5d8bfdfb29a3ffc0767d0a173661261f","userId":"ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5"}
-//      {"category":"OTHERS","docId":"0x149fb9e20deb386e2fc8e0e65895ff3de2145c691c2459f8c3c5cc65999dd675","docName":"filename","encryption":{"docHash":"0x7a61799ef6e6face9c0fd5936495f24a6be1f98edd54c94ae421d84c620c491c","encryptedPassA":"aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3ZNNcDoGKwp/cEzHP3upmbNlAH2G7uZOiDYt+U8JuZbNOwY5oxXYDOaCMWtTSZCl/l0gnDFgExTZzlI55","passHash":"0xc19da63e14e408a02ae5e941ce58f0ba8af07f86d509f14ce260aca52dcce49f","pubKeyA":"sXN4QtnVfQkXyovfsf7n4hmDMU9zApJjiPmtSgcvmhKssh33V","salt":"A7iagh/CB6cUnmIKkOgnLdh4COYcB6bbHJAwr+rtmpM="},"keywords":"Daka","payload":"","requestBodyHashSignature":"NULL","requestId":"ReCheck","requestType":"upload","trailHash":"0xebc35e744fd4183e151b2ebf8906eceb43d3f0667d82673104a41062619385a8","trailHashSignatureHash":"0xcb4c9d29e4dbe5a49cf55f5db97afaae5d8bfdfb29a3ffc0767d0a173661261f","userId":"ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5"}
-//      {"category":"OTHERS","docId":"0x149fb9e20deb386e2fc8e0e65895ff3de2145c691c2459f8c3c5cc65999dd675","docName":"filename","encryption":{"docHash":"0x7a61799ef6e6face9c0fd5936495f24a6be1f98edd54c94ae421d84c620c491c","encryptedPassA":"aWlu6VW2K3PNYr2odfxz1oIZ4ANregs3ZNNcDoGKwp/cEzHP3upmbNlAH2G7uZOiDYt+U8JuZbNOwY5oxXYDOaCMWtTSZCl/l0gnDFgExTZzlI55","passHash":"0xc19da63e14e408a02ae5e941ce58f0ba8af07f86d509f14ce260aca52dcce49f","salt":"A7iagh/CB6cUnmIKkOgnLdh4COYcB6bbHJAwr+rtmpM=","pubKeyA":"sXN4QtnVfQkXyovfsf7n4hmDMU9zApJjiPmtSgcvmhKssh33V"},"keywords":"Daka","payload":"","requestBodyHashSignature":"NULL","requestId":"ReCheck","requestType":"upload","trailHash":"0xebc35e744fd4183e151b2ebf8906eceb43d3f0667d82673104a41062619385a8","trailHashSignatureHash":"0xcb4c9d29e4dbe5a49cf55f5db97afaae5d8bfdfb29a3ffc0767d0a173661261f","userId":"ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5"}
+
         return getHash(requestString);
     }
 

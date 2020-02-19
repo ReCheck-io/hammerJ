@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 public class UserProperties {
     private String userID;
     private UserKeyPair keyPair;

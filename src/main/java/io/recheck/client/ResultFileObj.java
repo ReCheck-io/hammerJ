@@ -1,3 +1,5 @@
+package io.recheck.client;
+
 import org.json.JSONObject;
 
 public class ResultFileObj {
