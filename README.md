@@ -15,7 +15,7 @@ Keep in mind that you have to select the latest version when importing the libra
 </dependency>
 ```
 
-#### gradle
+#### gradle 
 ```
 implementation 'io.github.recheck-io:hammerJ:x.x.x'
 ```
