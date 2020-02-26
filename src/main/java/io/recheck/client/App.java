@@ -474,7 +474,8 @@ public class App {
     /**
      *This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
      *
-     * @override the previous function, when there is no specified private key.
+     * Overrides the previous function, when there is no specified private key.
+     *
      * @param data a String message to be encrypted
      * @param dstPublicEncKey The receiver's public key
      * @return an object encapsulating the payload of the encrypted file along with the private and public key needed
@@ -1130,7 +1131,7 @@ public class App {
      * @param content           - the content of the file
      * @param userChainId       - user's blockchain ID (in the AE blockchain this is ak_publicSignKey
      * @param userChainIdPubKey - user's publicEncKey
-     * @return server's response whether the file has been uploaded 
+     * @return server's response whether the file has been uploaded
      */
     public String store(String name, String content, String userChainId, String userChainIdPubKey) {
         FileObj obj = new FileObj();
