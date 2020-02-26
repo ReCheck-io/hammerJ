@@ -36,8 +36,8 @@ public class App {
     /**
      * Function to sign the bytes of a file using TweetNacl Signature class.
      *
-     * @param file
-     * @param kp
+     * @param file file or message to encrypt
+     * @param kp user's key pair
      * @return a byte array with the signature of the signature
      * @throws NoSuchAlgorithmException
      */
@@ -47,7 +47,7 @@ public class App {
     }
 
     /**
-     * @param toHash
+     * @param toHash message or file in the form of a String to be hashed with sha3(keccak256)
      * @return sha3 hash with 0x
      */
     public String getHash(String toHash) {
@@ -55,7 +55,7 @@ public class App {
     }
 
     /**
-     * @param toHash
+     * @param toHash message or file in the form of a String to be hashed with sha3(keccak256)
      * @return sha3 hash without 0x
      */
     private String keccak256(String toHash) {
@@ -63,10 +63,10 @@ public class App {
     }
 
     /**
-     * It will sing the contents of the object, without the payload, passed to the backend
+     * It will sign the contents of the object, without the payload, passed to the backend
      *
      * @param requestJSON
-     * @return
+     * @return a hash of the post request's content
      */
     private String getRequestHashJSON(SortedMap requestJSON) {
         Gson gson = new Gson();
@@ -90,7 +90,7 @@ public class App {
     /**
      * Gets a byte array and coverts it into String on the Base58 scheme.
      *
-     * @param toEncode
+     * @param toEncode a byte array to be encoded
      * @return Base58 encoded String
      * @throws NoSuchAlgorithmException
      */
@@ -101,9 +101,10 @@ public class App {
     /**
      * Takes a Base58 encoded String and returns a byte array.
      *
-     * @param toDecode
-     * @return
-     * @throws NoSuchAlgorithmException
+     * @param toDecode A Base58 encoded string to be decoded
+     * @return decoded information in the form of byte array
+     * @throws NoSuchAlgorithmException This exception is thrown when a particular cryptographic algorithm is requested
+     * but is not available in the environment.
      */
     private byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
         return Base58Check.decode(toDecode);
@@ -119,7 +120,8 @@ public class App {
      * @param key1 - six random words concatenated into a String with a space delimiter
      * @param key2 - six random words concatenated into a String with a space delimiter
      * @return byte array that is going to be used for the creation of Sign and Encryption keys
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
+     * provides type safety for all the security-related exception classes that extend from it.
      */
     private byte[] session25519(String key1, String key2) throws GeneralSecurityException {
         int logN = 131072;  // this number is 2^17  CPU/memory cost parameter (1 to 31)
@@ -157,7 +159,8 @@ public class App {
      *                   public and private Encryption keys and the security phrase.
      *
      * @return UserKeyPair object, containing the important information.
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
+     * provides type safety for all the security-related exception classes that extend from it.
      */
 
     public UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
@@ -267,11 +270,12 @@ public class App {
      * As final step encapsulates the credentials of the file and its encrypted hash to pass them to the caller.
      *
      *
-     * @param fileData
-     * @param dstPublicKey
+     * @param fileData The payload from the file in the form of a hash
+     * @param dstPublicKey The public key of the receiver
      * @return an object with encapsulated file's credentials
-     * @throws GeneralSecurityException
-     * @throws UnsupportedEncodingException
+     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
+     * provides type safety for all the security-related exception classes that extend from it.
+     * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
     public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
@@ -317,10 +321,10 @@ public class App {
      *
      * Encrypts the String data with TweetNaclFast Box type.
      *
-     * @param data
-     * @param key
+     * @param data the message to be encrypted
+     * @param key a Base64 encoded key (in the program we encode a sha3 hashed String)
      * @return String encrypted message then encoded in Base64
-     * @throws UnsupportedEncodingException
+     * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
     public String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
         // the key is encoded with Base64, otherwise the decoding won't work.
@@ -349,8 +353,8 @@ public class App {
      *
      * Takes the Base64 encoded secret message, decodes it and then decrypts it.
      *
-     * @param messageWithNonce
-     * @param key
+     * @param messageWithNonce a Base64 encoded message
+     * @param key  a Base64 encoded key
      * @return decrypted String message
      */
     public String decryptDataWithSymmetricKey(String messageWithNonce, String key) {
@@ -409,8 +413,8 @@ public class App {
      *  Takes as input secret or shared key and an encrypted data as a hash of type String that needs to be decrypted.
      *  Using asymmetric public key encryption.
      *
-     * @param messageWithNonce
-     * @param key
+     * @param messageWithNonce a Base64 encoded message with the nonce
+     * @param key a TweetNacl Box object
      * @return decrypted String message
      */
     public String decrypt(String messageWithNonce, TweetNaclFast.Box key) {
@@ -437,12 +441,13 @@ public class App {
     /**
      * This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
      *
-     * @param data
-     * @param dstPublicEncKey
-     * @param userAkKeyPairs
+     * @param data a String message to be encrypted
+     * @param dstPublicEncKey the public key of the receiver
+     * @param userAkKeyPairs the key pair of the sender
      * @return an object encapsulating the payload of the encrypted file along with the private and public key needed
      * for the encryption
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
+     * provides type safety for all the security-related exception classes that extend from it.
      */
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException {
         if (userAkKeyPairs == null) {
@@ -470,11 +475,12 @@ public class App {
      *This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
      *
      * @override the previous function, when there is no specified private key.
-     * @param data
-     * @param dstPublicEncKey
+     * @param data a String message to be encrypted
+     * @param dstPublicEncKey The receiver's public key
      * @return an object encapsulating the payload of the encrypted file along with the private and public key needed
      * for the encryption
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
+     * provides type safety for all the security-related exception classes that extend from it.
      */
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
         String generate = null;
@@ -501,7 +507,7 @@ public class App {
     /**
      * function to convert byte array to hex String
      *
-     * @param bytes
+     * @param bytes bytes array to be converted
      * @return String with hex Chars
      */
     public String bytesToHex(byte[] bytes) {
@@ -518,7 +524,7 @@ public class App {
      * function to convert a hex String into byte[]
      *
      * @param s - hex String
-     * @return
+     * @return the converted String into byte array
      */
     public byte[] hexStringToByteArray(String s) {
         int len = s.length();
@@ -534,12 +540,13 @@ public class App {
      * This function takes as input the file, user's id and their pubKey. Prepares the data and needed to indentify the file
      * upon uploading into the system.
      *
-     * @param fileObj
-     * @param userChainId
-     * @param userChainIdPubKey
+     * @param fileObj a fileObj containing info about the object and it is about to be uploaded
+     * @param userChainId the public key of the sender
+     * @param userChainIdPubKey the public encryption key of the sender
      * @return an object encapsulating the data needed to be stored per single file
-     * @throws GeneralSecurityException
-     * @throws UnsupportedEncodingException
+     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
+     * provides type safety for all the security-related exception classes that extend from it.
+     * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
     public FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey) throws GeneralSecurityException, UnsupportedEncodingException {
 
@@ -609,7 +616,7 @@ public class App {
      * TODO check if wrong challenge is going to give me access
      * @param kp - user's key Pair
      * @param ch - challenge, what would be represented as QR in the website
-     * @return
+     * @return the result of LoginWithChallenge
      */
 
     public String login(UserKeyPair kp, String ch) {
@@ -629,9 +636,9 @@ public class App {
      *
      * Creates a JSON object to put into post request in order for the user to log into the system.
      *
-     * @param challenge
-     * @param keyPair
-     * @return
+     * @param challenge the identification given by the server, so that the user can access the web GUI
+     * @param keyPair user's keypair
+     * @return the token response, either success or fail
      */
     private String loginWithChallenge(String challenge, UserKeyPair keyPair) {
         byte[] signature;
@@ -667,7 +674,7 @@ public class App {
     /**
      * Helper function to redirect to the correct http address
      *
-     * @param action
+     * @param action - type of action - mobilelogin etc.
      * @return String with correct http address
      */
 
@@ -682,8 +689,8 @@ public class App {
     /**
      * Overloading of the function with the addition of an appendix.
      *
-     * @param action
-     * @param appendix
+     * @param action - type of action - mobilelogin etc.
+     * @param appendix - the specific parameters for the corresponding action
      * @return String with correct http address
      */
 
@@ -702,7 +709,7 @@ public class App {
     /**
      * Method to send get request to the server
      *
-     * @param url
+     * @param url the url to the server API
      * @return JSON object in the form of a String
      */
     private String getRequest(String url) {
@@ -722,10 +729,11 @@ public class App {
      *
      * Method to send post request to the given url and json
      *
-     * @param url
-     * @param json
+     * @param url the server url to which the request to be sent
+     * @param json the json containing the object to be sent
      * @return String with the result of the request
-     * @throws IOException
+     * @throws IOException Signals that an I/O exception of some sort has occurred. This class is the general class of
+     * exceptions produced by failed or interrupted I/O operations.
      */
     private String post(String url, JSONObject json) throws IOException {
         RequestBody body = RequestBody.create(json.toString(), JSON);
@@ -742,9 +750,10 @@ public class App {
      *
      * Method that gets a file and encapsulates it into JSON file in order to post the details on the blockchain.
      *
-     * @param file
-     * @return
-     * @throws IOException
+     * @param file the object containing the info to put into json and post send
+     * @return the server response after sending the json
+     * @throws IOException Signals that an I/O exception of some sort has occurred. This class is the general class of
+     * exceptions produced by failed or interrupted I/O operations.
      */
 
     private String uploadFile(FileToUpload file) throws IOException {
@@ -786,9 +795,9 @@ public class App {
 
     /**
      *
-     * @param docChainId
-     * @param userChainId
-     * @return
+     * @param docChainId the hash of the document that is written in the blockchain
+     * @param userChainId user's chain id (public key)
+     * @return the server's response, which should be the browser key pair
      */
 
     private JSONObject submitCredentials(String docChainId, String userChainId) {
@@ -1121,7 +1130,7 @@ public class App {
      * @param content           - the content of the file
      * @param userChainId       - user's blockchain ID (in the AE blockchain this is ak_publicSignKey
      * @param userChainIdPubKey - user's publicEncKey
-     * @return
+     * @return server's response whether the file has been uploaded 
      */
     public String store(String name, String content, String userChainId, String userChainIdPubKey) {
         FileObj obj = new FileObj();
