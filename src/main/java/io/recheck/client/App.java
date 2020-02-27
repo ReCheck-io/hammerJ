@@ -838,6 +838,17 @@ public class App {
 
     }
 
+    /**
+     * Takes encrypted data - payload - and then with the sender's public and the receiver's secret key
+     * decrypts the data.
+     *
+     *
+     * @param payload encrypted data
+     * @param srcPublicEncKey sender's public key
+     * @param secretKey receiver's secret key
+     * @return decrypted data
+     */
+
     public String decryptDataWithPublicAndPrivateKey(String payload, String srcPublicEncKey, String secretKey) {
         byte[] srcPublicEncKeyArray = null;
         try {
@@ -849,6 +860,15 @@ public class App {
         TweetNaclFast.Box decryptedBox = new TweetNaclFast.Box(srcPublicEncKeyArray, secretKeyArray);
         return decrypt(payload, decryptedBox);//decrypted
     }
+
+    /**
+     * Decrypts with user's key pair. It is for the GUI to be asking keys for permission out of the mobile app.
+     *
+     * @param userId user's chain ID
+     * @param docChainId file's chain ID
+     * @param keyPair user's key pair
+     * @return response from the server whether the decryption has been successful or not
+     */
 
     public JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair) {
         LOGGER.fine("User device requests decryption info from server " + docChainId + "  " + userId);
@@ -913,6 +933,15 @@ public class App {
         return serverResponse;
     }
 
+    /**
+     *  Processing the encryption to decryption process, by creating the full password and decrypting the data
+     *
+     * @param encryptedFileInfo the encrypted file object
+     * @param devicePublicKey mobile device, or the user's, public key
+     * @param browserPrivateKey the browser's private key
+     * @return JSON obj result with the decrypted data.
+     */
+
     private JSONObject processEncryptedFileInfo(JSONObject encryptedFileInfo, String devicePublicKey, String browserPrivateKey) {
         JSONObject encryption = new JSONObject(encryptedFileInfo.get("encryption").toString());
 
@@ -930,6 +959,15 @@ public class App {
         resultFileInfo.put("encryption", "");
         return resultFileInfo;
     }
+
+    /**
+     * Verification of the file decryption, before returning it to the user who has selected to open/download it
+     *
+     * @param fileContents hash of the file
+     * @param userId user's chain ID
+     * @param docId file's chain ID
+     * @return the result taken from the server, after sending the data for double check
+     */
 
     private JSONObject verifyFileDecryption(String fileContents, String userId, String docId) {
         String fileHash = getHash(fileContents);
@@ -978,6 +1016,14 @@ public class App {
         return res;
     }
 
+    /**
+     * Searches for file based on the credential, doc id and user id, given.
+     *
+     * @param credentialsResponse The response of the credentials from the user's id and the document/selection they
+     *                            want to open
+     * @param receiverPubKey receiver's public key
+     * @return decrypted file or a selection of files
+     */
     private JSONObject pollForFile(JSONObject credentialsResponse, String receiverPubKey) {
         if (credentialsResponse.get("userId").toString() != null) {
             String pollUrl = getEndpointUrl("docencrypted", "&userId=" + credentialsResponse.get("userId").toString() + "&docId=" + credentialsResponse.get("docId").toString());
@@ -1010,6 +1056,13 @@ public class App {
         }
     }
 
+    /**
+     * Gets the number of file(s) that the user wants to open.
+     *
+     * @param selectionHash a hash of the selected files
+     * @return the server response with the corresponding files
+     */
+
     private String getSelectedFiles(String selectionHash) {
         String getUrl = getEndpointUrl("selection", "&selectionHash=" + selectionHash);
         LOGGER.fine("getSelectedFiles get request " + getUrl);
@@ -1019,6 +1072,15 @@ public class App {
 
         return selectionRes.toString();
     }
+
+    /**
+     * Shares the file with other accounts from the network, that the user already have in contacts.
+     *
+     * @param docId file's chain ID
+     * @param recipientId recipient(s) chain ID
+     * @param keyPair user/sender's key pair
+     * @return a JSON obj containing the shared file
+     */
 
     private JSONObject shareFile(String docId, String recipientId, UserKeyPair keyPair) {
         String getUrl = getEndpointUrl("shareencrypted", "&docId=" + docId + "&recipientId=" + recipientId);
@@ -1094,6 +1156,14 @@ public class App {
         throw new Error("Unable to create share. Doc id mismatch.");
     }
 
+    /**
+     * Function to sign a message, depending on the network eth/ae
+     *
+     * @param message message/file to sign
+     * @param keyPair user's key pair to get the private key for signing
+     * @return hash of the signature
+     */
+
     private String signMessage(String message, UserKeyPair keyPair) {
         switch (network) {
             case "ae":
@@ -1147,6 +1217,14 @@ public class App {
         return null;
     }
 
+    /**
+     * Gets information about a file, which is owned by/shared to the user and opens it
+     *
+     * @param docChainId file's chain ID
+     * @param userChainId user's chain ID
+     * @param keyPair user's key pair
+     * @return the contents of the file in human readable form
+     */
     public JSONObject openFile(String docChainId, String userChainId, UserKeyPair keyPair) {
 
         JSONObject credentialsResponse = submitCredentials(docChainId, userChainId);
@@ -1159,6 +1237,13 @@ public class App {
         }
     }
 
+    /**
+     * Function to open/share/mobile open to a particular selection of files
+     *
+     * @param selection hash of selection of files
+     * @param keyPair user's key pair
+     * @return a collection with hashes of the documents that have been manipulated
+     */
     public ArrayList<ResultFileObj> execSelection(String selection, UserKeyPair keyPair) {
         ArrayList<ResultFileObj> result = new ArrayList<>();
         // check if we have a selection or an id
