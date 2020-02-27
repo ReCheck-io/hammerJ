@@ -6,7 +6,7 @@ HammerJ is a Java encryption library that is used for end to end encryption. It 
 The expected workflow is where there will be a mobile app and client separately established. Only the mobile app will be able to hold the user’s key pairs. Meaning that it will be used for signing and encrypting/decrypting messages.  
 
 ### Usage
-Keep in mind that you have to select the latest version when importing the library to your project. It is written at the start of the README file. 
+Keep in mind that you have **to select the latest version** when importing the library to your project. It is written at the start of the README file. 
 #### maven 
 
 ```

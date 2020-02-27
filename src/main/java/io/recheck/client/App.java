@@ -645,9 +645,10 @@ public class App {
         byte[] signature;
         try {
             //TODO: change the sig with singMessage()
-            signature = sign(challenge.getBytes(), keyPair);
-            String sig58 = Base58Check.encode(signature);
-            String pubEncKey = keyPair.getPublicSignKey();
+//            signature = sign(challenge.getBytes(), keyPair);
+//            String sig58 = Base58Check.encode(signature);
+            String sig58 = signMessage(challenge, keyPair);
+            String pubEncKey = keyPair.getPublicEncKey();
             String pubKey = "ak_" + keyPair.getPublicSignKey();
 
             JSONObject payload = new JSONObject();
@@ -658,14 +659,16 @@ public class App {
             payload.put("firebaseToken", "notoken");
             payload.put("challenge", challenge);
             payload.put("challengeSignature", sig58);
+            payload.put("rtnToken", "notoken");
 
             String loginURL = getEndpointUrl("mobilelogin");
             String loginPostResult = post(loginURL, payload);
             JSONObject result = new JSONObject(loginPostResult);
+            System.out.println(result.toString(1));
             String tokenRes = result.get("rtnToken").toString();
             token = tokenRes;
             return tokenRes;
-        } catch (NoSuchAlgorithmException | IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return "Err";
