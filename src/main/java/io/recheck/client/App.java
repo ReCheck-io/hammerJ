@@ -1232,6 +1232,7 @@ public class App {
 
         JSONObject credentialsResponse = submitCredentials(docChainId, userChainId);
         JSONObject scanResult = decryptWithKeyPair(userChainId, docChainId, keyPair);
+        System.out.println(scanResult.toString(1));
         if (scanResult.get("userId").toString() != null) {
             //polling server for pass to decrypt message
             return pollForFile(credentialsResponse, keyPair.getPublicEncKey());

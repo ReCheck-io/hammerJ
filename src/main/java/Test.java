@@ -68,12 +68,11 @@ public class Test {
         String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
 //        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
-        String userChainId = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
-        String userChainIdPubKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
-        String ch="0x3e72436376e27f0ff14af2319e17263695285887c90951f0c066b6bdcd17aaf0";
-        String doc = "0x978c1c0bc5729e7b0753ae60440f201a66d6e96eb0666e75306d44e08a2153c8";
-        String privateKey = "0xd16ab98dcdf2bdb2538b069f14da5ec6c057c10e058ba6a439dd3ea59e6259ba";
 
+        String ch="0x210a7af203eccfd04a06990f4a7f07b63993a9a8db4ff98c3f8fd7accba80a9e";
+
+        //0.pdf
+        String doc = "0xac2bcbf60e9450ec3ddf0870422e7f3ed5cc7317ceaaf9783038ab7a68da4b70";
 
         UserKeyPair keys = null;
         try {
@@ -82,12 +81,29 @@ public class Test {
             e.printStackTrace();
         }
 
-//        System.out.println("address: " + keys.getAddress());
-//        System.out.println("public sign key: " + keys.getPublicSignKey());
-//        System.out.println("Private sign key: " + keys.getPrivateSignKey());
-//        System.out.println("Public enc key: " + keys.getPublicEncKey());
-//        System.out.println("Private enc key: " + keys.getPrivateEncKey());
-//        System.out.println("Phrase: "+ keys.getPhrase());
+        login(ap,keys,ch);
+//        open(ap,doc, keys.getPublicSignKey(), keys);
+//        Scanner sc = new Scanner(System.in);
+
+        // String input
+//        String selection = sc.nextLine();
+        String selection= "s:0x2b1b9c5c1a24a1e77cb33a205f033ca80ca7cd8450940ed4852b945d85b7a402";
+//        App.execSelection(selection, keys);
+    }
+
+    public void showKeys(UserKeyPair keys){
+        System.out.println("address: " + keys.getAddress());
+        System.out.println("public sign key: " + keys.getPublicSignKey());
+        System.out.println("Private sign key: " + keys.getPrivateSignKey());
+        System.out.println("Public enc key: " + keys.getPublicEncKey());
+        System.out.println("Private enc key: " + keys.getPrivateEncKey());
+        System.out.println("Phrase: "+ keys.getPhrase());
+    }
+
+    public static void login(App ap, UserKeyPair keys, String ch){
+        ap.login(keys,ch);
+    }
+    public void upload(App ap, String userChainId, String userChainIdPubKey){
 
         JSONObject js = new JSONObject();
         byte[] array = new byte[0];
@@ -106,22 +122,12 @@ public class Test {
         js.put("category", "OTHER");
         js.put("keywords", "");
 
+        String bl =  ap.store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
 
-        //login will either have a challenge from the browser QR, or will create a new one, without entering the browser GUI
-        ap.login(keys,ch);
-//
-//       String bl =  ap.store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
-
-//       System.out.println(bl);
-
-//        JSONObject jss = ap.openFile(doc,userChainId,keys);
-//         ap.decryptWithKeyPair(userChainId, doc, keys);
-
-//        Scanner sc = new Scanner(System.in);
-
-        // String input
-//        String selection = sc.nextLine();
-        String selection= "s:0x2b1b9c5c1a24a1e77cb33a205f033ca80ca7cd8450940ed4852b945d85b7a402";
-//        App.execSelection(selection, keys);
+        System.out.println(bl);
+    }
+    public static void open(App ap, String doc, String userChainId, UserKeyPair keys){
+        JSONObject jss = ap.openFile(doc,userChainId,keys);
+         ap.decryptWithKeyPair(userChainId, doc, keys);
     }
 }
