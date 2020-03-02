@@ -24,16 +24,81 @@ implementation 'io.github.recheck-io:hammerJ:x.x.x'
 
 ### Getting started 
 
-### 
+#### Creating a key pair
+The first thing you have to do is to create a key pair. They are used in all asymmetric encryption and user related methods. 
 
-#### How can it be used?
+```
+ App app = new App();
+        UserKeyPair keys= null;
+        String seedphrase = "";
+        try {
+           keys = app.generateAkKeyPair(seedphrase);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+```
+The key pair can be generated in two ways: 
+- First, when it is a new user and there is no seedphrase. Such will be generated using the diceware alogith - creating 12 easy to remember random words. 
+- Second, from a seedphrase.
+
+It is **highly recommended** for user to **write down and keep this phrase somewhere safe, as it is the only way to have access to their key pair.**
+
+#### Main functions
+Whether you would like to use ReCheck's service, or build your own server that is up to you. If you are to use our back-end, than these are the steps you should follow: 
+
+##### **login**
+There are two ways to login with and without entering the web GUI: 
+  - with entering the web GUI - then challenge has to be matching the QR code/text from the login page. ![login page](src/main/resources/pic.png) It is intended for the user to login with their mobile app.
+  - without entering the web GUI - then the challenge parameter have to be different from the QR code. Can be left as an empty string.  
+
+
+```
+app.login(keys, challenge);
+```
+
+##### upload
+Once the user has logged, one way or the other, they can upload a file. 
+
+The file has to be sent as a JSON obj, because it is sent via https and our server is only accepting this type of information.
+
+```
+        JSONObject js = new JSONObject();
+        byte[] array = new byte[0];
+        String fileContent = "";
+        try {
+            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
+            fileContent = Base64.getEncoder().encodeToString(array);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        js.put("payload", fileContent);
+        js.put("name", "filenamed");
+        js.put("category", "OTHER");
+        js.put("keywords", "");
+
+        app.login(keys, challenge);
+        String upload =  app.store(js.get("name").toString(), js.get("payload").toString(), keys.getPublicSignKey(), keys.getPublicEncKey());
+
+        // prints the response of the server
+        System.out.println(upload)
+
+```
+
+
+
+
+### hammerJ is useful encryption library
+
+#### It can be used for: 
  
 To securely transfer a file or a message across servers and browsers to the receiver, without the possibility of anyone but the receiver to unlock the contents of your package. 
 - Upload an encrypted file to a server (the server cannot see anything but the hash of the file) 
 - Decrypt a file from the server and download it locally
 - Share а file with other people in the network (in process)
 
-#### What does it give ? 
+#### It gives:  
 
 - API to work with Ethereum blockchain
 - API to work with Aeternity blockchain
