@@ -11,6 +11,7 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
 
+import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -107,6 +108,7 @@ public class App {
      * but is not available in the environment.
      */
     private byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
+        toDecode = toDecode.replace("ak_", "");
         return Base58Check.decode(toDecode);
     }
 
@@ -210,7 +212,7 @@ public class App {
 
         switch (network) {
             case "ae":
-                publicSignKey = Base58Check.encode(keyPairS.getPublicKey());
+                publicSignKey = "ak_"+Base58Check.encode(keyPairS.getPublicKey());
                 privateSignKey = bytesToHex(keyPairS.getSecretKey());
                 address = "ak_" + publicSignKey;
                 break;
@@ -649,7 +651,7 @@ public class App {
 //            String sig58 = Base58Check.encode(signature);
             String sig58 = signMessage(challenge, keyPair);
             String pubEncKey = keyPair.getPublicEncKey();
-            String pubKey = "ak_" + keyPair.getPublicSignKey();
+            String pubKey = keyPair.getPublicSignKey();
 
             JSONObject payload = new JSONObject();
 
@@ -664,7 +666,6 @@ public class App {
             String loginURL = getEndpointUrl("mobilelogin");
             String loginPostResult = post(loginURL, payload);
             JSONObject result = new JSONObject(loginPostResult);
-            System.out.println(result.toString(1));
             String tokenRes = result.get("rtnToken").toString();
             token = tokenRes;
             return tokenRes;
@@ -879,13 +880,14 @@ public class App {
         String trailHash = getHash(docChainId + userId + requestType + userId);
         String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
-        String query = "&userId="+ userId +"&docId=" + docChainId + "&requestId="+ requestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
+        String query = "&userId="+userId +"&docId=" + docChainId + "&requestId="+ requestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
         String getUrl = getEndpointUrl("exchangecredentials", query);
 
         //hashes the request, and puts it as a value inside the url
         getUrl = getRequestHashURL(getUrl, keyPair);
 
         LOGGER.fine("decryptWithKeyPair get request " + getUrl);
+
         String serverEncryptionInfo = getRequest(getUrl);
 
         JSONObject serverEncrptInfo = new JSONObject(serverEncryptionInfo);
@@ -898,6 +900,7 @@ public class App {
             throw new Error("Unable to retrieve intermediate public key B.");
         }
         String decryptedPassword = decryptDataWithPublicAndPrivateKey(encrpt.get("encryptedPassA").toString(), encrpt.get("pubKeyA").toString(), keyPair.getPrivateEncKey());
+        decryptedPassword = decryptedPassword.replaceAll("\"", "");
         LOGGER.fine("User device decrypts the sym password " + decryptedPassword);
         String syncPassHash = getHash(decryptedPassword);
         EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
@@ -1232,9 +1235,8 @@ public class App {
 
         JSONObject credentialsResponse = submitCredentials(docChainId, userChainId);
         JSONObject scanResult = decryptWithKeyPair(userChainId, docChainId, keyPair);
-        System.out.println(scanResult.toString(1));
         if (scanResult.get("userId").toString() != null) {
-            //polling server for pass to decrypt message
+//            polling server for pass to decrypt message
             return pollForFile(credentialsResponse, keyPair.getPublicEncKey());
         } else {
             throw new Error("Unable to decrypt file");

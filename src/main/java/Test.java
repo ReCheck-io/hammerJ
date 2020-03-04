@@ -59,20 +59,20 @@ public class Test {
         App ap = new App();
 
         LogManager.getLogManager().reset();
-        ap.LOGGER.setLevel(Level.ALL);
+        ap.LOGGER.setLevel(Level.SEVERE);
 
         ConsoleHandler handler = new ConsoleHandler();
-        handler.setLevel(Level.ALL);
+        handler.setLevel(Level.SEVERE);
         ap.LOGGER.addHandler(handler);
 
         String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
 //        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
 
-        String ch="0x210a7af203eccfd04a06990f4a7f07b63993a9a8db4ff98c3f8fd7accba80a9e";
+        String ch="0x4eb93ba0bfdba1bdd619d309b55bdee2a01f472f60745d2c5cece20cd753a4d5";
 
-        //0.pdf
-        String doc = "0xac2bcbf60e9450ec3ddf0870422e7f3ed5cc7317ceaaf9783038ab7a68da4b70";
+        //communication-blockchain.pdf
+        String doc = "0xfa6d14d20b01e40a0b6263df36bac171cbf27d4c648c7733fdd9e5de6406341b";
 
         UserKeyPair keys = null;
         try {
@@ -82,7 +82,7 @@ public class Test {
         }
 
         login(ap,keys,ch);
-//        open(ap,doc, keys.getPublicSignKey(), keys);
+        open(ap,doc, keys.getPublicSignKey(), keys);
 //        Scanner sc = new Scanner(System.in);
 
         // String input
@@ -128,6 +128,6 @@ public class Test {
     }
     public static void open(App ap, String doc, String userChainId, UserKeyPair keys){
         JSONObject jss = ap.openFile(doc,userChainId,keys);
-         ap.decryptWithKeyPair(userChainId, doc, keys);
+        System.out.println(jss);
     }
 }
