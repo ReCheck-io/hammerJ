@@ -1,6 +1,6 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.recheck-io/hammerJ/badge.svg)](https://search.maven.org/artifact/io.github.recheck-io/hammerJ)  [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/ReCheck-io/hammerJ/blob/master/LICENSE.txt) ![](https://github.com/Recheck-io/hammerJ/workflows/maven%20build/badge.svg)
 
-# Encryption library used for blockchain workflow. 
+# Encryption library with two PKI key pairs. 
 HammerJ is a Java encryption library that is used for end to end encryption. It is used to encrypt a message or file and securely send it across the internet to the receiver without the possibility of anyone but the sender and the receiver to know what is being sent. This library is using two PKI keypairs as well as symmetric encryption. We’ve implemented TweetNacl Fast standard methods. 
 
 The expected workflow is where there will be a mobile app and client separately established. Only the mobile app will be able to hold the user’s key pairs. Meaning that it will be used for signing and encrypting/decrypting messages.  
@@ -46,24 +46,31 @@ It is **highly recommended** for user to **write down and keep this phrase somew
 #### Main functions
 Whether you would like to use ReCheck's service, or build your own server that is up to you. If you are to use our back-end, than these are the steps you should follow: 
 
-##### **login**
-There are two ways to login with and without entering the web GUI: 
-  - with entering the web GUI - then challenge has to be matching the QR code/text from the login page. ![login page](src/main/resources/pic.png) It is intended for the user to login with their mobile app.
-  - without entering the web GUI - then the challenge parameter have to be different from the QR code. Can be left as an empty string.  
+##### **Getting a token**
+
+To use our service, you will need a temporary token that recognises your account and makes the connection between the client and the server for the session. There are two ways to get a token with and without entering the web GUI: 
+  - with entering the web GUI - then challenge parameter has to be matching the QR code/text from the login page. It is intended for the user to login with their mobile app.
+  - without entering the web GUI - then the challenge parameter can be taken as get request from ``` login/challange```
+    ```
+    String getChallengeUrl = getEndpointUrl("login/challenge");
+    String challengeResponce = getRequest(getChallengeUrl);
+    JSONObject js = new JSONObject(challengeResponce);
+    String challenge = js.get("challenge").toString();
+    ``` 
 
 
 ```
 app.login(keys, challenge);
 ```
 
-##### upload
+##### Upload
 Once the user has logged, one way or the other, they can upload a file. 
 
 The file has to be sent as a JSON obj, because it is sent via https and our server is only accepting this type of information.
 
 ```
-        JSONObject js = new JSONObject();
-        byte[] array = new byte[0];
+    public void upload(App ap, String filename, String userChainId, String userChainIdPubKey){
+        byte[] array;
         String fileContent = "";
         try {
             array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
@@ -73,20 +80,22 @@ The file has to be sent as a JSON obj, because it is sent via https and our serv
             return;
         }
 
-        js.put("payload", fileContent);
-        js.put("name", "filenamed");
-        js.put("category", "OTHER");
-        js.put("keywords", "");
-
-        app.login(keys, challenge);
-        String upload =  app.store(js.get("name").toString(), js.get("payload").toString(), keys.getPublicSignKey(), keys.getPublicEncKey());
-
-        // prints the response of the server
-        System.out.println(upload)
+        String upload =  ap.store(filename, fileContent, userChainId, userChainIdPubKey);
+        
+        // to print the response from the server 
+        System.out.println(upload);
+    }
 
 ```
 
 
+##### Download
+The user can download a file, that has been uploaded by or shared to them. The directory is left to be hardcoded or left as a user choice, depending on the higher level of implementation. 
+
+```
+String directory = "downloads/";
+ap.downloadFile(fileChainID, keys, directory);
+```
 
 
 ### hammerJ is useful encryption library

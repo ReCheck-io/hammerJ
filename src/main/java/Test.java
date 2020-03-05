@@ -3,9 +3,14 @@ import io.recheck.client.UserKeyPair;
 import org.json.JSONObject;
 import org.web3j.crypto.Hash;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.logging.ConsoleHandler;
@@ -13,48 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 
 public class Test {
-    private static String keccak256(String toHash) {
-        return Hash.sha3String(toHash).replaceFirst("0x","");
-    }
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-    public static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-        }
-        return new String(hexChars);
-    }
-
-    public static String compressPubKey(BigInteger pubKey) {
-        String pubKeyYPrefix = pubKey.testBit(0) ? "03" : "02";
-        String pubKeyHex = pubKey.toString(16);
-        String pubKeyX = pubKeyHex.substring(0, 64);
-        return pubKeyYPrefix + pubKeyX;
-    }
-
-    public static int byteArrayToLeInt(byte[] b) {
-        final ByteBuffer bb = ByteBuffer.wrap(b);
-        bb.order(ByteOrder.LITTLE_ENDIAN);
-        return bb.getInt();
-    }
-
-    public static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i + 1), 16));
-        }
-        return data;
-    }
-
-    public static byte[] fromHexString(String src) {
-        byte[] biBytes = new BigInteger("10" + src.replaceAll("\\s", ""), 16).toByteArray();
-        return Arrays.copyOfRange(biBytes, 1, biBytes.length);
-    }
-
     public static void main(String[] args){
         App ap = new App();
 
@@ -81,14 +44,13 @@ public class Test {
             e.printStackTrace();
         }
 
-        login(ap,keys,ch);
-        open(ap,doc, keys.getPublicSignKey(), keys);
-//        Scanner sc = new Scanner(System.in);
+        //login
+        ap.login(keys,ch);
 
-        // String input
-//        String selection = sc.nextLine();
-        String selection= "s:0x2b1b9c5c1a24a1e77cb33a205f033ca80ca7cd8450940ed4852b945d85b7a402";
-//        App.execSelection(selection, keys);
+        //open
+//        JSONObject jss = ap.openFile(doc,keys.getPublicSignKey(),keys);
+        String directory = "downloads/";
+        ap.downloadFile(doc, keys, directory);
     }
 
     public void showKeys(UserKeyPair keys){
@@ -100,34 +62,26 @@ public class Test {
         System.out.println("Phrase: "+ keys.getPhrase());
     }
 
-    public static void login(App ap, UserKeyPair keys, String ch){
-        ap.login(keys,ch);
-    }
-    public void upload(App ap, String userChainId, String userChainIdPubKey){
-
-        JSONObject js = new JSONObject();
-        byte[] array = new byte[0];
+    public void upload(App ap, String filename, String userChainId, String userChainIdPubKey){
+        byte[] array;
         String fileContent = "";
         try {
-//            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
-//            fileContent = Base64.getEncoder().encodeToString(array);
-            fileContent = Base64.getEncoder().encodeToString("sdaaaasaaaaaa".getBytes());
+            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
+            fileContent = Base64.getEncoder().encodeToString(array);
+//            fileContent = Base64.getEncoder().encodeToString("sdaaaasaaaaaa".getBytes());
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
 
-        js.put("payload", fileContent);
-        js.put("name", "filenamed");
-        js.put("category", "OTHER");
-        js.put("keywords", "");
+        String upload =  ap.store(filename, fileContent, userChainId, userChainIdPubKey);
 
-        String bl =  ap.store(js.get("name").toString(), js.get("payload").toString(), userChainId, userChainIdPubKey);
-
-        System.out.println(bl);
+        System.out.println(upload);
     }
-    public static void open(App ap, String doc, String userChainId, UserKeyPair keys){
-        JSONObject jss = ap.openFile(doc,userChainId,keys);
-        System.out.println(jss);
+    public void execSelection(){
+//        Scanner sc = new Scanner(System.in);
+//        String selection = sc.nextLine();
+//        String selection= "s:0x2b1b9c5c1a24a1e77cb33a205f033ca80ca7cd8450940ed4852b945d85b7a402";
+//        App.execSelection(selection, keys);
     }
 }

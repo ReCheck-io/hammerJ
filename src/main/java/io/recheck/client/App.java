@@ -12,8 +12,7 @@ import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
 
 import javax.swing.plaf.synth.SynthEditorPaneUI;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -1331,5 +1330,40 @@ public class App {
             throw new Error("Missing selection operation code.");
         }
         return result;
+    }
+
+    /**
+     * This method asks for the file ID in the chain, the user's keys and the directory to which the file to be
+     * downloaded to
+     *
+     * @param fileChainID the file's chain ID
+     * @param keys user's keys
+     * @param directory directory to which the user wants to download the file
+     */
+
+    public void downloadFile(String fileChainID, UserKeyPair keys, String directory){
+        JSONObject jss = openFile(fileChainID,keys.getPublicSignKey(),keys);
+
+        File dir = new File(directory);
+        if (!dir.exists()) {
+            if (dir.mkdir()) {
+                LOGGER.info("Directory is created!");
+            } else {
+                LOGGER.info("Failed to create directory!");
+            }
+        }
+
+        // decodes the file and puts it together
+        byte[] decodedFile = Base64.getDecoder().decode((String) jss.get("payload"));
+        File newFile = new File((String)directory + jss.get("name") + jss.get("extension"));
+
+        try {
+            OutputStream os = new FileOutputStream(newFile);
+            os.write(decodedFile);
+            LOGGER.info("Write bytes to file.");
+            os.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
