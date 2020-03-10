@@ -28,14 +28,14 @@ public class Test {
         handler.setLevel(Level.SEVERE);
         ap.LOGGER.addHandler(handler);
 
-        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
-//        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
+//        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
+        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
 
-        String ch="0x4eb93ba0bfdba1bdd619d309b55bdee2a01f472f60745d2c5cece20cd753a4d5";
+        String ch="0x7c749bd64479c4cf53b2022d0ca2db8ef87938e1bbd632bb16a9e93c861e7624";
 
-        //communication-blockchain.pdf
-        String doc = "0xfa6d14d20b01e40a0b6263df36bac171cbf27d4c648c7733fdd9e5de6406341b";
+
+        String doc = "0x37e206dc7411e1116f0949fd4f5851cad4d77215a43a2d8aecab981115026fbe";
 
         UserKeyPair keys = null;
         try {
@@ -45,15 +45,20 @@ public class Test {
         }
 
         //login
+        showKeys(keys);
         ap.login(keys,ch);
 
         //open
 //        JSONObject jss = ap.openFile(doc,keys.getPublicSignKey(),keys);
-        String directory = "downloads/";
-        ap.downloadFile(doc, keys, directory);
+//        String directory = "downloads/";
+//        ap.downloadFile(doc, keys, directory);
+
+        //upload
+//        upload(ap, "filefi", keys.getPublicSignKey(), keys.getPublicEncKey());
+
     }
 
-    public void showKeys(UserKeyPair keys){
+    public static void showKeys(UserKeyPair keys){
         System.out.println("address: " + keys.getAddress());
         System.out.println("public sign key: " + keys.getPublicSignKey());
         System.out.println("Private sign key: " + keys.getPrivateSignKey());
@@ -62,13 +67,13 @@ public class Test {
         System.out.println("Phrase: "+ keys.getPhrase());
     }
 
-    public void upload(App ap, String filename, String userChainId, String userChainIdPubKey){
+    public static void upload(App ap, String filename, String userChainId, String userChainIdPubKey){
         byte[] array;
         String fileContent = "";
         try {
-            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
-            fileContent = Base64.getEncoder().encodeToString(array);
-//            fileContent = Base64.getEncoder().encodeToString("sdaaaasaaaaaa".getBytes());
+//            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
+//            fileContent = Base64.getEncoder().encodeToString(array);
+            fileContent = Base64.getEncoder().encodeToString("sdaaaasaaaaaaaaaaa".getBytes());
         } catch (Exception e) {
             e.printStackTrace();
             return;

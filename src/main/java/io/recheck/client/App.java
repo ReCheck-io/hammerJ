@@ -25,7 +25,7 @@ public class App {
 
     private static String token = "";
     private static String requestId = "ReCheck";
-    private static String network = "ae"; //ae or eth
+    private static String network = "eth"; //ae or eth
     private static String baseUrl = "http://localhost:3000";
     private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
 
@@ -650,8 +650,8 @@ public class App {
 //            String sig58 = Base58Check.encode(signature);
             String sig58 = signMessage(challenge, keyPair);
             String pubEncKey = keyPair.getPublicEncKey();
-            String pubKey = keyPair.getPublicSignKey();
-
+            String pubKey = keyPair.getAddress();
+            System.out.println("toz pub key " + pubKey);
             JSONObject payload = new JSONObject();
 
             payload.put("action", "login");
@@ -1121,13 +1121,13 @@ public class App {
 
             SortedMap<String,Object> createShare = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             createShare.put("userId", userId);
-            createShare.put("docId", shareRes.get("docId").toString());
+            createShare.put("docId", docId);
             createShare.put("requestId", requestId);
             createShare.put("requestType", requestType);
             createShare.put("requestBodyHashSignature", "NULL");
             createShare.put("trailHash", trailHash);
             createShare.put("trailHashSignatureHash", trailHashSignatureHash);
-            createShare.put("recipientId", shareRes.get("recipientId").toString());
+            createShare.put("recipientId", recipientId);
 
             SortedMap<String, Object> encrpt = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             encrpt.put("senderEncrKey", keyPair.getPublicEncKey());

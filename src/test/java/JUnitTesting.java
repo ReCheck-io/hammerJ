@@ -45,7 +45,7 @@ public class JUnitTesting {
             e.printStackTrace();
         }
         assertEquals(keyPair.getPhrase(), passphrase, "Phrase");
-        assertEquals("ak_"+keyPair.getPublicSignKey(), publicKey, "Public Key");
+        assertEquals(keyPair.getPublicSignKey(), publicKey, "Public Key");
         assertEquals(keyPair.getPrivateSignKey().toLowerCase(), secretKey.toLowerCase(), "Private Key");
         assertEquals(keyPair.getPublicEncKey(), publicEncKey, "Public Encryption Key");
         assertEquals(keyPair.getPrivateEncKey().toLowerCase(), secretEncKey.toLowerCase(), "Private Encryption Key");
@@ -70,7 +70,7 @@ public class JUnitTesting {
             e.printStackTrace();
         }
         assertEquals(keyPair.getPhrase(), passphrase, "Phrase");
-        assertEquals("ak_"+keyPair.getPublicSignKey(), publicKey, "Public Key");
+        assertEquals(keyPair.getPublicSignKey(), publicKey, "Public Key");
         assertEquals(keyPair.getPrivateSignKey().toLowerCase(), secretKey.toLowerCase(), "Private Key");
         assertEquals(keyPair.getPublicEncKey(), publicEncKey, "Public Encryption Key");
         assertEquals(keyPair.getPrivateEncKey().toLowerCase(), secretEncKey.toLowerCase(), "Private Encryption Key");
