@@ -1,4 +1,4 @@
-package io.recheck.client;
+package io.recheck.client.POJO;
 
 public class FileCredentials {
     private String syncPass;

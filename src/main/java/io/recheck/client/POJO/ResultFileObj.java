@@ -1,4 +1,4 @@
-package io.recheck.client;
+package io.recheck.client.POJO;
 
 import org.json.JSONObject;
 
@@ -7,7 +7,7 @@ public class ResultFileObj {
     private String docId;
     private JSONObject data;
 
-    ResultFileObj(String docId, JSONObject data){
+    public ResultFileObj(String docId, JSONObject data){
         this.docId = docId;
         this.data = data;
     }

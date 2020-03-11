@@ -6,7 +6,7 @@
 
     <groupId>io.github.recheck-io</groupId>
     <artifactId>hammerJ</artifactId>
-    <version>0.0.18</version>
+    <version>0.0.19</version>
 
     <dependencies>
         <dependency>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>4.3.1</version>
+            <version>4.4.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpmime -->
         <dependency>

@@ -2,6 +2,9 @@ package io.recheck.client;
 
 import com.google.gson.Gson;
 import com.lambdaworks.crypto.SCrypt;
+import io.recheck.client.Crypto.Base58Check;
+import io.recheck.client.Crypto.TweetNaclFast;
+import io.recheck.client.POJO.*;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -11,7 +14,6 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
 
-import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +23,7 @@ import java.util.logging.Logger;
 
 import static java.util.Arrays.copyOfRange;
 
-public class App {
+public class HammerJ {
 
     private static String token = "";
     private static String requestId = "ReCheck";
@@ -218,10 +220,10 @@ public class App {
 
             case "eth":
                 privateSignKey = "0x" + bytesToHex(keyPairSK.getSecretKey());
-                Credentials cs = Credentials.create(privateSignKey);
+                Credentials credentials = Credentials.create(privateSignKey);
 
-                publicSignKey = cs.getEcKeyPair().getPublicKey().toString(16);
-                address = cs.getAddress();
+                publicSignKey = credentials.getEcKeyPair().getPublicKey().toString(16);
+                address = credentials.getAddress();
                 break;
         }
 
@@ -504,7 +506,7 @@ public class App {
         return result;
     }
 
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
 
     /**
      * function to convert byte array to hex String
@@ -519,7 +521,7 @@ public class App {
             hexChars[j * 2] = HEX_ARRAY[v >>> 4];
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
-        return new String(hexChars);
+        return new String(hexChars).toLowerCase();
     }
 
     /**
@@ -650,8 +652,7 @@ public class App {
 //            String sig58 = Base58Check.encode(signature);
             String sig58 = signMessage(challenge, keyPair);
             String pubEncKey = keyPair.getPublicEncKey();
-            String pubKey = keyPair.getAddress();
-            System.out.println("toz pub key " + pubKey);
+            String pubKey = keyPair.getPublicSignKey();
             JSONObject payload = new JSONObject();
 
             payload.put("action", "login");
@@ -1183,8 +1184,7 @@ public class App {
 
             case "eth":
                 Credentials cs = Credentials.create(keyPair.getPrivateEncKey());
-                byte[] msgHash = Hash.sha3(message.getBytes());
-                Sign.SignatureData signature = Sign.signMessage(msgHash, cs.getEcKeyPair(), false);
+                Sign.SignatureData signature = Sign.signMessage(message.getBytes(), cs.getEcKeyPair(), true);
 
                 String v = bytesToHex(signature.getV());
                 String r = Numeric.toHexString(signature.getR());

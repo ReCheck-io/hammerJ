@@ -1,7 +1,7 @@
 
-import io.recheck.client.App;
-import io.recheck.client.TweetNaclFast;
-import io.recheck.client.UserKeyPair;
+import io.recheck.client.HammerJ;
+import io.recheck.client.Crypto.TweetNaclFast;
+import io.recheck.client.POJO.UserKeyPair;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +10,7 @@ import java.security.GeneralSecurityException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JUnitTesting {
-    private App ap = new App();
+    private HammerJ ap = new HammerJ();
 
     @Test
     void generateAkKeyPairTestAE0() {

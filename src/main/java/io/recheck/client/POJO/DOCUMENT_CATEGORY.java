@@ -1,4 +1,4 @@
-package io.recheck.client;
+package io.recheck.client.POJO;
 
 public enum DOCUMENT_CATEGORY {
 

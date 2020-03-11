@@ -1,4 +1,4 @@
-package io.recheck.client;
+package io.recheck.client.POJO;
 
 public class UserKeyPair {
     // The Enc keys are the normal public 32 bytes, the Sign are to be used with AEternity, for the moment.
@@ -9,7 +9,7 @@ public class UserKeyPair {
     private String privateSignKey;
     private String phrase;
 
-    UserKeyPair(String address, String publicEncKey, String privateEncKey, String publicSignKey, String privateSignKey, String phrase){
+    public UserKeyPair(String address, String publicEncKey, String privateEncKey, String publicSignKey, String privateSignKey, String phrase){
         setAddress(address);
         setPublicEncKey(publicEncKey);
         setPrivateEncKey(privateEncKey);

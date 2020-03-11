@@ -1,16 +1,7 @@
-import io.recheck.client.App;
-import io.recheck.client.UserKeyPair;
-import org.json.JSONObject;
-import org.web3j.crypto.Hash;
+import io.recheck.client.HammerJ;
+import io.recheck.client.POJO.ResultFileObj;
+import io.recheck.client.POJO.UserKeyPair;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.logging.ConsoleHandler;
@@ -19,42 +10,49 @@ import java.util.logging.LogManager;
 
 public class Test {
     public static void main(String[] args){
-        App ap = new App();
+        HammerJ hammerJ = new HammerJ();
 
         LogManager.getLogManager().reset();
-        ap.LOGGER.setLevel(Level.SEVERE);
+        hammerJ.LOGGER.setLevel(Level.SEVERE);
 
         ConsoleHandler handler = new ConsoleHandler();
         handler.setLevel(Level.SEVERE);
-        ap.LOGGER.addHandler(handler);
+        hammerJ.LOGGER.addHandler(handler);
 
 //        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
-        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
+//        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
+        String passphrase = "samuel sane ry old ke crow peony lord sos lithe medley eliot";
 
-        String ch="0x7c749bd64479c4cf53b2022d0ca2db8ef87938e1bbd632bb16a9e93c861e7624";
+        String ch="0x0fe81cbc4884b4e487df8d752e19feef37f19ce75284ee37022995d862264406";
 
 
         String doc = "0x37e206dc7411e1116f0949fd4f5851cad4d77215a43a2d8aecab981115026fbe";
 
         UserKeyPair keys = null;
         try {
-          keys = ap.generateAkKeyPair(passphrase);
+          keys = hammerJ.generateAkKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
 
         //login
         showKeys(keys);
-        ap.login(keys,ch);
+        hammerJ.login(keys,ch);
+//       ArrayList<ResultFileObj> res =  ap.execSelection("s:0xf3c0cd252f0c7071be812dd8bb1c44e928696e6fd587afb39e8499e04f7c5d3e", keys);
+//       System.out.println(res.get(0).getDocId());
 
         //open
 //        JSONObject jss = ap.openFile(doc,keys.getPublicSignKey(),keys);
 //        String directory = "downloads/";
-//        ap.downloadFile(doc, keys, directory);
+//        ap.downloadFile(res.get(0).getDocId(), keys, directory);
 
         //upload
 //        upload(ap, "filefi", keys.getPublicSignKey(), keys.getPublicEncKey());
+
+//         execSelection for open share and open selection
+                ArrayList<ResultFileObj> res = hammerJ.execSelection("o:0x827f512e07dec271121e57c13f986862d98b221dfdd55f2f4d11e9b4e16a2d57", keys);
+                System.out.println(res.get(0).getDocId());
 
     }
 
@@ -67,7 +65,7 @@ public class Test {
         System.out.println("Phrase: "+ keys.getPhrase());
     }
 
-    public static void upload(App ap, String filename, String userChainId, String userChainIdPubKey){
+    public static void upload(HammerJ ap, String filename, String userChainId, String userChainIdPubKey){
         byte[] array;
         String fileContent = "";
         try {

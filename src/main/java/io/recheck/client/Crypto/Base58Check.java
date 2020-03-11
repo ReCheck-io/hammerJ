@@ -1,4 +1,4 @@
-package io.recheck.client;
+package io.recheck.client.Crypto;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;

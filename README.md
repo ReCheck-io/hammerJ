@@ -28,11 +28,11 @@ implementation 'io.github.recheck-io:hammerJ:x.x.x'
 The first thing you have to do is to create a key pair. They are used in all asymmetric encryption and user related methods. 
 
 ```
- App app = new App();
+ HammerJ hammerJ = new HammerJ();
         UserKeyPair keys= null;
         String seedphrase = "";
         try {
-           keys = app.generateAkKeyPair(seedphrase);
+           keys = hammerJ.generateAkKeyPair(seedphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -60,7 +60,7 @@ To use our service, you will need a temporary token that recognises your account
 
 
 ```
-app.login(keys, challenge);
+hammerJ.login(keys, challenge);
 ```
 
 ##### Upload
@@ -69,7 +69,7 @@ Once the user has logged, one way or the other, they can upload a file.
 The file has to be sent as a JSON obj, because it is sent via https and our server is only accepting this type of information.
 
 ```
-    public void upload(App ap, String filename, String userChainId, String userChainIdPubKey){
+    public void upload(HammerJ hammerJ, String filename, String userChainId, String userChainIdPubKey){
         byte[] array;
         String fileContent = "";
         try {
@@ -80,7 +80,7 @@ The file has to be sent as a JSON obj, because it is sent via https and our serv
             return;
         }
 
-        String upload =  ap.store(filename, fileContent, userChainId, userChainIdPubKey);
+        String upload =  hammerJ.store(filename, fileContent, userChainId, userChainIdPubKey);
         
         // to print the response from the server 
         System.out.println(upload);
@@ -94,9 +94,35 @@ The user can download a file, that has been uploaded by or shared to them. The d
 
 ```
 String directory = "downloads/";
-ap.downloadFile(fileChainID, keys, directory);
+hammerJ.downloadFile(fileChainID, keys, directory);
 ```
 
+
+##### Share
+
+To share a file, one has to provide a selection hash. 
+
+This selection hash can be obtained in ReCheck web app by selecting the files you want to share and then clicking on the share button. Then you will receive a QR code with similar String : 
+
+```s:0xff7ebbfb2cdf0ea4429491e8cd48e427bc3422c0801153d355d5ef12937e6ac6```
+
+```
+ArrayList<ResultFileObj> res = hammerJ.execSelection("s:0xff7ebbfb2cdf0ea4429491e8cd48e427bc3422c0801153d355d5ef12937e6ac6", keys);
+```
+
+This selection is created by having two arrays. The first array is with __hash IDs of the data/files in the blockchain__. The second is with __the recepients IDs__. The selection hash is then created by stringifying and then hashing (array[files] + array[userIDs]).
+
+The receiver(s) will have the new file(s) as separate inputs. To open those files, one will receive a QR code with similar data: 
+```o:0xf77ebbfb2cdf0ea4429491e8cd48e427bc3422c0801153d355d5ef12937e6ac6```
+
+The method **execSelection()** can take three types of selection, that are indicated in the start of the selection string. 
+- o - open the selection
+- s - share the selection
+- mo - mobile open the selection  
+
+```
+ArrayList<ResultFileObj> res = hammerJ.execSelection("o:0xf77ebbfb2cdf0ea4429491e8cd48e427bc3422c0801153d355d5ef12937e6ac6", keys);
+```
 
 ### hammerJ is useful encryption library
 
