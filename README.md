@@ -112,6 +112,9 @@ ArrayList<ResultFileObj> res = hammerJ.execSelection("s:0xff7ebbfb2cdf0ea4429491
 
 This selection is created by having two arrays. The first array is with __hash IDs of the data/files in the blockchain__. The second is with __the recepients IDs__. The selection hash is then created by stringifying and then hashing (array[files] + array[userIDs]).
 
+If you don't want to use the ReCheck services, you can create the selection hash by using the **selectFiles()** method. 
+
+
 The receiver(s) will have the new file(s) as separate inputs. To open those files, one will receive a QR code with similar data: 
 ```o:0xf77ebbfb2cdf0ea4429491e8cd48e427bc3422c0801153d355d5ef12937e6ac6```
 
