@@ -2,19 +2,29 @@ package io.recheck.client.POJO;
 
 public class FileToUpload {
 
-    private String docId;
-    private String docName;
+    private String dataId;
+    private String dataName;
+    private String dataExtension;
     private String category = "OTHERS";
     private String keywords = "Daka";
     private String userId;
     private String payload;
-    private Encryption encrypt;
+    private io.recheck.client.POJO.Encryption encrypt;
     private String userChainId;
     private String requestId;
     private String requestType;
     private String requestBodyHashSignature;
     private String trailHash;
     private String trailHashSignatureHash;
+
+    public String getDataExtension() {
+        return dataExtension;
+    }
+
+    public void setDataExtension(String dataExtension) {
+        this.dataExtension = dataExtension;
+    }
+
 
     public String getUserChainId() {
         return userChainId;
@@ -64,28 +74,28 @@ public class FileToUpload {
         this.trailHashSignatureHash = trailHashSignatureHash;
     }
 
-    public Encryption getEncrypt() {
+    public io.recheck.client.POJO.Encryption getEncrypt() {
         return encrypt;
     }
 
-    public void setEncrypt(Encryption encrypt) {
+    public void setEncrypt(io.recheck.client.POJO.Encryption encrypt) {
         this.encrypt = encrypt;
     }
 
-    public String getDocId() {
-        return docId;
+    public String getDataId() {
+        return dataId;
     }
 
-    public void setDocId(String docId) {
-        this.docId = docId;
+    public void setDataId(String dataId) {
+        this.dataId = dataId;
     }
 
-    public String getDocName() {
-        return docName;
+    public String getDataName() {
+        return dataName;
     }
 
-    public void setDocName(String docName) {
-        this.docName = docName;
+    public void setDataName(String dataName) {
+        this.dataName = dataName;
     }
 
     public String getCategory() {

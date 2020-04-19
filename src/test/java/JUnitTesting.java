@@ -19,7 +19,7 @@ public class JUnitTesting {
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.generateAkKeyPair(passphrase);
+            keyPair = ap.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -40,7 +40,7 @@ public class JUnitTesting {
         String address = "";
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.generateAkKeyPair(passphrase);
+            keyPair = ap.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -65,7 +65,7 @@ public class JUnitTesting {
         String address = "";
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.generateAkKeyPair(passphrase);
+            keyPair = ap.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -85,7 +85,7 @@ public class JUnitTesting {
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.generateAkKeyPair(passphrase);
+            keyPair = ap.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -106,7 +106,7 @@ public class JUnitTesting {
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.generateAkKeyPair(passphrase);
+            keyPair = ap.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -131,7 +131,7 @@ public class JUnitTesting {
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.generateAkKeyPair(passphrase);
+            keyPair = ap.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -158,11 +158,11 @@ public class JUnitTesting {
 
         TweetNaclFast.Box kpFromSecret = new TweetNaclFast.Box(kp.getPublicKey(),kp.getSecretKey());
 
-        String firstEncryptedMessage = ap.encrypt(message,kpFromSecret);
-        String firstDecryptedMessage = ap.decrypt(firstEncryptedMessage, kpFromSecret);
+        String firstEncryptedMessage = ap.encryptData(message,kpFromSecret);
+        String firstDecryptedMessage = ap.decryptData(firstEncryptedMessage, kpFromSecret);
 
-        String secondEncryptedMessage = ap.encrypt(message2,kpFromSecret);
-        String secondDecryptedMessage = ap.decrypt(secondEncryptedMessage, kpFromSecret);
+        String secondEncryptedMessage = ap.encryptData(message2,kpFromSecret);
+        String secondDecryptedMessage = ap.decryptData(secondEncryptedMessage, kpFromSecret);
 
         assertEquals(message, firstDecryptedMessage, "First decrypted message");
         assertEquals(message2, secondDecryptedMessage, "Second decrypted message");

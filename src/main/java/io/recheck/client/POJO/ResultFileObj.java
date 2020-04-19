@@ -4,20 +4,20 @@ import org.json.JSONObject;
 
 public class ResultFileObj {
 
-    private String docId;
+    private String dataId;
     private JSONObject data;
 
     public ResultFileObj(String docId, JSONObject data){
-        this.docId = docId;
+        this.dataId = docId;
         this.data = data;
     }
 
-    public String getDocId() {
-        return docId;
+    public String getDataId() {
+        return dataId;
     }
 
-    public void setDocId(String docId) {
-        this.docId = docId;
+    public void setDataId(String dataId) {
+        this.dataId = dataId;
     }
 
     public JSONObject getData() {

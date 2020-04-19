@@ -7,11 +7,11 @@ public class Encryption {
     private String encryptedPassA;
     private String pubKeyA;
 
-    public String getDocHash() {
+    public String getDataHash() {
         return docHash;
     }
 
-    public void setDocHash(String docHash) {
+    public void setDataHash(String docHash) {
         this.docHash = docHash;
     }
 

@@ -6,6 +6,16 @@ public class FileObj {
     private String name;
     private String category;
     private String keywords;
+    private String dataExtention;
+
+
+    public String getDataExtention() {
+        return dataExtention;
+    }
+
+    public void setDataExtention(String dataExtention) {
+        this.dataExtention = dataExtention;
+    }
 
     public String getPayload() {
         return payload;
@@ -24,7 +34,7 @@ public class FileObj {
     }
 
     public String getCategory() {
-        if (category == null){
+        if (category == null) {
             category = " ";
         }
         return category;
@@ -35,7 +45,7 @@ public class FileObj {
     }
 
     public String getKeywords() {
-        if (keywords == null){
+        if (keywords == null) {
             keywords = " ";
         }
         return keywords;

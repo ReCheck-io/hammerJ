@@ -19,19 +19,19 @@ public class Test {
         handler.setLevel(Level.SEVERE);
         hammerJ.LOGGER.addHandler(handler);
 
-//        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
+        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
 //        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
-        String passphrase = "samuel sane ry old ke crow peony lord sos lithe medley eliot";
+//        String passphrase = "samuel sane ry old ke crow peony lord sos lithe medley eliot";
 
-        String ch="0x0fe81cbc4884b4e487df8d752e19feef37f19ce75284ee37022995d862264406";
+        String ch="0xa7fcc040fe0722ca2b5b25629cd2a02d7324efbc1fc4054605c909e84d4f9ce5";
 
 
         String doc = "0x37e206dc7411e1116f0949fd4f5851cad4d77215a43a2d8aecab981115026fbe";
 
         UserKeyPair keys = null;
         try {
-          keys = hammerJ.generateAkKeyPair(passphrase);
+          keys = hammerJ.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -51,8 +51,8 @@ public class Test {
 //        upload(ap, "filefi", keys.getPublicSignKey(), keys.getPublicEncKey());
 
 //         execSelection for open share and open selection
-                ArrayList<ResultFileObj> res = hammerJ.execSelection("o:0x827f512e07dec271121e57c13f986862d98b221dfdd55f2f4d11e9b4e16a2d57", keys);
-                System.out.println(res.get(0).getDocId());
+                ArrayList<ResultFileObj> res = hammerJ.execSelection("sg:0x04d284a516fd5a3bf4940cf3b7de2668d7296bdbd4cb8c2b8b9cd9f97aec0cf4", keys);
+                System.out.println(res.get(0).getDataId());
 
     }
 

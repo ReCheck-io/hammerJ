@@ -23,11 +23,12 @@ import java.util.logging.Logger;
 
 import static java.util.Arrays.copyOfRange;
 
+
 public class HammerJ {
 
     private static String token = "";
-    private static String requestId = "ReCheck";
-    private static String network = "eth"; //ae or eth
+    private static String defaultRequestId = "ReCheck";
+    private static String network = "ae"; //ae or eth
     private static String baseUrl = "http://localhost:3000";
     private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
 
@@ -39,12 +40,12 @@ public class HammerJ {
      * Function to sign the bytes of a file using TweetNacl Signature class.
      *
      * @param file file or message to encrypt
-     * @param kp user's key pair
+     * @param keyPair user's key pair
      * @return a byte array with the signature of the signature
      * @throws NoSuchAlgorithmException
      */
-    private byte[] sign(byte[] file, UserKeyPair kp) throws NoSuchAlgorithmException {
-        TweetNaclFast.Signature sig = new TweetNaclFast.Signature(decodeBase58(kp.getPublicSignKey()), hexStringToByteArray(kp.getPrivateSignKey()));
+    private byte[] sign(byte[] file, UserKeyPair keyPair) throws NoSuchAlgorithmException {
+        TweetNaclFast.Signature sig = new TweetNaclFast.Signature(decodeBase58(keyPair.getPublicSignKey()), hexStringToByteArray(keyPair.getPrivateSignKey()));
         return sig.detached(file);
     }
 
@@ -80,10 +81,18 @@ public class HammerJ {
         return getHash(requestString);
     }
 
+    /**
+     * It will sign the contents of the url request, without the payload, passed to the backend
+     *
+     * @param url the parameters passed for post/get request
+     * @param keyPair user's key pair
+     * @return hash of the contents then put into one of the parameters. This is because server check is made
+     * once the request reach its destination.
+     */
+
     private String getRequestHashURL(String url, UserKeyPair keyPair){
         String hashedURL = getHash(url);
         String signedUrl = signMessage(hashedURL, keyPair);
-
         url = url.replace("NULL", signedUrl);
 
         return url;
@@ -120,8 +129,8 @@ public class HammerJ {
      * The encryption keys are for the Public-key authenticated encryption box construction which implements
      * curve25519-xsalsa20-poly1305. The signing keys are for the ed25519 digital signature system.
      *
-     * @param key1 - six random words concatenated into a String with a space delimiter
      * @param key2 - six random words concatenated into a String with a space delimiter
+     * @param key1 - six random words concatenated into a String with a space delimiter
      * @return byte array that is going to be used for the creation of Sign and Encryption keys
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
      * provides type safety for all the security-related exception classes that extend from it.
@@ -132,16 +141,16 @@ public class HammerJ {
         int p = 1;   // Parallelization parameter.
         int dkLen = 64;   // length of derived key in Bytes
 
-        // takes the first six words and encodes them with Blake2s
-        byte[] key1Bytes = key1.getBytes();
-        Blake2s key1Blake = new Blake2s(32); // A 32 Byte hash of the password
-        key1Blake.update(key1Bytes);
-        byte[] blakeHash = key1Blake.digest();
-
         // by definition, the second key is used as salt and need only be converted to byte[]
-        byte[] key2Bytes = key2.getBytes();
+        byte[] key1Bytes = key1.getBytes();
 
-        byte[] derivedBytes = SCrypt.scrypt(blakeHash, key2Bytes, logN, r, p, dkLen);
+        // takes the first six words and encodes them with Blake2s
+        byte[] key2Bytes = key2.getBytes();
+        Blake2s key2Blake = new Blake2s(32); // A 32 Byte hash of the password
+        key2Blake.update(key2Bytes);
+        byte[] blakeHash = key2Blake.digest();
+
+        byte[] derivedBytes = SCrypt.scrypt(blakeHash, key1Bytes, logN, r, p, dkLen);
 
         return derivedBytes;
 
@@ -166,7 +175,7 @@ public class HammerJ {
      * provides type safety for all the security-related exception classes that extend from it.
      */
 
-    public UserKeyPair generateAkKeyPair(String passphrase) throws GeneralSecurityException {
+    public UserKeyPair newKeyPair(String passphrase) throws GeneralSecurityException {
 
         String key1 = "";
         String key2 = "";
@@ -188,10 +197,8 @@ public class HammerJ {
         String phrase = key1 + " " + key2;
 
         //gets the 64 byte for the creation of the two key pairs
-        /**
-         NB! IN ORDER FOR JAVA AND JS TO BE THE SAME, THE KEYS HERE ARE SWITCHED
-         */
-        byte[] derivedBytes = session25519(key2, key1);
+
+        byte[] derivedBytes = session25519(key1, key2);
 
         //the first 32 bytes are used for the encryption pair, the second - sing pair.
         byte[] encryptKeySeed = copyOfRange(derivedBytes, 0, 32);
@@ -213,9 +220,9 @@ public class HammerJ {
 
         switch (network) {
             case "ae":
-                publicSignKey = "ak_"+Base58Check.encode(keyPairS.getPublicKey());
+                publicSignKey ="ak_" + Base58Check.encode(keyPairS.getPublicKey());
                 privateSignKey = bytesToHex(keyPairS.getSecretKey());
-                address = "ak_" + publicSignKey;
+                address = publicSignKey;
                 break;
 
             case "eth":
@@ -392,7 +399,7 @@ public class HammerJ {
      * @param key Shared key - Box TweetNacl - that will be used for encryption of the data
      * @return base64 String private key encrypted message
      */
-    public String encrypt(String data, TweetNaclFast.Box key) {
+    public String encryptData(String data, TweetNaclFast.Box key) {
 
         byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
         byte[] messageUint8 = data.getBytes();
@@ -420,7 +427,7 @@ public class HammerJ {
      * @param key a TweetNacl Box object
      * @return decrypted String message
      */
-    public String decrypt(String messageWithNonce, TweetNaclFast.Box key) {
+    public String decryptData(String messageWithNonce, TweetNaclFast.Box key) {
         byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
         byte[] nonce = new byte[24];
         byte[] message = new byte[messageWithNonceAsUint8Array.length - nonce.length];
@@ -456,14 +463,14 @@ public class HammerJ {
         if (userAkKeyPairs == null) {
             //passing a null variable to escape overloading the whole parameter
             String generate = null;
-            userAkKeyPairs = generateAkKeyPair(generate);
+            userAkKeyPairs = newKeyPair(generate);
         }
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
         byte[] mySecretEncKeyArray = hexStringToByteArray(userAkKeyPairs.getPrivateEncKey());
 
         // create BOX object to make the .before method
         TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
-        String encryptedData = encrypt(data, sharedKeyBox);
+        String encryptedData = encryptData(data, sharedKeyBox);
 
         //Putting the data into a object data struct (JS like)
         EncryptedDataWithPublicKey result = new EncryptedDataWithPublicKey();
@@ -488,14 +495,14 @@ public class HammerJ {
      */
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
         String generate = null;
-        UserKeyPair srcAkPair = generateAkKeyPair(generate);
+        UserKeyPair srcAkPair = newKeyPair(generate);
 
         byte[] destPublicEncKeyArray = decodeBase58(dstPublicEncKey);
         byte[] mySecretEncKeyArray = hexStringToByteArray(srcAkPair.getPrivateEncKey());
 
         // create BOX object to make the .before method
         TweetNaclFast.Box sharedKeyBox = new TweetNaclFast.Box(destPublicEncKeyArray, mySecretEncKeyArray);
-        String encryptedData = encrypt(data, sharedKeyBox);
+        String encryptedData = encryptData(data, sharedKeyBox);
 
         //Putting the data into a object data struct (JS like)
         EncryptedDataWithPublicKey result = new EncryptedDataWithPublicKey();
@@ -556,22 +563,23 @@ public class HammerJ {
 
         String fileContents = fileObj.getPayload();
         EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, userChainIdPubKey);
-        String docOriginalHash = getHash(fileContents);
+        String dataOriginalHash = getHash(fileContents);
         String syncPassHash = getHash(encryptedFile.getCredentials().getSyncPass());
-        String docChainId = getHash(docOriginalHash);
+        String dataChainId = getHash(dataOriginalHash);
         String requestType = "upload";
-        String trailHash = getHash(docChainId + userChainId + requestType + userChainId);
+        String trailHash = getHash(dataChainId + userChainId + requestType + userChainId);
 
 
         FileToUpload upload = new FileToUpload();
         upload.setUserId(userChainId);
-        upload.setDocId(docChainId);
-        upload.setRequestId(requestId);
+        upload.setDataId(dataChainId);
+        upload.setRequestId(defaultRequestId);
         upload.setRequestType(requestType);
         upload.setRequestBodyHashSignature("NULL");
         upload.setTrailHash(trailHash);
         upload.setTrailHashSignatureHash(getHash(trailHash));
-        upload.setDocName(fileObj.getName());
+        upload.setDataName(fileObj.getName());
+        upload.setDataExtension(fileObj.getDataExtention());
         //TODO: Change once these are realised
         if (fileObj.getCategory() == null) {
             upload.setCategory("OTHERS");
@@ -583,7 +591,7 @@ public class HammerJ {
 
         Encryption encrpt = new Encryption();
 
-        encrpt.setDocHash(docOriginalHash);
+        encrpt.setDataHash(dataOriginalHash);
         encrpt.setSalt(encryptedFile.getCredentials().getSalt());
         encrpt.setPassHash(syncPassHash);
         encrpt.setEncryptedPassA(encryptedFile.getCredentials().getEncryptedPass());
@@ -610,8 +618,6 @@ public class HammerJ {
         this.baseUrl = baseUrl;
     }
 
-    //gets the challange and pass it down to another function to do the actual login, then callbacks it here
-
     /**
      * This function checks if the user is having a challenge or not and then redirects to loginWithChallenge function.
      * If there is, then the user is also logged in the browser GUI. Otherwise, the user just
@@ -625,14 +631,23 @@ public class HammerJ {
 
     public String login(UserKeyPair kp, String ch) {
         String getChallengeUrl = getEndpointUrl("login/challenge");
-        String challengeResponce = getRequest(getChallengeUrl);
-        JSONObject js = new JSONObject(challengeResponce);
-        String challenge = js.get("challenge").toString();
+        String challengeResponse = getRequest(getChallengeUrl);
+        JSONObject js = null;
+        if (challengeResponse != null) {
+            js = new JSONObject(challengeResponse);
+        }
+
+        JSONObject data = new JSONObject(js.get("data").toString());
+        String challenge = data.get("challenge").toString();
+
         ch = ch.trim();
+
         if (ch.length() > 31) {
             challenge = ch;
         }
-        LOGGER.severe("challenge responce " + challengeResponce);
+
+        LOGGER.severe("challenge response " + challengeResponse);
+
         return loginWithChallenge(challenge, kp);
     }
 
@@ -645,28 +660,28 @@ public class HammerJ {
      * @return the token response, either success or fail
      */
     private String loginWithChallenge(String challenge, UserKeyPair keyPair) {
-        byte[] signature;
         try {
-            //TODO: change the sig with singMessage()
-//            signature = sign(challenge.getBytes(), keyPair);
-//            String sig58 = Base58Check.encode(signature);
             String sig58 = signMessage(challenge, keyPair);
-            String pubEncKey = keyPair.getPublicEncKey();
-            String pubKey = keyPair.getPublicSignKey();
             JSONObject payload = new JSONObject();
 
             payload.put("action", "login");
-            payload.put("pubKey", pubKey);
-            payload.put("pubEncKey", pubEncKey);
-            payload.put("firebaseToken", "notoken");
+            payload.put("pubKey", keyPair.getPublicSignKey());
+            payload.put("pubEncKey", keyPair.getPublicEncKey());
+            payload.put("firebase", "notoken");
             payload.put("challenge", challenge);
             payload.put("challengeSignature", sig58);
             payload.put("rtnToken", "notoken");
 
-            String loginURL = getEndpointUrl("mobilelogin");
+            String loginURL = getEndpointUrl("login/mobile");
+
             String loginPostResult = post(loginURL, payload);
-            JSONObject result = new JSONObject(loginPostResult);
+
+            JSONObject data = new JSONObject(loginPostResult);
+
+            JSONObject result = new JSONObject(data.get("data").toString());
+
             String tokenRes = result.get("rtnToken").toString();
+
             token = tokenRes;
             return tokenRes;
         } catch (IOException e) {
@@ -765,19 +780,20 @@ public class HammerJ {
         SortedMap<String, Object> js = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         js.put("userId", file.getUserId());
-        js.put("docId", file.getDocId());
+        js.put("dataId", file.getDataId());
         js.put("requestId", file.getRequestId());
         js.put("requestType", file.getRequestType());
         js.put("requestBodyHashSignature", "NULL");
         js.put("trailHash", file.getTrailHash());
         js.put("trailHashSignatureHash", file.getTrailHashSignatureHash());
-        js.put("docName", file.getDocName());
+        js.put("dataName", file.getDataName());
+        js.put("dataExtension", file.getDataExtension());
         js.put("category", file.getCategory());
         js.put("keywords", file.getKeywords());
         js.put("payload", "");
 
         SortedMap<String,Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        encryption.put("docHash", file.getEncrypt().getDocHash());
+        encryption.put("dataOriginalHash", file.getEncrypt().getDataHash());
         encryption.put("salt", file.getEncrypt().getSalt());
         encryption.put("passHash", file.getEncrypt().getPassHash());
         encryption.put("encryptedPassA", file.getEncrypt().getEncryptedPassA());
@@ -791,24 +807,33 @@ public class HammerJ {
         js.put("requestBodyHashSignature", requestBodySig);
 
         JSONObject upload = new JSONObject(js);
+        System.out.println(upload.toString(1));
+        String submitUrl = getEndpointUrl("data/create");
 
-        LOGGER.severe("ei tva da go eba" + upload.toString(1));
-        String responce = post("http://localhost:3000/uploadencrypted?api=1&token=" + token, upload);
+        System.out.println("toz url " + submitUrl);
+        LOGGER.info("Store post" + submitUrl);
 
-        return responce;
+        String response = post(submitUrl, upload);
+        JSONObject uploadResult = new JSONObject(response);
+        System.out.println("tui kvo e " +  uploadResult);
+
+        LOGGER.severe("Store result"+  uploadResult.get("data").toString());
+        return uploadResult.get("data").toString();
     }
 
     /**
+     * This method prepares the browser with key pair if it does not already have in order
+     * for secure communication to take place. For more info take a look at ReCheck protocol for secure communication.
      *
-     * @param docChainId the hash of the document that is written in the blockchain
+     * @param dataChainId the hash of the file or message that is written in the blockchain
      * @param userChainId user's chain id (public key)
      * @return the server's response, which should be the browser key pair
      */
 
-    private JSONObject submitCredentials(String docChainId, String userChainId) {
+    private JSONObject prepare(String dataChainId, String userChainId) {
         if (browserKeyPair.getPublicEncKey() == null) {
             try {
-                browserKeyPair = generateAkKeyPair("");
+                browserKeyPair = newKeyPair("");
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
             }
@@ -816,7 +841,7 @@ public class HammerJ {
         LOGGER.fine("Browser has key: " + browserKeyPair.getPublicSignKey());
         JSONObject browserPubKeySubmit = new JSONObject();
 
-        browserPubKeySubmit.put("docId", docChainId);
+        browserPubKeySubmit.put("dataId", dataChainId);
         browserPubKeySubmit.put("userId", userChainId);
 
         JSONObject encryption = new JSONObject();
@@ -826,14 +851,17 @@ public class HammerJ {
 
         LOGGER.fine("submit pubkey payload " + browserPubKeySubmit);
 
-        String browserPubKeySubmitUrl = getEndpointUrl("browsercredentials");
+        String browserPubKeySubmitUrl = getEndpointUrl("credentials");
         LOGGER.fine("browser poll post submit pubKeyB " + browserPubKeySubmitUrl);
 
         String browserPubKeySubmitRes = null;
         try {
             browserPubKeySubmitRes = post(browserPubKeySubmitUrl, browserPubKeySubmit);
+
             JSONObject js = new JSONObject(browserPubKeySubmitRes);
-            return js;
+            JSONObject credentials = new JSONObject(js.get("data").toString());
+
+            return credentials;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -862,37 +890,37 @@ public class HammerJ {
         }
         byte[] secretKeyArray = hexStringToByteArray(secretKey);
         TweetNaclFast.Box decryptedBox = new TweetNaclFast.Box(srcPublicEncKeyArray, secretKeyArray);
-        return decrypt(payload, decryptedBox);//decrypted
+        return decryptData(payload, decryptedBox);//decrypted
     }
 
     /**
      * Decrypts with user's key pair. It is for the GUI to be asking keys for permission out of the mobile app.
      *
      * @param userId user's chain ID
-     * @param docChainId file's chain ID
+     * @param dataChainId file's chain ID
      * @param keyPair user's key pair
      * @return response from the server whether the decryption has been successful or not
      */
 
-    public JSONObject decryptWithKeyPair(String userId, String docChainId, UserKeyPair keyPair) {
-        LOGGER.fine("User device requests decryption info from server " + docChainId + "  " + userId);
+    public JSONObject reEncrypt(String userId, String dataChainId, UserKeyPair keyPair) {
+        String trailExtraArgs = null;
+        LOGGER.fine("User device requests decryption info from server " + dataChainId + "  " + userId);
         String requestType = "download";
-        String trailHash = getHash(docChainId + userId + requestType + userId);
+        String trailHash = getHash(dataChainId + userId + requestType + userId + trailExtraArgs);
         String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
-        String query = "&userId="+userId +"&docId=" + docChainId + "&requestId="+ requestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
-        String getUrl = getEndpointUrl("exchangecredentials", query);
+        String query = "&userId="+userId +"&dataId=" + dataChainId + "&requestId="+ defaultRequestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
+        String getUrl = getEndpointUrl("credentials/exchange", query);
 
         //hashes the request, and puts it as a value inside the url
         getUrl = getRequestHashURL(getUrl, keyPair);
 
         LOGGER.fine("decryptWithKeyPair get request " + getUrl);
-
         String serverEncryptionInfo = getRequest(getUrl);
 
         JSONObject serverEncrptInfo = new JSONObject(serverEncryptionInfo);
-
-        JSONObject encrpt = new JSONObject(serverEncrptInfo.get("encryption").toString());
+        JSONObject data = new JSONObject(serverEncrptInfo.get("data").toString());
+        JSONObject encrpt = new JSONObject(data.get("encryption").toString());
 
         LOGGER.fine("Server responds to device with encryption info " + serverEncrptInfo);
 
@@ -912,7 +940,7 @@ public class HammerJ {
         LOGGER.fine("User device re-encrypts password for browser " + reEncryptedPasswordInfo);
 
         JSONObject devicePost = new JSONObject();
-        devicePost.put("docId", docChainId);
+        devicePost.put("dataId", dataChainId);
         devicePost.put("userId", keyPair.getAddress());
 
         JSONObject encryption = new JSONObject();
@@ -922,7 +950,7 @@ public class HammerJ {
         devicePost.put("encryption", encryption);
 
         LOGGER.fine("devicePost " + devicePost);
-        String postUrl = getEndpointUrl("exchangecredentials");
+        String postUrl = getEndpointUrl("credentials/exchange");
         LOGGER.fine("decryptWithKeyPair post " + postUrl);
 
         String serverPostResponse = null;
@@ -932,8 +960,8 @@ public class HammerJ {
             e.printStackTrace();
         }
 
-        JSONObject serverResponse = new JSONObject(serverPostResponse);
-
+        JSONObject dataRes = new JSONObject(serverPostResponse);
+        JSONObject serverResponse = new JSONObject(dataRes.get("data").toString());
         LOGGER.fine("User device POST to server encryption info " + devicePost);
         LOGGER.fine("Server responds to user device POST " + serverResponse.toString());
         return serverResponse;
@@ -971,29 +999,28 @@ public class HammerJ {
      *
      * @param fileContents hash of the file
      * @param userId user's chain ID
-     * @param docId file's chain ID
+     * @param dataId file's chain ID
      * @return the result taken from the server, after sending the data for double check
      */
 
-    private JSONObject verifyFileDecryption(String fileContents, String userId, String docId) {
+    private JSONObject validate(String fileContents, String userId, String dataId) {
         String fileHash = getHash(fileContents);
-        String validateUrl = getEndpointUrl("verify");
 
         String requestType = "verify";
-        String trailHash = getHash(docId + userId + requestType + userId);
+        String trailHash = getHash(dataId + userId + requestType + userId);
 
 
         SortedMap<String,Object> file = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         file.put("userId", userId);
-        file.put("docId", docId);
-        file.put("requestId", requestId);
+        file.put("dataId", dataId);
+        file.put("requestId", defaultRequestId);
         file.put("requestType", requestType);
         file.put("requestBodyHashSignature", "NULL");
         file.put("trailHash", trailHash);
         file.put("trailHashSignatureHash", getHash(trailHash));
 
         SortedMap<String,Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        encryption.put("decryptedDocHash", fileHash);
+        encryption.put("decryptedDataHash", fileHash);
 
         file.put("encryption", encryption);
         String requestBodSig = getRequestHashJSON(file);
@@ -1001,6 +1028,8 @@ public class HammerJ {
 
 
         JSONObject upload = new JSONObject(file);
+
+        String validateUrl = getEndpointUrl("credentials/validate");
 
         String result = null;
         try {
@@ -1022,32 +1051,40 @@ public class HammerJ {
         return res;
     }
 
+    private String processExternalId(String dataIdInput, String userId, boolean isExternal){
+
+
+        return null;
+    }
+
     /**
-     * Searches for file based on the credential, doc id and user id, given.
+     * Searches for file based on the credential, data id and user id, given.
      *
-     * @param credentialsResponse The response of the credentials from the user's id and the document/selection they
+     * @param credentialsResponse The response of the credentials from the user's id and the file/selection they
      *                            want to open
      * @param receiverPubKey receiver's public key
      * @return decrypted file or a selection of files
      */
-    private JSONObject pollForFile(JSONObject credentialsResponse, String receiverPubKey) {
+    private JSONObject poll(JSONObject credentialsResponse, String receiverPubKey) {
         if (credentialsResponse.get("userId").toString() != null) {
-            String pollUrl = getEndpointUrl("docencrypted", "&userId=" + credentialsResponse.get("userId").toString() + "&docId=" + credentialsResponse.get("docId").toString());
+            String pollUrl = getEndpointUrl("data/info", "&userId=" + credentialsResponse.get("userId").toString() + "&dataId=" + credentialsResponse.get("dataId").toString());
 
             for (int i = 0; i < 50; i++) {
                 String pollRes = getRequest(pollUrl);
 
                 JSONObject pollResult = new JSONObject(pollRes);
-                JSONObject encryption = new JSONObject(pollResult.get("encryption").toString());
+                JSONObject dataPollRes = new JSONObject(pollResult.get("data").toString());
+                JSONObject encryption = new JSONObject(dataPollRes.get("encryption").toString());
 
                 LOGGER.fine("browser poll result " + pollResult.toString());
 
                 if (encryption.toString() != null) {
                     LOGGER.fine("Server responds to polling with " + pollResult.toString());
-                    JSONObject decryptedFile = processEncryptedFileInfo(pollResult, receiverPubKey, browserKeyPair.getPrivateEncKey());
-                    JSONObject validationResult = verifyFileDecryption(decryptedFile.get("payload").toString(), decryptedFile.get("userId").toString(), decryptedFile.get("docId").toString());
+                    JSONObject decryptedFile = processEncryptedFileInfo(dataPollRes, receiverPubKey, browserKeyPair.getPrivateEncKey());
+
+                    JSONObject validationResult = validate(decryptedFile.get("payload").toString(), decryptedFile.get("userId").toString(), decryptedFile.get("dataId").toString());
                     LOGGER.fine("validation object " + validationResult.toString());
-                    // TODO: Better check !
+                    // TODO: Better check ! what happens
                     if (validationResult.toString() == null) {
                         return validationResult;
                     }
@@ -1069,7 +1106,7 @@ public class HammerJ {
      * @return the server response with the corresponding files
      */
 
-    private String getSelectedFiles(String selectionHash) {
+    private String getSelected(String selectionHash) {
         String getUrl = getEndpointUrl("selection", "&selectionHash=" + selectionHash);
         LOGGER.fine("getSelectedFiles get request " + getUrl);
         String selectionResponse = getRequest(getUrl);
@@ -1082,22 +1119,23 @@ public class HammerJ {
     /**
      * Shares the file with other accounts from the network, that the user already have in contacts.
      *
-     * @param docId file's chain ID
+     * @param dataId file's chain ID
      * @param recipientId recipient(s) chain ID
      * @param keyPair user/sender's key pair
      * @return a JSON obj containing the shared file
      */
 
-    private JSONObject shareFile(String docId, String recipientId, UserKeyPair keyPair) {
-        String getUrl = getEndpointUrl("shareencrypted", "&docId=" + docId + "&recipientId=" + recipientId);
-        LOGGER.fine("shareencrypted get request " + getUrl);
+    private JSONObject share(String dataId, String recipientId, UserKeyPair keyPair) {
+        String getUrl = getEndpointUrl("credentials/share", "&dataId=" + dataId + "&recipientId=" + recipientId);
+        LOGGER.fine("credentials/share get request " + getUrl);
         String getShareResponse = getRequest(getUrl);
         LOGGER.fine("Share res " + getShareResponse);
 
-        JSONObject shareRes = new JSONObject(getShareResponse);
+        JSONObject shareResData = new JSONObject(getShareResponse);
+        JSONObject shareRes = new JSONObject(shareResData.get("data").toString());
 
 
-        if (shareRes.get("docId").toString().equals(docId)) {
+        if (shareRes.get("dataId").toString().equals(dataId)) {
 
             JSONObject encryption = new JSONObject(shareRes.get("encryption").toString());
 
@@ -1114,16 +1152,16 @@ public class HammerJ {
             }
             String userId = keyPair.getAddress();
             //recepientId
-            //docId
+            //dataId
             String requestType = "share";
-            String trailHash = getHash(docId + userId + requestType + recipientId);
+            String trailHash = getHash(dataId + userId + requestType + recipientId);
             String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
 
             SortedMap<String,Object> createShare = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             createShare.put("userId", userId);
-            createShare.put("docId", docId);
-            createShare.put("requestId", requestId);
+            createShare.put("dataId", dataId);
+            createShare.put("requestId", defaultRequestId);
             createShare.put("requestType", requestType);
             createShare.put("requestBodyHashSignature", "NULL");
             createShare.put("trailHash", trailHash);
@@ -1143,7 +1181,8 @@ public class HammerJ {
 
             JSONObject jsCreateShare = new JSONObject(createShare);
 
-            String postUrl = getEndpointUrl("shareencrypted");
+            String postUrl = getEndpointUrl("share/create");
+
             String serverPostResponse = null;
             try {
                 serverPostResponse = post(postUrl, jsCreateShare);
@@ -1159,7 +1198,7 @@ public class HammerJ {
 
             return result;
         }
-        throw new Error("Unable to create share. Doc id mismatch.");
+        throw new Error("Unable to create share. Data id mismatch.");
     }
 
     /**
@@ -1200,7 +1239,7 @@ public class HammerJ {
     // End-functions
 
     /**
-     * This function is going to be called upon uploading a document and 'store' it on the blockchain
+     * This function is going to be called upon uploading a file and 'store' it on the blockchain
      *
      * @param name              - this will be the name stored on the platform
      * @param content           - the content of the file
@@ -1211,7 +1250,17 @@ public class HammerJ {
     public String store(String name, String content, String userChainId, String userChainIdPubKey) {
         FileObj obj = new FileObj();
         obj.setPayload(content);
+        String dataExtension;
+        int index = name.lastIndexOf(".");
+        if (index > 0) {
+            dataExtension = name.substring(index);
+            name = name.substring(0,index);
+        }else {
+            dataExtension = ".unknown";
+        }
         obj.setName(name);
+        obj.setDataExtention(dataExtension);
+
         try {
             FileToUpload file = getFileUploadData(obj, userChainId, userChainIdPubKey);
             return uploadFile(file);
@@ -1225,21 +1274,64 @@ public class HammerJ {
     /**
      * Gets information about a file, which is owned by/shared to the user and opens it
      *
-     * @param docChainId file's chain ID
+     * @param dataChainId file's chain ID
      * @param userChainId user's chain ID
      * @param keyPair user's key pair
      * @return the contents of the file in human readable form
      */
-    public JSONObject openFile(String docChainId, String userChainId, UserKeyPair keyPair) {
+    public JSONObject openFile(String dataChainId, String userChainId, UserKeyPair keyPair) {
 
-        JSONObject credentialsResponse = submitCredentials(docChainId, userChainId);
-        JSONObject scanResult = decryptWithKeyPair(userChainId, docChainId, keyPair);
+        JSONObject credentialsResponse = prepare(dataChainId, userChainId);
+        JSONObject scanResult = reEncrypt(userChainId, dataChainId, keyPair);
         if (scanResult.get("userId").toString() != null) {
 //            polling server for pass to decrypt message
-            return pollForFile(credentialsResponse, keyPair.getPublicEncKey());
+            return poll(credentialsResponse, keyPair.getPublicEncKey());
         } else {
             throw new Error("Unable to decrypt file");
         }
+    }
+
+
+    public JSONObject signFile(String dataId, String recipientId, UserKeyPair keyPair) {
+        String userId = keyPair.getAddress();
+
+        //TODO change them into their should be thing
+        String trailExtraArgs = null;
+
+//        dataId = processExternalId(dataId, userId, isExternal);
+
+        String requestType = "sign";
+        String trailHash = getHash(dataId + userId + requestType + recipientId + trailExtraArgs);
+
+        SortedMap<String,Object> signObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        signObj.put("dataId", dataId);
+        signObj.put("userId", userId);
+        signObj.put("requestId", defaultRequestId);
+        signObj.put("recipientId", recipientId);
+        signObj.put("requestBodyHashSignature", "NULL");
+        signObj.put("trailHash", trailHash);
+        signObj.put("trailHashSignatureHash",getHash(signMessage(trailHash,keyPair)));
+
+        String requestBodyHashSignature = getRequestHashJSON(signObj);
+
+        signObj.put("requestBodyHashSignature", requestBodyHashSignature);
+
+        JSONObject jsSignObject = new JSONObject(signObj);
+
+        String postUrl = getEndpointUrl("signature/create");
+        LOGGER.severe("dataSign " + jsSignObject.toString());
+
+        String serverPostResponse = null;
+        try {
+            serverPostResponse = post(postUrl, jsSignObject);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JSONObject serverPostResData = new JSONObject(serverPostResponse);
+        LOGGER.severe("Server responds to data sign POST" + serverPostResData.get("data").toString());
+        JSONObject serverPostData = new JSONObject(serverPostResData.get("data").toString());
+
+        return serverPostData;
     }
 
     /**
@@ -1247,7 +1339,7 @@ public class HammerJ {
      *
      * @param selection hash of selection of files
      * @param keyPair user's key pair
-     * @return a collection with hashes of the documents that have been manipulated
+     * @return a collection with hashes of the files that have been manipulated
      */
     public ArrayList<ResultFileObj> execSelection(String selection, UserKeyPair keyPair) {
         ArrayList<ResultFileObj> result = new ArrayList<>();
@@ -1257,11 +1349,13 @@ public class HammerJ {
             String[] actionSelectionHash = selection.split(":");
             String action = actionSelectionHash[0];
             String selectionHash = actionSelectionHash[1];
-            String selectionResult = getSelectedFiles(selectionHash);
+            String selectionResult = getSelected(selectionHash);
 
-            LOGGER.fine("selection result " + selectionResult);
+            LOGGER.severe("selection result " + selectionResult);
 
-            JSONObject selectionRes = new JSONObject(selectionResult);
+            JSONObject selectionResData = new JSONObject(selectionResult);
+
+            JSONObject selectionRes = new JSONObject(selectionResData.get("data").toString());
             LOGGER.fine("--------");
             LOGGER.fine(selectionRes.toString(1));
             LOGGER.fine("-------");
@@ -1276,7 +1370,8 @@ public class HammerJ {
                     recipients[i] = recipients[i].replace("\"", "");
                 }
 
-                String[] files = selectionRes.get("docsIds").toString().split(",");
+                String[] files = selectionRes.get("dataIds").toString().split(",");
+                System.out.println("tuk exec files" + files[0]);
                 for (int i = 0; i < files.length; i++) {
                     files[i] = files[i].replace("[", "");
                     files[i] = files[i].replace("]", "");
@@ -1287,41 +1382,50 @@ public class HammerJ {
                     throw new Error("Invalid selection format.");
                 }
                 for (int i = 0; i < files.length; i++) {  // iterate open each entry from the array
-                    if (action.equals("o")) {
-                        if (keyPair.getPublicSignKey().equals(recipients[i])) {
+                    if (action.equals("op")) {
+                        if (!keyPair.getPublicSignKey().equals(recipients[i])) {
                             LOGGER.fine("selection entry omitted " + recipients[i] + ":" + files[i]);
                             continue;                             // skip entries that are not for that keypair
                         }
                         if (keyPair.getPrivateEncKey() != null) {
                             LOGGER.fine("selection entry added " + recipients[i] + ":" + files[i]);
-                            JSONObject fileContent = openFile(files[i], "ak_" + keyPair.getPublicSignKey(), keyPair);
+                            JSONObject fileContent = openFile(files[i], keyPair.getAddress(), keyPair);
                             result.add(new ResultFileObj(files[i], fileContent));
+
                         } else {
                             //creating the json object to pass to pollForFile
                             JSONObject fileCont = new JSONObject();
-                            fileCont.put("docId", files[i]);
+                            fileCont.put("dataId", files[i]);
                             fileCont.put("userId", recipients[i]);
 
-                            JSONObject fileContent = pollForFile(fileCont, keyPair.getPublicEncKey());
+                            JSONObject fileContent = poll(fileCont, keyPair.getPublicEncKey());
 
                             result.add(new ResultFileObj(files[i], fileContent));
 
                         }
-                    } else if (action.equals("s")) {
-                        JSONObject shareResult = shareFile(files[i], recipients[i], keyPair);
-
-                        result.add(new ResultFileObj(files[i], shareResult));
-                    } else if (action.equals("mo")) {
-                        if (!("ak_" + keyPair.getPublicSignKey()).equals(recipients[i])) {
+                    } else if (action.equals("re")) {
+                        if (!keyPair.getAddress().equals(recipients[i])) {
                             LOGGER.fine("selection entry omitted " + recipients[i] + ":" + files[i]);
                             continue;                      // skip entries that are not for that keypair
                         }
                         LOGGER.fine("selection entry added " + recipients[i] + ":" + files[i]);
-                        JSONObject scanResult = decryptWithKeyPair(recipients[i], files[i], keyPair);
+                        JSONObject scanResult = reEncrypt(recipients[i], files[i], keyPair);
 
                         result.add(new ResultFileObj(files[i], scanResult));
 
-                    } else {
+                    } else if (action.equals("sh")) {
+
+                        JSONObject shareResult = share(files[i], recipients[i], keyPair);
+
+                        result.add(new ResultFileObj(files[i], shareResult));
+
+                    } else if (action.equals("sg")) {
+
+                        JSONObject signResult = signFile(files[i], recipients[i], keyPair);
+
+                        result.add(new ResultFileObj(files[i], signResult));
+                    }
+                    else {
                         throw new Error("Unsupported selection operation code.");
                     }
                 }
@@ -1343,7 +1447,6 @@ public class HammerJ {
 
     public void downloadFile(String fileChainID, UserKeyPair keys, String directory){
         JSONObject jss = openFile(fileChainID,keys.getPublicSignKey(),keys);
-
         File dir = new File(directory);
         if (!dir.exists()) {
             if (dir.mkdir()) {
@@ -1355,7 +1458,7 @@ public class HammerJ {
 
         // decodes the file and puts it together
         byte[] decodedFile = Base64.getDecoder().decode((String) jss.get("payload"));
-        File newFile = new File((String)directory + jss.get("name") + jss.get("extension"));
+        File newFile = new File((String)directory + jss.get("dataName") + jss.get("dataExtension"));
 
         try {
             OutputStream os = new FileOutputStream(newFile);
