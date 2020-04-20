@@ -15,6 +15,8 @@ import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -552,26 +554,26 @@ public class HammerJ {
      * upon uploading into the system.
      *
      * @param fileObj a fileObj containing info about the object and it is about to be uploaded
-     * @param userChainId the public key of the sender
-     * @param userChainIdPubKey the public encryption key of the sender
+     * @param keyPair the keyPair of the user
      * @return an object encapsulating the data needed to be stored per single file
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
      * provides type safety for all the security-related exception classes that extend from it.
      * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
-    public FileToUpload getFileUploadData(FileObj fileObj, String userChainId, String userChainIdPubKey) throws GeneralSecurityException, UnsupportedEncodingException {
+    public FileToUpload getFileUploadData(FileObj fileObj,UserKeyPair keyPair) throws GeneralSecurityException, UnsupportedEncodingException {
 
         String fileContents = fileObj.getPayload();
-        EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, userChainIdPubKey);
+        EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, keyPair.getPublicEncKey());
         String dataOriginalHash = getHash(fileContents);
         String syncPassHash = getHash(encryptedFile.getCredentials().getSyncPass());
         String dataChainId = getHash(dataOriginalHash);
         String requestType = "upload";
-        String trailHash = getHash(dataChainId + userChainId + requestType + userChainId);
+        //TODO change
+        String trailHash = getHash(dataChainId + keyPair.getPublicSignKey() + requestType + keyPair.getPublicSignKey());
 
 
         FileToUpload upload = new FileToUpload();
-        upload.setUserId(userChainId);
+        upload.setUserId(keyPair.getPublicSignKey());
         upload.setDataId(dataChainId);
         upload.setRequestId(defaultRequestId);
         upload.setRequestType(requestType);
@@ -807,15 +809,12 @@ public class HammerJ {
         js.put("requestBodyHashSignature", requestBodySig);
 
         JSONObject upload = new JSONObject(js);
-        System.out.println(upload.toString(1));
         String submitUrl = getEndpointUrl("data/create");
 
-        System.out.println("toz url " + submitUrl);
         LOGGER.info("Store post" + submitUrl);
 
         String response = post(submitUrl, upload);
         JSONObject uploadResult = new JSONObject(response);
-        System.out.println("tui kvo e " +  uploadResult);
 
         LOGGER.severe("Store result"+  uploadResult.get("data").toString());
         return uploadResult.get("data").toString();
@@ -1241,15 +1240,27 @@ public class HammerJ {
     /**
      * This function is going to be called upon uploading a file and 'store' it on the blockchain
      *
-     * @param name              - this will be the name stored on the platform
-     * @param content           - the content of the file
-     * @param userChainId       - user's blockchain ID (in the AE blockchain this is ak_publicSignKey
-     * @param userChainIdPubKey - user's publicEncKey
+     * @param fileNameFromPath  - this will be the name stored on the platform
      * @return server's response whether the file has been uploaded
      */
-    public String store(String name, String content, String userChainId, String userChainIdPubKey) {
+    public String store(String fileNameFromPath,UserKeyPair keyPair) {
         FileObj obj = new FileObj();
-        obj.setPayload(content);
+        byte[] array;
+        String fileContent = "";
+        try {
+            array = Files.readAllBytes(Paths.get(fileNameFromPath));
+            fileContent = Base64.getEncoder().encodeToString(array);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        obj.setPayload(fileContent);
+        int indexName = fileNameFromPath.lastIndexOf("/");
+        String name;
+        if (indexName > 0) {
+            name = fileNameFromPath.substring(indexName);
+        }else {
+            name = fileNameFromPath;
+        }
         String dataExtension;
         int index = name.lastIndexOf(".");
         if (index > 0) {
@@ -1262,7 +1273,7 @@ public class HammerJ {
         obj.setDataExtention(dataExtension);
 
         try {
-            FileToUpload file = getFileUploadData(obj, userChainId, userChainIdPubKey);
+            FileToUpload file = getFileUploadData(obj, keyPair);
             return uploadFile(file);
         } catch (Exception e) {
             e.printStackTrace();
@@ -1275,14 +1286,13 @@ public class HammerJ {
      * Gets information about a file, which is owned by/shared to the user and opens it
      *
      * @param dataChainId file's chain ID
-     * @param userChainId user's chain ID
      * @param keyPair user's key pair
      * @return the contents of the file in human readable form
      */
-    public JSONObject openFile(String dataChainId, String userChainId, UserKeyPair keyPair) {
+    public JSONObject openFile(String dataChainId, UserKeyPair keyPair) {
 
-        JSONObject credentialsResponse = prepare(dataChainId, userChainId);
-        JSONObject scanResult = reEncrypt(userChainId, dataChainId, keyPair);
+        JSONObject credentialsResponse = prepare(dataChainId, keyPair.getPublicSignKey());
+        JSONObject scanResult = reEncrypt(keyPair.getPublicSignKey(), dataChainId, keyPair);
         if (scanResult.get("userId").toString() != null) {
 //            polling server for pass to decrypt message
             return poll(credentialsResponse, keyPair.getPublicEncKey());
@@ -1291,6 +1301,15 @@ public class HammerJ {
         }
     }
 
+    /**
+     * This function is to for the user to put a signature with their private key on file or message
+     * that they verify or validate to be authentic
+     *
+     * @param dataId - the file or message to be signed
+     * @param recipientId - file or message's owner
+     * @param keyPair - signer's key pair
+     * @return the result from the server - empty string for success, otherwise an error
+     */
 
     public JSONObject signFile(String dataId, String recipientId, UserKeyPair keyPair) {
         String userId = keyPair.getAddress();
@@ -1330,7 +1349,6 @@ public class HammerJ {
         JSONObject serverPostResData = new JSONObject(serverPostResponse);
         LOGGER.severe("Server responds to data sign POST" + serverPostResData.get("data").toString());
         JSONObject serverPostData = new JSONObject(serverPostResData.get("data").toString());
-
         return serverPostData;
     }
 
@@ -1371,7 +1389,6 @@ public class HammerJ {
                 }
 
                 String[] files = selectionRes.get("dataIds").toString().split(",");
-                System.out.println("tuk exec files" + files[0]);
                 for (int i = 0; i < files.length; i++) {
                     files[i] = files[i].replace("[", "");
                     files[i] = files[i].replace("]", "");
@@ -1389,7 +1406,7 @@ public class HammerJ {
                         }
                         if (keyPair.getPrivateEncKey() != null) {
                             LOGGER.fine("selection entry added " + recipients[i] + ":" + files[i]);
-                            JSONObject fileContent = openFile(files[i], keyPair.getAddress(), keyPair);
+                            JSONObject fileContent = openFile(files[i], keyPair);
                             result.add(new ResultFileObj(files[i], fileContent));
 
                         } else {
@@ -1446,7 +1463,7 @@ public class HammerJ {
      */
 
     public void downloadFile(String fileChainID, UserKeyPair keys, String directory){
-        JSONObject jss = openFile(fileChainID,keys.getPublicSignKey(),keys);
+        JSONObject jss = openFile(fileChainID,keys);
         File dir = new File(directory);
         if (!dir.exists()) {
             if (dir.mkdir()) {

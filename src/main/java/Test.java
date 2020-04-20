@@ -1,7 +1,10 @@
 import io.recheck.client.HammerJ;
 import io.recheck.client.POJO.ResultFileObj;
 import io.recheck.client.POJO.UserKeyPair;
+import org.json.JSONObject;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.logging.ConsoleHandler;
@@ -27,7 +30,7 @@ public class Test {
         String ch="0xa7fcc040fe0722ca2b5b25629cd2a02d7324efbc1fc4054605c909e84d4f9ce5";
 
 
-        String doc = "0x37e206dc7411e1116f0949fd4f5851cad4d77215a43a2d8aecab981115026fbe";
+        String fileChainID = "0x14a17fe1b2bb8208ce045bec5830e7bfc800ca9d0fa600421916536495f19ccb";
 
         UserKeyPair keys = null;
         try {
@@ -43,16 +46,16 @@ public class Test {
 //       System.out.println(res.get(0).getDocId());
 
         //open
-//        JSONObject jss = ap.openFile(doc,keys.getPublicSignKey(),keys);
-//        String directory = "downloads/";
-//        ap.downloadFile(res.get(0).getDocId(), keys, directory);
+//        JSONObject jss = hammerJ.openFile(fileChainID,keys);
+        String directory = "downloads/";
+        hammerJ.downloadFile(fileChainID, keys, directory);
 
         //upload
-//        upload(ap, "filefi", keys.getPublicSignKey(), keys.getPublicEncKey());
+//        hammerJ.store("datatata.png", keys);
 
 //         execSelection for open share and open selection
-                ArrayList<ResultFileObj> res = hammerJ.execSelection("sg:0x04d284a516fd5a3bf4940cf3b7de2668d7296bdbd4cb8c2b8b9cd9f97aec0cf4", keys);
-                System.out.println(res.get(0).getDataId());
+//                ArrayList<ResultFileObj> res = hammerJ.execSelection("sg:0xfcd15c61e7cce3fb5eaf7ac3f9b76646972a0e31bdac2f2db4389103aa9d1998", keys);
+//                System.out.println(res.get(0).getDataId());
 
     }
 
@@ -65,22 +68,6 @@ public class Test {
         System.out.println("Phrase: "+ keys.getPhrase());
     }
 
-    public static void upload(HammerJ ap, String filename, String userChainId, String userChainIdPubKey){
-        byte[] array;
-        String fileContent = "";
-        try {
-//            array = Files.readAllBytes(Paths.get("Greedy4.pdf"));
-//            fileContent = Base64.getEncoder().encodeToString(array);
-            fileContent = Base64.getEncoder().encodeToString("sdaaaasaaaaaaaaaaa".getBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-
-        String upload =  ap.store(filename, fileContent, userChainId, userChainIdPubKey);
-
-        System.out.println(upload);
-    }
     public void execSelection(){
 //        Scanner sc = new Scanner(System.in);
 //        String selection = sc.nextLine();
