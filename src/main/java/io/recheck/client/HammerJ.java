@@ -902,18 +902,19 @@ public class HammerJ {
      */
 
     public JSONObject reEncrypt(String userId, String dataChainId, UserKeyPair keyPair) {
-        String trailExtraArgs = null;
+//        String trailExtraArgs = null;
         LOGGER.fine("User device requests decryption info from server " + dataChainId + "  " + userId);
         String requestType = "download";
-        String trailHash = getHash(dataChainId + userId + requestType + userId + trailExtraArgs);
+        String trailHash = getHash(dataChainId + userId + requestType + userId);
         String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
         String query = "&userId="+userId +"&dataId=" + dataChainId + "&requestId="+ defaultRequestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
+        System.out.println("query " + query);
         String getUrl = getEndpointUrl("credentials/exchange", query);
 
         //hashes the request, and puts it as a value inside the url
         getUrl = getRequestHashURL(getUrl, keyPair);
-
+        System.out.println("getUrl "+ getUrl);
         LOGGER.fine("decryptWithKeyPair get request " + getUrl);
         String serverEncryptionInfo = getRequest(getUrl);
 
@@ -937,6 +938,9 @@ public class HammerJ {
             e.printStackTrace();
         }
         LOGGER.fine("User device re-encrypts password for browser " + reEncryptedPasswordInfo);
+        System.out.println("payload " + reEncryptedPasswordInfo.getPayload());
+        System.out.println("SrcPubkey " + reEncryptedPasswordInfo.getSrcPublicEncKey());
+        System.out.println("DstKey " + reEncryptedPasswordInfo.getDstPublicEncKey());
 
         JSONObject devicePost = new JSONObject();
         devicePost.put("dataId", dataChainId);
@@ -961,7 +965,7 @@ public class HammerJ {
 
         JSONObject dataRes = new JSONObject(serverPostResponse);
         JSONObject serverResponse = new JSONObject(dataRes.get("data").toString());
-        LOGGER.fine("User device POST to server encryption info " + devicePost);
+        LOGGER.severe("User device POST to server encryption info " + devicePost.toString(1));
         LOGGER.fine("Server responds to user device POST " + serverResponse.toString());
         return serverResponse;
     }
@@ -1191,7 +1195,7 @@ public class HammerJ {
             //TODO: serverPostResponce and result could be null
             JSONObject postResponse = new JSONObject(serverPostResponse);
 
-            LOGGER.fine("Share POST to server encryption info " + createShare);
+            LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
             LOGGER.fine("Server responds to user device POST " + postResponse.toString());
             JSONObject result = new JSONObject(postResponse.toString());
 
@@ -1315,30 +1319,31 @@ public class HammerJ {
         String userId = keyPair.getAddress();
 
         //TODO change them into their should be thing
-        String trailExtraArgs = null;
+//        String trailExtraArgs = null;
 
 //        dataId = processExternalId(dataId, userId, isExternal);
 
         String requestType = "sign";
-        String trailHash = getHash(dataId + userId + requestType + recipientId + trailExtraArgs);
+        String trailHash = getHash(dataId + userId + requestType + recipientId );
 
         SortedMap<String,Object> signObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         signObj.put("dataId", dataId);
         signObj.put("userId", userId);
         signObj.put("requestId", defaultRequestId);
         signObj.put("recipientId", recipientId);
+        signObj.put("requestType", requestType);
         signObj.put("requestBodyHashSignature", "NULL");
         signObj.put("trailHash", trailHash);
         signObj.put("trailHashSignatureHash",getHash(signMessage(trailHash,keyPair)));
 
-        String requestBodyHashSignature = getRequestHashJSON(signObj);
+        String requestBodyHashSignature = signMessage(getRequestHashJSON(signObj),keyPair);
 
         signObj.put("requestBodyHashSignature", requestBodyHashSignature);
 
         JSONObject jsSignObject = new JSONObject(signObj);
 
         String postUrl = getEndpointUrl("signature/create");
-        LOGGER.severe("dataSign " + jsSignObject.toString());
+        LOGGER.severe("dataSign " + jsSignObject.toString(1));
 
         String serverPostResponse = null;
         try {

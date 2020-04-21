@@ -22,12 +22,15 @@ public class Test {
         handler.setLevel(Level.SEVERE);
         hammerJ.LOGGER.addHandler(handler);
 
-        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
-//        String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
+        //ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5
+//        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
+
+        //
+         String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
 //        String passphrase = "samuel sane ry old ke crow peony lord sos lithe medley eliot";
 
-        String ch="0xa7fcc040fe0722ca2b5b25629cd2a02d7324efbc1fc4054605c909e84d4f9ce5";
+        String ch="0x63bb458cf596ea83d3caeedfb923ba4ac0ef8029230e6a28ca9ed91494439d31";
 
 
         String fileChainID = "0x14a17fe1b2bb8208ce045bec5830e7bfc800ca9d0fa600421916536495f19ccb";
@@ -40,23 +43,21 @@ public class Test {
         }
 
         //login
-        showKeys(keys);
+//        showKeys(keys);
         hammerJ.login(keys,ch);
-//       ArrayList<ResultFileObj> res =  ap.execSelection("s:0xf3c0cd252f0c7071be812dd8bb1c44e928696e6fd587afb39e8499e04f7c5d3e", keys);
-//       System.out.println(res.get(0).getDocId());
 
         //open
 //        JSONObject jss = hammerJ.openFile(fileChainID,keys);
-        String directory = "downloads/";
-        hammerJ.downloadFile(fileChainID, keys, directory);
+//        String directory = "downloads/";
+//        hammerJ.downloadFile(fileChainID, keys, directory);
 
         //upload
-//        hammerJ.store("datatata.png", keys);
+//        hammerJ.store("dd.png", keys);
 
 //         execSelection for open share and open selection
-//                ArrayList<ResultFileObj> res = hammerJ.execSelection("sg:0xfcd15c61e7cce3fb5eaf7ac3f9b76646972a0e31bdac2f2db4389103aa9d1998", keys);
-//                System.out.println(res.get(0).getDataId());
-
+                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0x6582808b99e95aa35d3b70080a5ea753b2acf11f4e4aaf230def573ab7d86f19", keys);
+                System.out.println(res.get(0).getDataId());
+//
     }
 
     public static void showKeys(UserKeyPair keys){

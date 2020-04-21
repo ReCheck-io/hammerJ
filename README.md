@@ -28,12 +28,12 @@ implementation 'io.github.recheck-io:hammerJ:x.x.x'
 ### Getting started
 The main methods exported for usage are a few. To see more detailed explanations and examples [click here](docs/index.md).
 
-- newKeyPair( seedphrase ) - where the seedphrase is String
-- login( keys, challenge ) - the user's keyPair and the challenge to enter the GUI, if the user wants
-- openFile(fileChainID,keys) - will get the payload of the respective file
-- downloadFile(fileChainID, keys, directory) - will convert the payload taken from _openFile()_. for the file, have the name and suffix from the name and convert accordingly into the specified directory. 
-- store(dataPath, keys) - you have to specify the full path of the file, or just the name, if the file is in the program's folder and the keys of the user
-- execSelection(selectionHash, keys) - this method executes several actions. Depending on the hash, it can open, share or sign a file. 
+- **newKeyPair ( seedphrase )** - where the seedphrase is String.
+- **login ( keys, challenge )** - the user's keyPair and the challenge to enter the GUI, if the user wants. This function gives the user a token with which to operate in the service. 
+- **openFile ( fileChainID, keys )** - will get the payload of the respective file from the service. 
+- **downloadFile ( fileChainID, keys, directory )** - will convert the payload taken from _openFile()_. for the file, have the filename and suffix from the specified name and suffix uploaded and convert accordingly into the specified local directory. 
+- **store ( dataPath, keys )** - uploads the file on the server. You have to specify the full path of the file, or just the name, if the file is in the program's folder and the keys of the user
+- **execSelection ( selectionHash, keys )** - this method executes several actions. Depending on the hash, it can open, share or sign a file. 
 
 ### hammerJ can be used for: 
  
