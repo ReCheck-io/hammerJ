@@ -564,6 +564,7 @@ public class HammerJ {
 
         String fileContents = fileObj.getPayload();
         EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, keyPair.getPublicEncKey());
+
         String dataOriginalHash = getHash(fileContents);
         String syncPassHash = getHash(encryptedFile.getCredentials().getSyncPass());
         String dataChainId = getHash(dataOriginalHash);
@@ -806,13 +807,15 @@ public class HammerJ {
         String requestBodySig = getRequestHashJSON(js);
 
         js.put("payload", file.getPayload());
+
         js.put("requestBodyHashSignature", requestBodySig);
 
         JSONObject upload = new JSONObject(js);
         String submitUrl = getEndpointUrl("data/create");
 
         LOGGER.info("Store post" + submitUrl);
-
+        System.out.println(upload.toString(1));
+        System.exit(0);
         String response = post(submitUrl, upload);
         JSONObject uploadResult = new JSONObject(response);
 

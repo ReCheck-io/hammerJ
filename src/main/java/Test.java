@@ -23,10 +23,10 @@ public class Test {
         hammerJ.LOGGER.addHandler(handler);
 
         //ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5
-//        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
+        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
 
         //
-         String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
+//         String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
 //        String passphrase = "samuel sane ry old ke crow peony lord sos lithe medley eliot";
 
@@ -52,11 +52,11 @@ public class Test {
 //        hammerJ.downloadFile(fileChainID, keys, directory);
 
         //upload
-//        hammerJ.store("dd.png", keys);
+        hammerJ.store("today.txt", keys);
 
 //         execSelection for open share and open selection
-                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0x6582808b99e95aa35d3b70080a5ea753b2acf11f4e4aaf230def573ab7d86f19", keys);
-                System.out.println(res.get(0).getDataId());
+//                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0x6582808b99e95aa35d3b70080a5ea753b2acf11f4e4aaf230def573ab7d86f19", keys);
+//                System.out.println(res.get(0).getDataId());
 //
     }
 
