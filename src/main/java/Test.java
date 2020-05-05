@@ -23,17 +23,17 @@ public class Test {
         hammerJ.LOGGER.addHandler(handler);
 
         //ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5
-        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
+//        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
 
         //
-//         String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
+         String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 //        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
 //        String passphrase = "samuel sane ry old ke crow peony lord sos lithe medley eliot";
 
-        String ch="0x63bb458cf596ea83d3caeedfb923ba4ac0ef8029230e6a28ca9ed91494439d31";
+        String ch="0xd74ec98a98403c96089c463d1a3a0fdf6f6d98aaad389971194e77e15f5e30b6";
 
 
-        String fileChainID = "0x14a17fe1b2bb8208ce045bec5830e7bfc800ca9d0fa600421916536495f19ccb";
+        String fileChainID = "0x8a26d491b66951db56d7edc14d5bdd6eb37b128deec3b88517b7dfd9f65dab7a";
 
         UserKeyPair keys = null;
         try {
@@ -48,14 +48,15 @@ public class Test {
 
         //open
 //        JSONObject jss = hammerJ.openFile(fileChainID,keys);
-//        String directory = "downloads/";
-//        hammerJ.downloadFile(fileChainID, keys, directory);
+        String directory = "downloads/";
+        hammerJ.downloadFile(fileChainID, keys, directory);
 
         //upload
-        hammerJ.store("today.txt", keys);
+//        String s = hammerJ.store("tomorrow.txt", keys);
+//        System.out.println(s);
 
 //         execSelection for open share and open selection
-//                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0x6582808b99e95aa35d3b70080a5ea753b2acf11f4e4aaf230def573ab7d86f19", keys);
+//                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0xcea32931657083955965a6325463efccf6e86c0b1726a00e9af0b70e95fbffec", keys);
 //                System.out.println(res.get(0).getDataId());
 //
     }

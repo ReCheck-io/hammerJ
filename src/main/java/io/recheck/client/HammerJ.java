@@ -403,7 +403,7 @@ public class HammerJ {
      */
     public String encryptData(String data, TweetNaclFast.Box key) {
 
-        byte[] theNonce = TweetNaclFast.hexDecode(BOX_NONCE);
+        byte[] theNonce = TweetNaclFast.makeSecretBoxNonce();
         byte[] messageUint8 = data.getBytes();
         byte[] encrypted = key.after(messageUint8, 0, messageUint8.length, theNonce);
 
@@ -814,8 +814,6 @@ public class HammerJ {
         String submitUrl = getEndpointUrl("data/create");
 
         LOGGER.info("Store post" + submitUrl);
-        System.out.println(upload.toString(1));
-        System.exit(0);
         String response = post(submitUrl, upload);
         JSONObject uploadResult = new JSONObject(response);
 
@@ -853,7 +851,7 @@ public class HammerJ {
 
         LOGGER.fine("submit pubkey payload " + browserPubKeySubmit);
 
-        String browserPubKeySubmitUrl = getEndpointUrl("credentials");
+        String browserPubKeySubmitUrl = getEndpointUrl("credentials/create/pubkeyb");
         LOGGER.fine("browser poll post submit pubKeyB " + browserPubKeySubmitUrl);
 
         String browserPubKeySubmitRes = null;
@@ -913,7 +911,7 @@ public class HammerJ {
 
         String query = "&userId="+userId +"&dataId=" + dataChainId + "&requestId="+ defaultRequestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
         System.out.println("query " + query);
-        String getUrl = getEndpointUrl("credentials/exchange", query);
+        String getUrl = getEndpointUrl("credentials/info", query);
 
         //hashes the request, and puts it as a value inside the url
         getUrl = getRequestHashURL(getUrl, keyPair);
@@ -956,7 +954,7 @@ public class HammerJ {
         devicePost.put("encryption", encryption);
 
         LOGGER.fine("devicePost " + devicePost);
-        String postUrl = getEndpointUrl("credentials/exchange");
+        String postUrl = getEndpointUrl("credentials/create/passb");
         LOGGER.fine("decryptWithKeyPair post " + postUrl);
 
         String serverPostResponse = null;
@@ -1113,7 +1111,7 @@ public class HammerJ {
      */
 
     private String getSelected(String selectionHash) {
-        String getUrl = getEndpointUrl("selection", "&selectionHash=" + selectionHash);
+        String getUrl = getEndpointUrl("selection/info", "&selectionHash=" + selectionHash);
         LOGGER.fine("getSelectedFiles get request " + getUrl);
         String selectionResponse = getRequest(getUrl);
         LOGGER.fine("selection obj: " + selectionResponse);
@@ -1132,7 +1130,7 @@ public class HammerJ {
      */
 
     private JSONObject share(String dataId, String recipientId, UserKeyPair keyPair) {
-        String getUrl = getEndpointUrl("credentials/share", "&dataId=" + dataId + "&recipientId=" + recipientId);
+        String getUrl = getEndpointUrl("share/credentials", "&dataId=" + dataId + "&recipientId=" + recipientId);
         LOGGER.fine("credentials/share get request " + getUrl);
         String getShareResponse = getRequest(getUrl);
         LOGGER.fine("Share res " + getShareResponse);
