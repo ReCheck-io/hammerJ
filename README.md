@@ -1,9 +1,18 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.recheck-io/hammerJ/badge.svg)](https://search.maven.org/artifact/io.github.recheck-io/hammerJ)  [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/ReCheck-io/hammerJ/blob/master/LICENSE.txt) ![](https://github.com/Recheck-io/hammerJ/workflows/maven%20build/badge.svg)  [![Website recheck.io](https://img.shields.io/badge/Website-recheck.io-brightgreen.svg)](https://recheck.io/)<a href="https://discord.gg/3KwFw72"><img src="https://img.shields.io/discord/675683560673509386?logo=discord" alt="chat on Discord"></a>
 
-# Encryption library with two PKI key pairs. 
-HammerJ is a Java encryption library implementation of end-to-end encryption protocol. Through this software one can securely send a message or file across the internet to the receiver without the possibility of anyone but the sender and the receiver to know what is being sent. This library is using two PKI keypairs as well as symmetric encryption. We’ve implemented TweetNacl Fast standard methods. 
+# About this library 
 
-The expected workflow is where there will be a mobile app and client separately established. Only the mobile app will be able to hold the user’s key pairs. Meaning that it will be used for signing and encrypting/decrypting messages.
+This is a reference implementation of a protocol for end-to-end encryption with the Recheck services platform. It implements data storage, fetching and validation with a set of keypairs that support ethereum and aeterntiy digital signatures. 
+
+# How it works 
+
+The protocol consists of a client - sending device, server, receiving device and identity device (which is supposed to be your mobile phone ). Between those four entities two sets of PKI key pairs are taking part into sending the data across them. 
+
+The first set is that of the user. It is being created(or more precisely revealed) with the creation of the user's account/wallet. With it, the user can operate with the service we provide. Moreover, upon uploading, the client is using this set to encrypt the file that is being uploaded on ReCheck servers. __By doing this we enforce the good practices of privacy by design and cannot read or in fact know anything about your file.__
+
+The browser through which a user is acting with the data is treated like an additional user with its own keypair, thus providing extra layer of interactive authentication while every operation is still under the control of the user with his own keypair.
+
+This way the private key of the user never leaves his/her identity device, yet it manages the authentication in the browser.
 
 The protocol is the following: 
 ![protocol](docs/protocol.png)  
