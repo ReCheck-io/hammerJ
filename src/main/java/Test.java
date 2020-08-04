@@ -29,7 +29,7 @@ public class Test {
 //        Private encryption key: 0193ffaaf9c8cb59faf3fe9e7e6c811fccd08e591add55f2c49c1244d846f21d
 //        Recovery phrase: culpa murre duane faith sweet locus derek rosen halo every islam horus
 
-        String passphrase = "culpa murre duane faith sweet locus derek rosen halo every islam horus";
+        String passphrase = "m's folio blinn tuft layup chili felix why mitre beep gino medley";
 
         String ch="0xd74ec98a98403c96089c463d1a3a0fdf6f6d98aaad389971194e77e15f5e30b6";
 
@@ -45,7 +45,7 @@ public class Test {
 
         //login
         showKeys(keys);
-//        hammerJ.login(keys,ch);
+        hammerJ.login(keys,ch);
 
         //open
 //        JSONObject jss = hammerJ.openFile(fileChainID,keys);
@@ -53,8 +53,8 @@ public class Test {
 //        hammerJ.downloadFile(fileChainID, keys, directory);
 
         //upload
-//        String s = hammerJ.store("tomorrow.txt", keys);
-//        System.out.println(s);
+       String s = hammerJ.store("today.txt", keys);
+        System.out.println(s);
 
 //         execSelection for open share and open selection
 //                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0xcea32931657083955965a6325463efccf6e86c0b1726a00e9af0b70e95fbffec", keys);

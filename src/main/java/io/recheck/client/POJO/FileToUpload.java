@@ -5,7 +5,7 @@ public class FileToUpload {
     private String dataId;
     private String dataName;
     private String dataExtension;
-    private String category = "OTHERS";
+    private String category = "OTHER";
     private String keywords = "Daka";
     private String userId;
     private String payload;

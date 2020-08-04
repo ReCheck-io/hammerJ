@@ -581,7 +581,7 @@ public class HammerJ {
         upload.setDataExtension(fileObj.getDataExtention());
         //TODO: Change once these are realised
         if (fileObj.getCategory() == null) {
-            upload.setCategory("OTHERS");
+            upload.setCategory("OTHER");
         }
         if (fileObj.getKeywords() == null) {
             upload.setKeywords("Daka");
@@ -699,9 +699,9 @@ public class HammerJ {
      */
 
     private String getEndpointUrl(String action) {
-        String url = baseUrl + "/" + action;
+        String url = baseUrl + "/" + action + "?api=1";
         if (!(token == null || token.trim() == "")) {
-            url = baseUrl + "/" + action + "&token=" + token;
+            url = baseUrl + "/" + action + "?api=1&token=" + token;
         }
         return url;
     }
@@ -715,9 +715,9 @@ public class HammerJ {
      */
 
     private String getEndpointUrl(String action, String appendix) {
-        String url = baseUrl + "/" + action;
+        String url = baseUrl + "/" + action + "?api=1";
         if (!(token == null && token.trim() == "")) {
-            url = baseUrl + "/" + action + "&token=" + token;
+            url = baseUrl + "/" + action + "?api=1&token=" + token;
         }
         if (!(appendix == null && appendix.trim() == "")) {
             LOGGER.fine("appendix" + appendix);
@@ -808,10 +808,13 @@ public class HammerJ {
         js.put("requestBodyHashSignature", requestBodySig);
 
         JSONObject upload = new JSONObject(js);
+        System.out.println(upload.toString(1));
         String submitUrl = getEndpointUrl("data/create");
-
+        System.out.println(submitUrl);
         LOGGER.info("Store post" + submitUrl);
         String response = post(submitUrl, upload);
+        System.out.println("ko stana sa " + response);
+
         JSONObject uploadResult = new JSONObject(response);
 
         LOGGER.severe("Store result"+  uploadResult.get("data").toString());
