@@ -22,13 +22,14 @@ public class Test {
         handler.setLevel(Level.SEVERE);
         hammerJ.LOGGER.addHandler(handler);
 
-        //ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5
-//        String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
+//        Public address: ak_2MAEj79xyD4KGfmgxEYav5GA4CSuFwPK7wgxZWFvwZukF1T7HA
+//        Public signing key: ak_2MAEj79xyD4KGfmgxEYav5GA4CSuFwPK7wgxZWFvwZukF1T7HA
+//        Private signing key: f86339d598b8ed062b146266ed30b374eaed13c6cc8c989c8f9bf90c352c6f50b1785b661ddccb7570ea5c62c26bc67ce5a5642c5c38d3b2914348118e87e1a9
+//        Public encryption key: wYmEjRpjAhpSR358gg9ssbjbcMWuc1ST4ACthNBihyfUDiZ8k
+//        Private encryption key: 0193ffaaf9c8cb59faf3fe9e7e6c811fccd08e591add55f2c49c1244d846f21d
+//        Recovery phrase: culpa murre duane faith sweet locus derek rosen halo every islam horus
 
-        //
-         String passphrase = "night hewitt stub ding tot viet heard hoi funny aver trout arrear";
-//        String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
-//        String passphrase = "samuel sane ry old ke crow peony lord sos lithe medley eliot";
+        String passphrase = "culpa murre duane faith sweet locus derek rosen halo every islam horus";
 
         String ch="0xd74ec98a98403c96089c463d1a3a0fdf6f6d98aaad389971194e77e15f5e30b6";
 
@@ -43,13 +44,13 @@ public class Test {
         }
 
         //login
-//        showKeys(keys);
-        hammerJ.login(keys,ch);
+        showKeys(keys);
+//        hammerJ.login(keys,ch);
 
         //open
 //        JSONObject jss = hammerJ.openFile(fileChainID,keys);
-        String directory = "downloads/";
-        hammerJ.downloadFile(fileChainID, keys, directory);
+//        String directory = "downloads/";
+//        hammerJ.downloadFile(fileChainID, keys, directory);
 
         //upload
 //        String s = hammerJ.store("tomorrow.txt", keys);

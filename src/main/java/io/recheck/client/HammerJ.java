@@ -31,7 +31,7 @@ public class HammerJ {
     private static String token = "";
     private static String defaultRequestId = "ReCheck";
     private static String network = "ae"; //ae or eth
-    private static String baseUrl = "http://localhost:3000";
+    private static String baseUrl = "https://beta.recheck.io";
     private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
 
     private static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
@@ -179,9 +179,6 @@ public class HammerJ {
 
     public UserKeyPair newKeyPair(String passphrase) throws GeneralSecurityException {
 
-        String key1 = "";
-        String key2 = "";
-
         if ((passphrase != null) && !(passphrase.equals(""))) {
             passphrase = passphrase.trim();
             String[] words = StringUtils.split(passphrase);
@@ -189,18 +186,17 @@ public class HammerJ {
                 System.err.println("Invalid passphrase. Your input is " + words.length + " words. It must be 12 words long.");
                 System.exit(0);
             }
-            key1 = words[0] + " " + words[1] + " " + words[2] + " " + words[3] + " " + words[4] + " " + words[5];
-            key2 = words[6] + " " + words[7] + " " + words[8] + " " + words[9] + " " + words[10] + " " + words[11];
         } else {
             String[] fullphrase = StringUtils.split(diceware());
-            key1 = fullphrase[0] + " " + fullphrase[1] + " " + fullphrase[2] + " " + fullphrase[3] + " " + fullphrase[4] + " " + fullphrase[5];
-            key2 = fullphrase[6] + " " + fullphrase[7] + " " + fullphrase[8] + " " + fullphrase[9] + " " + fullphrase[10] + " " + fullphrase[11];
+            for (int i = 0; i<12 ; i++){
+                passphrase += fullphrase[0] + " ";
+            }
         }
-        String phrase = key1 + " " + key2;
+
 
         //gets the 64 byte for the creation of the two key pairs
-
-        byte[] derivedBytes = session25519(key1, key2);
+        // instead of k1 and k2 => phrase and getHash(phrase)
+        byte[] derivedBytes = session25519(passphrase, getHash(passphrase));
 
         //the first 32 bytes are used for the encryption pair, the second - sing pair.
         byte[] encryptKeySeed = copyOfRange(derivedBytes, 0, 32);
@@ -237,7 +233,7 @@ public class HammerJ {
         }
 
         // put all the keys in the User keyPair's object
-        UserKeyPair keys = new UserKeyPair(address, publicEncKey, privateEncKey, publicSignKey, privateSignKey, phrase);
+        UserKeyPair keys = new UserKeyPair(address, publicEncKey, privateEncKey, publicSignKey, privateSignKey, passphrase);
         return keys;
     }
 
@@ -258,7 +254,7 @@ public class HammerJ {
      *
      * @return a string with the value of either eth for Ethereum or ae for Aeternity blockchain
      */
-    public String  getNetwork(){
+    public String getNetwork(){
         return network;
     }
 
@@ -616,9 +612,10 @@ public class HammerJ {
             .readTimeout(300, TimeUnit.SECONDS)
             .build();
 
-    private void init(String token, String baseUrl) {
+    private void init(String token, String baseUrl, String network) {
         this.token = token;
         this.baseUrl = baseUrl;
+        this.setNetwork(network);
     }
 
     /**
@@ -702,9 +699,9 @@ public class HammerJ {
      */
 
     private String getEndpointUrl(String action) {
-        String url = baseUrl + "/" + action + "?noapi=1";
+        String url = baseUrl + "/" + action;
         if (!(token == null || token.trim() == "")) {
-            url = baseUrl + "/" + action + "?api=1&token=" + token;
+            url = baseUrl + "/" + action + "&token=" + token;
         }
         return url;
     }
@@ -718,9 +715,9 @@ public class HammerJ {
      */
 
     private String getEndpointUrl(String action, String appendix) {
-        String url = baseUrl + "/" + action + "noapi=1";
+        String url = baseUrl + "/" + action;
         if (!(token == null && token.trim() == "")) {
-            url = baseUrl + "/" + action + "?api=1&token=" + token;
+            url = baseUrl + "/" + action + "&token=" + token;
         }
         if (!(appendix == null && appendix.trim() == "")) {
             LOGGER.fine("appendix" + appendix);
