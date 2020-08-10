@@ -22,12 +22,19 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.Arrays.copyOfRange;
 
 
 public class HammerJ {
 
+    //email REGEX pattern
+    public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
+            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern VALID_AETHERNITY = Pattern.compile("^ak_[0-9a-zA-Z]{41,}$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern VALID_ETHEREUM = Pattern.compile("^0x[0-9a-fA-F]{40}$", Pattern.CASE_INSENSITIVE);
     private static String token = "";
     private static String defaultRequestId = "ReCheck";
     private static String network = "ae"; //ae or eth
@@ -79,6 +86,8 @@ public class HammerJ {
         // Convert the ordered map into an ordered string.
         String requestString = gson.toJson(requestJSON);
         requestString = requestString.replace("\\u003d","=");
+
+        System.out.println(requestString);
 
         return getHash(requestString);
     }
@@ -813,7 +822,6 @@ public class HammerJ {
         System.out.println(submitUrl);
         LOGGER.info("Store post" + submitUrl);
         String response = post(submitUrl, upload);
-        System.out.println("ko stana sa " + response);
 
         JSONObject uploadResult = new JSONObject(response);
 
@@ -1120,6 +1128,19 @@ public class HammerJ {
         return selectionRes.toString();
     }
 
+    public static boolean validateEmail(String emailStr) {
+        Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
+        return matcher.find();
+    }
+    public static boolean validateAEAddress(String aeAddress) {
+        Matcher matcher = VALID_AETHERNITY.matcher(aeAddress);
+        return matcher.find();
+    }
+    public static boolean validateEthAddress(String ethAddress) {
+        Matcher matcher = VALID_ETHEREUM.matcher(ethAddress);
+        return matcher.find();
+    }
+
     /**
      * Shares the file with other accounts from the network, that the user already have in contacts.
      *
@@ -1129,15 +1150,36 @@ public class HammerJ {
      * @return a JSON obj containing the shared file
      */
 
-    private JSONObject share(String dataId, String recipientId, UserKeyPair keyPair) {
-        String getUrl = getEndpointUrl("share/credentials", "&dataId=" + dataId + "&recipientId=" + recipientId);
-        LOGGER.fine("credentials/share get request " + getUrl);
+    public JSONObject shareData(String dataId, String recipientId, UserKeyPair keyPair) {
+        boolean isEmailShare = false;
+        String recipientType;
+
+        if (validateEmail(recipientId)){
+            isEmailShare = true;
+            recipientType = "recipientEmail";
+        } else if (validateAEAddress(recipientId)){
+            recipientType = "recipientId";
+        }else if (validateEthAddress(recipientId)){
+            recipientType = "recipientId";
+        }else {
+            recipientType = "";
+            try {
+                throw new Exception("Address not valid");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        String getUrl = getEndpointUrl("share/credentials", "&dataId=" + dataId + "&" + recipientType + "=" + recipientId);
+        LOGGER.severe("credentials/share get request " + getUrl);
         String getShareResponse = getRequest(getUrl);
         LOGGER.fine("Share res " + getShareResponse);
 
         JSONObject shareResData = new JSONObject(getShareResponse);
         JSONObject shareRes = new JSONObject(shareResData.get("data").toString());
-
+        System.out.println(shareRes.toString(1));
+        System.out.println("dataID " + dataId);
+        System.out.println("recipientID" + recipientId);
 
         if (shareRes.get("dataId").toString().equals(dataId)) {
 
@@ -1147,7 +1189,7 @@ public class HammerJ {
             String encryptedPassA = encryption.get("encryptedPassA").toString();
             String pubKeyA = encryption.get("pubKeyA").toString();
             String decryptedPassword = decryptDataWithPublicAndPrivateKey(encryptedPassA, pubKeyA, keyPair.getPrivateEncKey());
-            String syncPassHash = keccak256(decryptedPassword);
+            String syncPassHash = getHash(decryptedPassword);
             EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
             try {
                 reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword, recipientEncrKey, keyPair);
@@ -1155,8 +1197,6 @@ public class HammerJ {
                 e.printStackTrace();
             }
             String userId = keyPair.getAddress();
-            //recepientId
-            //dataId
             String requestType = "share";
             String trailHash = getHash(dataId + userId + requestType + recipientId);
             String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
@@ -1171,6 +1211,7 @@ public class HammerJ {
             createShare.put("trailHash", trailHash);
             createShare.put("trailHashSignatureHash", trailHashSignatureHash);
             createShare.put("recipientId", recipientId);
+            createShare.put("payload", "");
 
             SortedMap<String, Object> encrpt = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             encrpt.put("senderEncrKey", keyPair.getPublicEncKey());
@@ -1184,7 +1225,8 @@ public class HammerJ {
             createShare.put("requestBodyHashSignature", requestBodyHash);
 
             JSONObject jsCreateShare = new JSONObject(createShare);
-
+            System.out.println("create Share");
+            System.out.println(jsCreateShare.toString(1));
             String postUrl = getEndpointUrl("share/create");
 
             String serverPostResponse = null;
@@ -1199,11 +1241,39 @@ public class HammerJ {
             LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
             LOGGER.fine("Server responds to user device POST " + postResponse.toString());
             JSONObject result = new JSONObject(postResponse.toString());
-
+            System.out.println("result");
+            System.out.println(result.toString(1));
             return result;
         }
         throw new Error("Unable to create share. Data id mismatch.");
     }
+
+    /**
+     * This method asks for the blockchain ID of the file and the blockchain ID (the address) of
+     * a participant in the actions and returns the transactions made with the file.
+     *
+     * @param dataChainId - the blockchain id of the file
+     * @param userId - the blockchain address of user that is a participant in the transactions
+     * @return - info about the transactions made with the file
+     */
+
+    public JSONObject checkHash(String dataChainId,String userId) {
+        if (userId.contains("ak_")){
+            userId = userId.substring(3);
+        }
+        String query = "&userId="+ userId +"&dataId="+dataChainId;
+
+        String getUrl = getEndpointUrl("tx/info", query);
+        LOGGER.severe("query URL " + getUrl);
+
+        String serverResponse = getRequest(getUrl);
+        JSONObject serverRes = new JSONObject(serverResponse);
+
+        LOGGER.severe("Server responds to checkHash GET " + serverRes.get("data"));
+
+        return serverRes;
+    }
+
 
     /**
      * Function to sign a message, depending on the network eth/ae
@@ -1438,7 +1508,7 @@ public class HammerJ {
 
                     } else if (action.equals("sh")) {
 
-                        JSONObject shareResult = share(files[i], recipients[i], keyPair);
+                        JSONObject shareResult = shareData(files[i], recipients[i], keyPair);
 
                         result.add(new ResultFileObj(files[i], shareResult));
 

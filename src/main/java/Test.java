@@ -22,19 +22,12 @@ public class Test {
         handler.setLevel(Level.SEVERE);
         hammerJ.LOGGER.addHandler(handler);
 
-//        Public address: ak_2MAEj79xyD4KGfmgxEYav5GA4CSuFwPK7wgxZWFvwZukF1T7HA
-//        Public signing key: ak_2MAEj79xyD4KGfmgxEYav5GA4CSuFwPK7wgxZWFvwZukF1T7HA
-//        Private signing key: f86339d598b8ed062b146266ed30b374eaed13c6cc8c989c8f9bf90c352c6f50b1785b661ddccb7570ea5c62c26bc67ce5a5642c5c38d3b2914348118e87e1a9
-//        Public encryption key: wYmEjRpjAhpSR358gg9ssbjbcMWuc1ST4ACthNBihyfUDiZ8k
-//        Private encryption key: 0193ffaaf9c8cb59faf3fe9e7e6c811fccd08e591add55f2c49c1244d846f21d
-//        Recovery phrase: culpa murre duane faith sweet locus derek rosen halo every islam horus
-
         String passphrase = "m's folio blinn tuft layup chili felix why mitre beep gino medley";
 
-        String ch="0xd74ec98a98403c96089c463d1a3a0fdf6f6d98aaad389971194e77e15f5e30b6";
+        String ch="0xd7323d4eb25e57060f68f59640b06178ee81ea30b796f9653f9fa13e454b0b21";
 
-
-        String fileChainID = "0x8a26d491b66951db56d7edc14d5bdd6eb37b128deec3b88517b7dfd9f65dab7a";
+        String recipient = "ak_25ZrFQDCAHoGVnT8Ed3hXgWwPwy7jpcQVtfs63DwEAYW6m6vgU";
+        String fileChainID = "0x3b74ba61de77c3f1852e356411dbaeb2db59a77e06f1245b89e49d591a1e2fcc";
 
         UserKeyPair keys = null;
         try {
@@ -52,9 +45,15 @@ public class Test {
 //        String directory = "downloads/";
 //        hammerJ.downloadFile(fileChainID, keys, directory);
 
+        //checkHash
+//        JSONObject js = hammerJ.checkHash(fileChainID,keys.getAddress());
+//        System.out.println(js.toString(1));
+        //share
+        JSONObject jss = hammerJ.shareData(fileChainID, recipient, keys);
+        System.out.println(jss.toString(1));
         //upload
-       String s = hammerJ.store("today.txt", keys);
-        System.out.println(s);
+//       String s = hammerJ.store("today.txt", keys);
+//        System.out.println(s);
 
 //         execSelection for open share and open selection
 //                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0xcea32931657083955965a6325463efccf6e86c0b1726a00e9af0b70e95fbffec", keys);
