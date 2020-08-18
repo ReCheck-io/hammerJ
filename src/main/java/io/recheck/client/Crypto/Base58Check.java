@@ -1,3 +1,7 @@
+/**
+ * License - released for public domain
+ */
+
 package io.recheck.client.Crypto;
 
 import java.math.BigInteger;

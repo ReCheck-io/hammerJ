@@ -1,4 +1,6 @@
-package io.recheck.client.Crypto;// Copyright (c) 2014 Tom Zhou<iwebpp@gmail.com>
+// Copyright (c) 2014 Tom Zhou<iwebpp@gmail.com> MIT License
+
+package io.recheck.client.Crypto;
 /**
  * This file is taken from https://github.com/InstantWebP2P/tweetnacl-java and since the project has not been
  * uploaded to maven, this is the only possible way to reuse their code.

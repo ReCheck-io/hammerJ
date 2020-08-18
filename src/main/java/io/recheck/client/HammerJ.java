@@ -93,6 +93,27 @@ public class HammerJ {
     }
 
     /**
+     * It will sign the contents of the object, without the payload, passed to the backend
+     *
+     * @param requestJSON
+     * @return a hash of the post request's content
+     */
+    private String getObjectIntoByte64(SortedMap requestJSON) {
+        Gson gson = new Gson();
+
+        // Convert the ordered map into an ordered string.
+        String requestString = gson.toJson(requestJSON);
+        requestString = requestString.replace("\\u003d","=");
+
+        byte[] requestStringBytes = requestString.getBytes();
+
+        String result = Base64.getEncoder().encodeToString(requestStringBytes);
+        System.out.println(result);
+
+        return result;
+    }
+
+    /**
      * It will sign the contents of the url request, without the payload, passed to the backend
      *
      * @param url the parameters passed for post/get request
@@ -1153,12 +1174,15 @@ public class HammerJ {
     public JSONObject shareData(String dataId, String recipientId, UserKeyPair keyPair) {
         boolean isEmailShare = false;
         String recipientType;
+        String requestType = "share";
 
         if (validateEmail(recipientId)){
             isEmailShare = true;
             recipientType = "recipientEmail";
+            requestType = "email";
         } else if (validateAEAddress(recipientId)){
             recipientType = "recipientId";
+            requestType = "share";
         }else if (validateEthAddress(recipientId)){
             recipientType = "recipientId";
         }else {
@@ -1177,19 +1201,35 @@ public class HammerJ {
 
         JSONObject shareResData = new JSONObject(getShareResponse);
         JSONObject shareRes = new JSONObject(shareResData.get("data").toString());
-        System.out.println(shareRes.toString(1));
-        System.out.println("dataID " + dataId);
-        System.out.println("recipientID" + recipientId);
+
 
         if (shareRes.get("dataId").toString().equals(dataId)) {
 
             JSONObject encryption = new JSONObject(shareRes.get("encryption").toString());
 
-            String recipientEncrKey = encryption.get("recipientEncrKey").toString();
+
             String encryptedPassA = encryption.get("encryptedPassA").toString();
             String pubKeyA = encryption.get("pubKeyA").toString();
             String decryptedPassword = decryptDataWithPublicAndPrivateKey(encryptedPassA, pubKeyA, keyPair.getPrivateEncKey());
             String syncPassHash = getHash(decryptedPassword);
+            String recipientEncrKey ="";
+//            String recipientEncrKey = encryption.get("recipientEncrKey").toString();
+
+            UserKeyPair recipientEmailLinkKeyPair = null;
+            if (isEmailShare) {
+//                if (isNullAny(emailSharePubKeys)) {
+                try {
+                    recipientEmailLinkKeyPair = newKeyPair(null);
+                } catch (GeneralSecurityException e) {
+                    e.printStackTrace();
+                }
+//                } else {
+//                    recipientEmailLinkKeyPair = recipientsEmailLinkKeyPair;
+//                }
+
+                recipientEncrKey = recipientEmailLinkKeyPair.getPublicEncKey();
+            }
+
             EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
             try {
                 reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword, recipientEncrKey, keyPair);
@@ -1197,7 +1237,6 @@ public class HammerJ {
                 e.printStackTrace();
             }
             String userId = keyPair.getAddress();
-            String requestType = "share";
             String trailHash = getHash(dataId + userId + requestType + recipientId);
             String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
@@ -1210,7 +1249,8 @@ public class HammerJ {
             createShare.put("requestBodyHashSignature", "NULL");
             createShare.put("trailHash", trailHash);
             createShare.put("trailHashSignatureHash", trailHashSignatureHash);
-            createShare.put("recipientId", recipientId);
+            //TODO: instead of recipientId as key i will have recipientType 
+            createShare.put(recipientType, recipientId);
             createShare.put("payload", "");
 
             SortedMap<String, Object> encrpt = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -1237,15 +1277,85 @@ public class HammerJ {
             }
             //TODO: serverPostResponce and result could be null
             JSONObject postResponse = new JSONObject(serverPostResponse);
-
             LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
             LOGGER.fine("Server responds to user device POST " + postResponse.toString());
-            JSONObject result = new JSONObject(postResponse.toString());
-            System.out.println("result");
-            System.out.println(result.toString(1));
+            JSONObject serverResult = new JSONObject(postResponse.toString());
+            JSONObject result = new JSONObject(serverResult.get("data").toString());
+
+            //emailShare shenanigans
+            String shareUrl = generateEmailShareUrl(isEmailShare, result, keyPair, recipientEmailLinkKeyPair);
+            result.put("shareUrl", shareUrl);
+
             return result;
         }
         throw new Error("Unable to create share. Data id mismatch.");
+    }
+
+    private String generateEmailShareUrl(boolean isEmailShare, JSONObject shareResult,UserKeyPair keyPair, UserKeyPair emailKeyPair) {
+        String generatedShareUrl = null;
+        if (!isEmailShare) {
+            return generatedShareUrl;
+        }
+        System.out.println("ei tva");
+        System.out.println(shareResult.toString(1));
+//        if (shareResult.get("selectionHash").toString() != null) {
+//            throw new Error("Unable to create email share selection hash. Contact your service provider.");
+//        }
+
+        String selectionHash = shareResult.get("selectionHash").toString();
+
+        //TODO: to think how to pass the execSelection hash
+//        if ((execFileSelectionHash)) {
+//            selectionHash = execFileSelectionHash;
+//        }
+
+        generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
+        SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        queryObj.put("selectionHash", selectionHash);
+        queryObj.put("pubKey", emailKeyPair.getPrivateSignKey());
+        queryObj.put("shareUrl", generatedShareUrl);
+        queryObj.put("requestBodyHashSignature", "NULL");
+        queryObj.put("payload", "");
+
+        String requestBodyHash = signMessage(getRequestHashJSON(queryObj), keyPair);
+
+        queryObj.put("requestBodyHashSignature", requestBodyHash);
+
+        // Stringified for harder readability
+        String query = getObjectIntoByte64(queryObj);
+
+        SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+        fragmentObj.put("secretKey", emailKeyPair.getPrivateSignKey());
+        fragmentObj.put("secretEncKey", emailKeyPair.getPrivateEncKey());
+
+        String fragment = getObjectIntoByte64(fragmentObj);
+
+        generatedShareUrl = generatedShareUrl +"?q=" +query +"#"+fragment ;
+
+//        JSONObject result = new JSONObject();
+//
+//        result.put("shareUrl", generatedShareUrl);
+
+//        if (!isNullAny(execFileSelectionHash, emailSharePubKeys)) {
+//
+//            let encryptedShareUrl = await encryptDataToPublicKeyWithKeyPair(generatedShareUrl, emailSharePubKeys.pubEncKey, keyPair);
+//            let emailSelectionsObj = {
+//                    selectionHash: selectionHash,
+//                    pubKey: emailSharePubKeys.pubKey,
+//                    pubEncKey: emailSharePubKeys.pubEncKey,
+//                    encryptedUrl: encryptedShareUrl.payload,
+//            };
+//
+//            let submitUrl = getEndpointUrl('email/share/create');
+//            let submitRes = (await axios.post(submitUrl, emailSelectionsObj)).data;
+//            log('Server returns result', submitRes.data);
+//            if (submitRes.status === "ERROR") {
+//                throw submitRes.data;
+//            }
+//        }
+
+        return generatedShareUrl;
     }
 
     /**

@@ -27,7 +27,8 @@ public class Test {
         String ch="0xd7323d4eb25e57060f68f59640b06178ee81ea30b796f9653f9fa13e454b0b21";
 
         String recipient = "ak_25ZrFQDCAHoGVnT8Ed3hXgWwPwy7jpcQVtfs63DwEAYW6m6vgU";
-        String fileChainID = "0x3b74ba61de77c3f1852e356411dbaeb2db59a77e06f1245b89e49d591a1e2fcc";
+        String recipientMail = "vampireskooo@gmail.com";
+        String fileChainID = "0xd90a2f151e135e5131fb599f2e5c9cf2742702d02b07de76bf551a0688dd5b4e";
 
         UserKeyPair keys = null;
         try {
@@ -49,7 +50,7 @@ public class Test {
 //        JSONObject js = hammerJ.checkHash(fileChainID,keys.getAddress());
 //        System.out.println(js.toString(1));
         //share
-        JSONObject jss = hammerJ.shareData(fileChainID, recipient, keys);
+        JSONObject jss = hammerJ.shareData(fileChainID, recipientMail, keys);
         System.out.println(jss.toString(1));
         //upload
 //       String s = hammerJ.store("today.txt", keys);
