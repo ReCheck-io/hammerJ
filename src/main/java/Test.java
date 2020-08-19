@@ -28,7 +28,7 @@ public class Test {
 
         String recipient = "ak_25ZrFQDCAHoGVnT8Ed3hXgWwPwy7jpcQVtfs63DwEAYW6m6vgU";
         String recipientMail = "vampireskooo@gmail.com";
-        String fileChainID = "0xd90a2f151e135e5131fb599f2e5c9cf2742702d02b07de76bf551a0688dd5b4e";
+        String fileChainID = "0xd57f03fb24b0ee160eafcb54b4d939d752d372f216b1577f87cec6ffc8242963";
 
         UserKeyPair keys = null;
         try {

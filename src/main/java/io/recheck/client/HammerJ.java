@@ -81,13 +81,17 @@ public class HammerJ {
      * @return a hash of the post request's content
      */
     private String getRequestHashJSON(SortedMap requestJSON) {
+
+        requestJSON.put("payload","");
+        requestJSON.put("requestBodyHashSignature", "NULL");
+
         Gson gson = new Gson();
 
         // Convert the ordered map into an ordered string.
         String requestString = gson.toJson(requestJSON);
         requestString = requestString.replace("\\u003d","=");
 
-        System.out.println(requestString);
+        System.out.println("maika ti \n  " +  requestString);
 
         return getHash(requestString);
     }
@@ -108,7 +112,6 @@ public class HammerJ {
         byte[] requestStringBytes = requestString.getBytes();
 
         String result = Base64.getEncoder().encodeToString(requestStringBytes);
-        System.out.println(result);
 
         return result;
     }
@@ -1280,13 +1283,23 @@ public class HammerJ {
             LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
             LOGGER.fine("Server responds to user device POST " + postResponse.toString());
             JSONObject serverResult = new JSONObject(postResponse.toString());
-            JSONObject result = new JSONObject(serverResult.get("data").toString());
+            System.out.println();
+            if (!serverResult.get("data").toString().startsWith("{")){
+               String[] message = serverResult.get("data").toString().split(",");
+               for (int i=0; i< message.length;i++){
+                   System.out.println(message[i]);
+               }
+                System.exit(0);
+            }else {
 
-            //emailShare shenanigans
-            String shareUrl = generateEmailShareUrl(isEmailShare, result, keyPair, recipientEmailLinkKeyPair);
-            result.put("shareUrl", shareUrl);
+                JSONObject result = new JSONObject(serverResult.get("data").toString());
 
-            return result;
+                //generating email keys and shareable link
+                String shareUrl = generateEmailShareUrl(isEmailShare, result, keyPair, recipientEmailLinkKeyPair);
+                result.put("shareUrl", shareUrl);
+
+                return result;
+            }
         }
         throw new Error("Unable to create share. Data id mismatch.");
     }
@@ -1296,8 +1309,7 @@ public class HammerJ {
         if (!isEmailShare) {
             return generatedShareUrl;
         }
-        System.out.println("ei tva");
-        System.out.println(shareResult.toString(1));
+
 //        if (shareResult.get("selectionHash").toString() != null) {
 //            throw new Error("Unable to create email share selection hash. Contact your service provider.");
 //        }
@@ -1312,24 +1324,36 @@ public class HammerJ {
         generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
         SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         queryObj.put("selectionHash", selectionHash);
-        queryObj.put("pubKey", emailKeyPair.getPrivateSignKey());
+        queryObj.put("pubKey", emailKeyPair.getPublicSignKey());
+        queryObj.put("pubEncKey", emailKeyPair.getPublicEncKey());
         queryObj.put("shareUrl", generatedShareUrl);
         queryObj.put("requestBodyHashSignature", "NULL");
         queryObj.put("payload", "");
 
-        String requestBodyHash = signMessage(getRequestHashJSON(queryObj), keyPair);
 
+        String requestBodyHash = signMessage(getRequestHashJSON(queryObj), keyPair);
         queryObj.put("requestBodyHashSignature", requestBodyHash);
 
+        Gson gson = new Gson();
+
+        // Convert the ordered map into an ordered string.
+        String queryO = gson.toJson(queryObj);
+        System.out.println("toz query Obj \n" + queryO);
         // Stringified for harder readability
         String query = getObjectIntoByte64(queryObj);
 
+        System.out.println("query 64 \n" + query);
         SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         fragmentObj.put("secretKey", emailKeyPair.getPrivateSignKey());
         fragmentObj.put("secretEncKey", emailKeyPair.getPrivateEncKey());
 
+
         String fragment = getObjectIntoByte64(fragmentObj);
+
+        String fragmentO = gson.toJson(fragmentObj);
+        System.out.println("fragment object \n" + fragmentO);
+        System.out.println("fragment 64 \n" + fragment);
 
         generatedShareUrl = generatedShareUrl +"?q=" +query +"#"+fragment ;
 
