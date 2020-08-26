@@ -17,6 +17,10 @@ public class UserKeyPair {
         setPrivateSignKey(privateSignKey);
         setPhrase(phrase);
     }
+    public UserKeyPair (String publicSignKey, String publicEncKey){
+        setPublicSignKey(publicSignKey);
+        setPublicEncKey(publicEncKey);
+    }
 
     public UserKeyPair(String s, String s1, String s2, String s3, String s4) {
     }

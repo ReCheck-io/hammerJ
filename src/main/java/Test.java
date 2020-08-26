@@ -49,16 +49,22 @@ public class Test {
         //checkHash
 //        JSONObject js = hammerJ.checkHash(fileChainID,keys.getAddress());
 //        System.out.println(js.toString(1));
+
         //share
-        JSONObject jss = hammerJ.shareData(fileChainID, recipientMail, keys);
-        System.out.println(jss.toString(1));
+//        JSONObject jss = hammerJ.shareData(fileChainID, recipientMail, keys);
+//        System.out.println(jss.toString(1));
+
         //upload
 //       String s = hammerJ.store("today.txt", keys);
 //        System.out.println(s);
 
+        //sign
+//        JSONObject js = hammerJ.signFile(fileChainID,keys.getAddress(),keys);
+//        System.out.println(js.toString());
+
 //         execSelection for open share and open selection
-//                ArrayList<ResultFileObj> res = hammerJ.execSelection("re:0xcea32931657083955965a6325463efccf6e86c0b1726a00e9af0b70e95fbffec", keys);
-//                System.out.println(res.get(0).getDataId());
+                ArrayList<ResultFileObj> res = hammerJ.execSelection("se:0x656a395008241429ba9f56556f0b8a61d625390c079ffc4b38bf7256ff6985c5", keys);
+                System.out.println(res.get(0).getDataId());
 //
     }
 

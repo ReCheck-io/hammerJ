@@ -48,7 +48,7 @@ public class HammerJ {
     /**
      * Function to sign the bytes of a file using TweetNacl Signature class.
      *
-     * @param file file or message to encrypt
+     * @param file    file or message to encrypt
      * @param keyPair user's key pair
      * @return a byte array with the signature of the signature
      * @throws NoSuchAlgorithmException
@@ -82,16 +82,14 @@ public class HammerJ {
      */
     private String getRequestHashJSON(SortedMap requestJSON) {
 
-        requestJSON.put("payload","");
+        requestJSON.put("payload", "");
         requestJSON.put("requestBodyHashSignature", "NULL");
 
         Gson gson = new Gson();
 
         // Convert the ordered map into an ordered string.
         String requestString = gson.toJson(requestJSON);
-        requestString = requestString.replace("\\u003d","=");
-
-        System.out.println("maika ti \n  " +  requestString);
+        requestString = requestString.replace("\\u003d", "=");
 
         return getHash(requestString);
     }
@@ -107,7 +105,7 @@ public class HammerJ {
 
         // Convert the ordered map into an ordered string.
         String requestString = gson.toJson(requestJSON);
-        requestString = requestString.replace("\\u003d","=");
+        requestString = requestString.replace("\\u003d", "=");
 
         byte[] requestStringBytes = requestString.getBytes();
 
@@ -119,13 +117,13 @@ public class HammerJ {
     /**
      * It will sign the contents of the url request, without the payload, passed to the backend
      *
-     * @param url the parameters passed for post/get request
+     * @param url     the parameters passed for post/get request
      * @param keyPair user's key pair
      * @return hash of the contents then put into one of the parameters. This is because server check is made
      * once the request reach its destination.
      */
 
-    private String getRequestHashURL(String url, UserKeyPair keyPair){
+    private String getRequestHashURL(String url, UserKeyPair keyPair) {
         String hashedURL = getHash(url);
         String signedUrl = signMessage(hashedURL, keyPair);
         url = url.replace("NULL", signedUrl);
@@ -150,7 +148,7 @@ public class HammerJ {
      * @param toDecode A Base58 encoded string to be decoded
      * @return decoded information in the form of byte array
      * @throws NoSuchAlgorithmException This exception is thrown when a particular cryptographic algorithm is requested
-     * but is not available in the environment.
+     *                                  but is not available in the environment.
      */
     private byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
         toDecode = toDecode.replace("ak_", "");
@@ -159,7 +157,7 @@ public class HammerJ {
 
     /**
      * session25519 is a public key cryptography library for the generation of Curve25519 encryption and ed25519 digital signature keys.
-     *
+     * <p>
      * The encryption and signing keys are created with TweetNaCl.js, a port of TweetNaCl / NaCl.
      * The encryption keys are for the Public-key authenticated encryption box construction which implements
      * curve25519-xsalsa20-poly1305. The signing keys are for the ed25519 digital signature system.
@@ -168,7 +166,7 @@ public class HammerJ {
      * @param key1 - six random words concatenated into a String with a space delimiter
      * @return byte array that is going to be used for the creation of Sign and Encryption keys
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
-     * provides type safety for all the security-related exception classes that extend from it.
+     *                                  provides type safety for all the security-related exception classes that extend from it.
      */
     private byte[] session25519(String key1, String key2) throws GeneralSecurityException {
         int logN = 131072;  // this number is 2^17  CPU/memory cost parameter (1 to 31)
@@ -195,19 +193,17 @@ public class HammerJ {
     }
 
     /**
-     *
      * @param passphrase - the secret 12 random words, which the user should be keeping secret and save in order to
      *                   recover their account in case something happens.
-     *
+     *                   <p>
      *                   In case this parameter is null or empty, it means that there is a new account to be created. It
      *                   happens by using diceware method to choose the random 12 words.
-     *
+     *                   <p>
      *                   It keyPair containing one address, public and private Sign keys,
      *                   public and private Encryption keys and the security phrase.
-     *
      * @return UserKeyPair object, containing the important information.
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
-     * provides type safety for all the security-related exception classes that extend from it.
+     *                                  provides type safety for all the security-related exception classes that extend from it.
      */
 
     public UserKeyPair newKeyPair(String passphrase) throws GeneralSecurityException {
@@ -221,7 +217,7 @@ public class HammerJ {
             }
         } else {
             String[] fullphrase = StringUtils.split(diceware());
-            for (int i = 0; i<12 ; i++){
+            for (int i = 0; i < 12; i++) {
                 passphrase += fullphrase[0] + " ";
             }
         }
@@ -251,7 +247,7 @@ public class HammerJ {
 
         switch (network) {
             case "ae":
-                publicSignKey ="ak_" + Base58Check.encode(keyPairS.getPublicKey());
+                publicSignKey = "ak_" + Base58Check.encode(keyPairS.getPublicKey());
                 privateSignKey = bytesToHex(keyPairS.getSecretKey());
                 address = publicSignKey;
                 break;
@@ -287,7 +283,7 @@ public class HammerJ {
      *
      * @return a string with the value of either eth for Ethereum or ae for Aeternity blockchain
      */
-    public String getNetwork(){
+    public String getNetwork() {
         return network;
     }
 
@@ -297,25 +293,23 @@ public class HammerJ {
      * @param net - setting the blockchain to be used
      */
 
-    public void setNetwork(String net){
-        network = net ;
+    public void setNetwork(String net) {
+        network = net;
     }
 
     /**
-     *
      * Creates a key and salt in order to create symmetric key. This Sym key is going to be used for the file encryption.
-     *
+     * <p>
      * On the other hand the newly created key is encrypted with another, so that it can be sent along with the salt to
      * the receiver who has the means to decrypt the key, re-create the Sym key and decrypt the file.
-     *
+     * <p>
      * As final step encapsulates the credentials of the file and its encrypted hash to pass them to the caller.
      *
-     *
-     * @param fileData The payload from the file in the form of a hash
+     * @param fileData     The payload from the file in the form of a hash
      * @param dstPublicKey The public key of the receiver
      * @return an object with encapsulated file's credentials
-     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
-     * provides type safety for all the security-related exception classes that extend from it.
+     * @throws GeneralSecurityException     The GeneralSecurityException class is a generic security exception class that
+     *                                      provides type safety for all the security-related exception classes that extend from it.
      * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
     public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
@@ -359,11 +353,10 @@ public class HammerJ {
     }
 
     /**
-     *
      * Encrypts the String data with TweetNaclFast Box type.
      *
      * @param data the message to be encrypted
-     * @param key a Base64 encoded key (in the program we encode a sha3 hashed String)
+     * @param key  a Base64 encoded key (in the program we encode a sha3 hashed String)
      * @return String encrypted message then encoded in Base64
      * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
@@ -391,11 +384,10 @@ public class HammerJ {
     }
 
     /**
-     *
      * Takes the Base64 encoded secret message, decodes it and then decrypts it.
      *
      * @param messageWithNonce a Base64 encoded message
-     * @param key  a Base64 encoded key
+     * @param key              a Base64 encoded key
      * @return decrypted String message
      */
     public String decryptDataWithSymmetricKey(String messageWithNonce, String key) {
@@ -427,7 +419,7 @@ public class HammerJ {
      * Using asymmetric public key encryption.
      *
      * @param data String data payload
-     * @param key Shared key - Box TweetNacl - that will be used for encryption of the data
+     * @param key  Shared key - Box TweetNacl - that will be used for encryption of the data
      * @return base64 String private key encrypted message
      */
     public String encryptData(String data, TweetNaclFast.Box key) {
@@ -451,11 +443,11 @@ public class HammerJ {
     }
 
     /**
-     *  Takes as input secret or shared key and an encrypted data as a hash of type String that needs to be decrypted.
-     *  Using asymmetric public key encryption.
+     * Takes as input secret or shared key and an encrypted data as a hash of type String that needs to be decrypted.
+     * Using asymmetric public key encryption.
      *
      * @param messageWithNonce a Base64 encoded message with the nonce
-     * @param key a TweetNacl Box object
+     * @param key              a TweetNacl Box object
      * @return decrypted String message
      */
     public String decryptData(String messageWithNonce, TweetNaclFast.Box key) {
@@ -482,13 +474,13 @@ public class HammerJ {
     /**
      * This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
      *
-     * @param data a String message to be encrypted
+     * @param data            a String message to be encrypted
      * @param dstPublicEncKey the public key of the receiver
-     * @param userAkKeyPairs the key pair of the sender
+     * @param userAkKeyPairs  the key pair of the sender
      * @return an object encapsulating the payload of the encrypted file along with the private and public key needed
      * for the encryption
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
-     * provides type safety for all the security-related exception classes that extend from it.
+     *                                  provides type safety for all the security-related exception classes that extend from it.
      */
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException {
         if (userAkKeyPairs == null) {
@@ -513,16 +505,16 @@ public class HammerJ {
     }
 
     /**
-     *This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
-     *
+     * This function takes someone's public key and user's private to encrypt the data with TweetNacl Box function.
+     * <p>
      * Overrides the previous function, when there is no specified private key.
      *
-     * @param data a String message to be encrypted
+     * @param data            a String message to be encrypted
      * @param dstPublicEncKey The receiver's public key
      * @return an object encapsulating the payload of the encrypted file along with the private and public key needed
      * for the encryption
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
-     * provides type safety for all the security-related exception classes that extend from it.
+     *                                  provides type safety for all the security-related exception classes that extend from it.
      */
     public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
         String generate = null;
@@ -585,11 +577,11 @@ public class HammerJ {
      * @param fileObj a fileObj containing info about the object and it is about to be uploaded
      * @param keyPair the keyPair of the user
      * @return an object encapsulating the data needed to be stored per single file
-     * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
-     * provides type safety for all the security-related exception classes that extend from it.
+     * @throws GeneralSecurityException     The GeneralSecurityException class is a generic security exception class that
+     *                                      provides type safety for all the security-related exception classes that extend from it.
      * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
-    public FileToUpload getFileUploadData(FileObj fileObj,UserKeyPair keyPair) throws GeneralSecurityException, UnsupportedEncodingException {
+    public FileToUpload getFileUploadData(FileObj fileObj, UserKeyPair keyPair) throws GeneralSecurityException, UnsupportedEncodingException {
 
         String fileContents = fileObj.getPayload();
         EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, keyPair.getPublicEncKey());
@@ -598,7 +590,7 @@ public class HammerJ {
         String syncPassHash = getHash(encryptedFile.getCredentials().getSyncPass());
         String dataChainId = getHash(dataOriginalHash);
         String requestType = "upload";
-        //TODO change
+
         String trailHash = getHash(dataChainId + keyPair.getPublicSignKey() + requestType + keyPair.getPublicSignKey());
 
 
@@ -645,7 +637,7 @@ public class HammerJ {
             .readTimeout(300, TimeUnit.SECONDS)
             .build();
 
-    private void init(String token, String baseUrl, String network) {
+    public void init(String token, String baseUrl, String network) {
         this.token = token;
         this.baseUrl = baseUrl;
         this.setNetwork(network);
@@ -655,8 +647,9 @@ public class HammerJ {
      * This function checks if the user is having a challenge or not and then redirects to loginWithChallenge function.
      * If there is, then the user is also logged in the browser GUI. Otherwise, the user just
      * have access to the backend's APIs.
-     *
+     * <p>
      * TODO check if wrong challenge is going to give me access
+     *
      * @param kp - user's key Pair
      * @param ch - challenge, what would be represented as QR in the website
      * @return the result of LoginWithChallenge
@@ -685,11 +678,10 @@ public class HammerJ {
     }
 
     /**
-     *
      * Creates a JSON object to put into post request in order for the user to log into the system.
      *
      * @param challenge the identification given by the server, so that the user can access the web GUI
-     * @param keyPair user's keypair
+     * @param keyPair   user's keypair
      * @return the token response, either success or fail
      */
     private String loginWithChallenge(String challenge, UserKeyPair keyPair) {
@@ -742,7 +734,7 @@ public class HammerJ {
     /**
      * Overloading of the function with the addition of an appendix.
      *
-     * @param action - type of action - mobilelogin etc.
+     * @param action   - type of action - mobilelogin etc.
      * @param appendix - the specific parameters for the corresponding action
      * @return String with correct http address
      */
@@ -779,14 +771,13 @@ public class HammerJ {
     }
 
     /**
-     *
      * Method to send post request to the given url and json
      *
-     * @param url the server url to which the request to be sent
+     * @param url  the server url to which the request to be sent
      * @param json the json containing the object to be sent
      * @return String with the result of the request
      * @throws IOException Signals that an I/O exception of some sort has occurred. This class is the general class of
-     * exceptions produced by failed or interrupted I/O operations.
+     *                     exceptions produced by failed or interrupted I/O operations.
      */
     private String post(String url, JSONObject json) throws IOException {
         RequestBody body = RequestBody.create(json.toString(), JSON);
@@ -800,13 +791,12 @@ public class HammerJ {
     }
 
     /**
-     *
      * Method that gets a file and encapsulates it into JSON file in order to post the details on the blockchain.
      *
      * @param file the object containing the info to put into json and post send
      * @return the server response after sending the json
      * @throws IOException Signals that an I/O exception of some sort has occurred. This class is the general class of
-     * exceptions produced by failed or interrupted I/O operations.
+     *                     exceptions produced by failed or interrupted I/O operations.
      */
 
     private String uploadFile(FileToUpload file) throws IOException {
@@ -825,7 +815,7 @@ public class HammerJ {
         js.put("keywords", file.getKeywords());
         js.put("payload", "");
 
-        SortedMap<String,Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        SortedMap<String, Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         encryption.put("dataOriginalHash", file.getEncrypt().getDataHash());
         encryption.put("salt", file.getEncrypt().getSalt());
         encryption.put("passHash", file.getEncrypt().getPassHash());
@@ -841,15 +831,13 @@ public class HammerJ {
         js.put("requestBodyHashSignature", requestBodySig);
 
         JSONObject upload = new JSONObject(js);
-        System.out.println(upload.toString(1));
         String submitUrl = getEndpointUrl("data/create");
-        System.out.println(submitUrl);
         LOGGER.info("Store post" + submitUrl);
         String response = post(submitUrl, upload);
 
         JSONObject uploadResult = new JSONObject(response);
 
-        LOGGER.severe("Store result"+  uploadResult.get("data").toString());
+        LOGGER.severe("Store result" + uploadResult.get("data").toString());
         return uploadResult.get("data").toString();
     }
 
@@ -906,10 +894,9 @@ public class HammerJ {
      * Takes encrypted data - payload - and then with the sender's public and the receiver's secret key
      * decrypts the data.
      *
-     *
-     * @param payload encrypted data
+     * @param payload         encrypted data
      * @param srcPublicEncKey sender's public key
-     * @param secretKey receiver's secret key
+     * @param secretKey       receiver's secret key
      * @return decrypted data
      */
 
@@ -928,9 +915,9 @@ public class HammerJ {
     /**
      * Decrypts with user's key pair. It is for the GUI to be asking keys for permission out of the mobile app.
      *
-     * @param userId user's chain ID
+     * @param userId      user's chain ID
      * @param dataChainId file's chain ID
-     * @param keyPair user's key pair
+     * @param keyPair     user's key pair
      * @return response from the server whether the decryption has been successful or not
      */
 
@@ -941,13 +928,11 @@ public class HammerJ {
         String trailHash = getHash(dataChainId + userId + requestType + userId);
         String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
-        String query = "&userId="+userId +"&dataId=" + dataChainId + "&requestId="+ defaultRequestId + "&requestType=" +requestType+ "&requestBodyHashSignature=NULL&trailHash="+ trailHash+ "&trailHashSignatureHash=" +trailHashSignatureHash;
-        System.out.println("query " + query);
+        String query = "&userId=" + userId + "&dataId=" + dataChainId + "&requestId=" + defaultRequestId + "&requestType=" + requestType + "&requestBodyHashSignature=NULL&trailHash=" + trailHash + "&trailHashSignatureHash=" + trailHashSignatureHash;
         String getUrl = getEndpointUrl("credentials/info", query);
 
         //hashes the request, and puts it as a value inside the url
         getUrl = getRequestHashURL(getUrl, keyPair);
-        System.out.println("getUrl "+ getUrl);
         LOGGER.fine("decryptWithKeyPair get request " + getUrl);
         String serverEncryptionInfo = getRequest(getUrl);
 
@@ -971,9 +956,6 @@ public class HammerJ {
             e.printStackTrace();
         }
         LOGGER.fine("User device re-encrypts password for browser " + reEncryptedPasswordInfo);
-        System.out.println("payload " + reEncryptedPasswordInfo.getPayload());
-        System.out.println("SrcPubkey " + reEncryptedPasswordInfo.getSrcPublicEncKey());
-        System.out.println("DstKey " + reEncryptedPasswordInfo.getDstPublicEncKey());
 
         JSONObject devicePost = new JSONObject();
         devicePost.put("dataId", dataChainId);
@@ -1004,10 +986,10 @@ public class HammerJ {
     }
 
     /**
-     *  Processing the encryption to decryption process, by creating the full password and decrypting the data
+     * Processing the encryption to decryption process, by creating the full password and decrypting the data
      *
      * @param encryptedFileInfo the encrypted file object
-     * @param devicePublicKey mobile device, or the user's, public key
+     * @param devicePublicKey   mobile device, or the user's, public key
      * @param browserPrivateKey the browser's private key
      * @return JSON obj result with the decrypted data.
      */
@@ -1034,8 +1016,8 @@ public class HammerJ {
      * Verification of the file decryption, before returning it to the user who has selected to open/download it
      *
      * @param fileContents hash of the file
-     * @param userId user's chain ID
-     * @param dataId file's chain ID
+     * @param userId       user's chain ID
+     * @param dataId       file's chain ID
      * @return the result taken from the server, after sending the data for double check
      */
 
@@ -1046,7 +1028,7 @@ public class HammerJ {
         String trailHash = getHash(dataId + userId + requestType + userId);
 
 
-        SortedMap<String,Object> file = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        SortedMap<String, Object> file = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         file.put("userId", userId);
         file.put("dataId", dataId);
         file.put("requestId", defaultRequestId);
@@ -1055,7 +1037,7 @@ public class HammerJ {
         file.put("trailHash", trailHash);
         file.put("trailHashSignatureHash", getHash(trailHash));
 
-        SortedMap<String,Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        SortedMap<String, Object> encryption = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         encryption.put("decryptedDataHash", fileHash);
 
         file.put("encryption", encryption);
@@ -1087,18 +1069,13 @@ public class HammerJ {
         return res;
     }
 
-    private String processExternalId(String dataIdInput, String userId, boolean isExternal){
-
-
-        return null;
-    }
 
     /**
      * Searches for file based on the credential, data id and user id, given.
      *
      * @param credentialsResponse The response of the credentials from the user's id and the file/selection they
      *                            want to open
-     * @param receiverPubKey receiver's public key
+     * @param receiverPubKey      receiver's public key
      * @return decrypted file or a selection of files
      */
     private JSONObject poll(JSONObject credentialsResponse, String receiverPubKey) {
@@ -1152,43 +1129,57 @@ public class HammerJ {
         return selectionRes.toString();
     }
 
+    /**
+     * Validation of an email
+     *
+     * @param emailStr - input email
+     * @return whether the email is valid or not.
+     */
+
     public static boolean validateEmail(String emailStr) {
         Matcher matcher = VALID_EMAIL_ADDRESS_REGEX.matcher(emailStr);
         return matcher.find();
     }
+
+    /**
+     * Validation of a blockchain address on AEthernity
+     *
+     * @param aeAddress - input address
+     * @return whether the address is AE valid or not
+     */
+
     public static boolean validateAEAddress(String aeAddress) {
         Matcher matcher = VALID_AETHERNITY.matcher(aeAddress);
         return matcher.find();
     }
+
+    /**
+     * Validation of a blockchain address on Ethereum
+     *
+     * @param ethAddress - input address
+     * @return whether the address is eth valid or not
+     */
+
     public static boolean validateEthAddress(String ethAddress) {
         Matcher matcher = VALID_ETHEREUM.matcher(ethAddress);
         return matcher.find();
     }
 
-    /**
-     * Shares the file with other accounts from the network, that the user already have in contacts.
-     *
-     * @param dataId file's chain ID
-     * @param recipientId recipient(s) chain ID
-     * @param keyPair user/sender's key pair
-     * @return a JSON obj containing the shared file
-     */
 
-    public JSONObject shareData(String dataId, String recipientId, UserKeyPair keyPair) {
-        boolean isEmailShare = false;
+    private String[] recipientCheck(String recipientId) {
+
         String recipientType;
         String requestType = "share";
 
-        if (validateEmail(recipientId)){
-            isEmailShare = true;
+        if (validateEmail(recipientId)) {
             recipientType = "recipientEmail";
             requestType = "email";
-        } else if (validateAEAddress(recipientId)){
+        } else if (validateAEAddress(recipientId)) {
             recipientType = "recipientId";
             requestType = "share";
-        }else if (validateEthAddress(recipientId)){
+        } else if (validateEthAddress(recipientId)) {
             recipientType = "recipientId";
-        }else {
+        } else {
             recipientType = "";
             try {
                 throw new Exception("Address not valid");
@@ -1196,56 +1187,81 @@ public class HammerJ {
                 e.printStackTrace();
             }
         }
+        String[] result = new String[2];
+        result[0] = recipientType;
+        result[1] = requestType;
 
+        return result;
+    }
+
+    /**
+     * Shares the file either with other accounts from the network, that the user already have in contacts, or
+     * by providing an email. With the email-share it also returns a link that sends a secret code to the email.
+     * Only with the possession of this code can the contents of the share be decrypted.
+     *
+     * @param dataId      file's chain ID
+     * @param recipientId recipient(s) chain ID
+     * @param senderKeys  user/sender's key pair
+     * @return a JSON obj containing the shared file
+     */
+
+    public JSONObject shareData(String dataId, String recipientId, UserKeyPair senderKeys) {
+        boolean isEmailShare;
+        isEmailShare = recipientId.contains("@");
+        String[] recipientQuerySpecific = recipientCheck(recipientId);
+
+        String recipientType = recipientQuerySpecific[0];
+        String requestType = recipientQuerySpecific[1];
+
+        //providing that the right API is called
         String getUrl = getEndpointUrl("share/credentials", "&dataId=" + dataId + "&" + recipientType + "=" + recipientId);
         LOGGER.severe("credentials/share get request " + getUrl);
         String getShareResponse = getRequest(getUrl);
+        // Share response is going to give back data either for email or for an identity share
         LOGGER.fine("Share res " + getShareResponse);
 
         JSONObject shareResData = new JSONObject(getShareResponse);
         JSONObject shareRes = new JSONObject(shareResData.get("data").toString());
 
-
+        // if the server is OK and gave back the correct data
         if (shareRes.get("dataId").toString().equals(dataId)) {
-
+            //the encryption sent contains pub key of the receiver, if is to be to an identity
             JSONObject encryption = new JSONObject(shareRes.get("encryption").toString());
 
-
+            //can go into a method
             String encryptedPassA = encryption.get("encryptedPassA").toString();
             String pubKeyA = encryption.get("pubKeyA").toString();
-            String decryptedPassword = decryptDataWithPublicAndPrivateKey(encryptedPassA, pubKeyA, keyPair.getPrivateEncKey());
+            String decryptedPassword = decryptDataWithPublicAndPrivateKey(encryptedPassA, pubKeyA, senderKeys.getPrivateEncKey());
             String syncPassHash = getHash(decryptedPassword);
-            String recipientEncrKey ="";
-//            String recipientEncrKey = encryption.get("recipientEncrKey").toString();
 
+            String recipientEncrKey = "";
             UserKeyPair recipientEmailLinkKeyPair = null;
+
             if (isEmailShare) {
-//                if (isNullAny(emailSharePubKeys)) {
                 try {
                     recipientEmailLinkKeyPair = newKeyPair(null);
                 } catch (GeneralSecurityException e) {
                     e.printStackTrace();
                 }
-//                } else {
-//                    recipientEmailLinkKeyPair = recipientsEmailLinkKeyPair;
-//                }
-
                 recipientEncrKey = recipientEmailLinkKeyPair.getPublicEncKey();
+            } else {
+                recipientEncrKey = encryption.get("recipientEncrKey").toString();
             }
 
             EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
             try {
-                reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword, recipientEncrKey, keyPair);
+                reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword, recipientEncrKey, senderKeys);
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
             }
-            String userId = keyPair.getAddress();
-            String trailHash = getHash(dataId + userId + requestType + recipientId);
-            String trailHashSignatureHash = getHash(signMessage(trailHash, keyPair));
 
+            String senderId = senderKeys.getAddress();
+            String trailHash = getHash(dataId + senderId + requestType + recipientId);
+            String trailHashSignatureHash = getHash(signMessage(trailHash, senderKeys));
 
-            SortedMap<String,Object> createShare = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            createShare.put("userId", userId);
+            // can go into a method
+            SortedMap<String, Object> createShare = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            createShare.put("userId", senderId);
             createShare.put("dataId", dataId);
             createShare.put("requestId", defaultRequestId);
             createShare.put("requestType", requestType);
@@ -1257,19 +1273,17 @@ public class HammerJ {
             createShare.put("payload", "");
 
             SortedMap<String, Object> encrpt = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            encrpt.put("senderEncrKey", keyPair.getPublicEncKey());
+            encrpt.put("senderEncrKey", senderKeys.getPublicEncKey());
             encrpt.put("syncPassHash", syncPassHash);
             encrpt.put("encryptedPassA", reEncryptedPasswordInfo.getPayload());
 
             createShare.put("encryption", encrpt);
 
-            String requestBodyHash = signMessage(getRequestHashJSON(createShare), keyPair);
+            String requestBodyHash = signMessage(getRequestHashJSON(createShare), senderKeys);
 
             createShare.put("requestBodyHashSignature", requestBodyHash);
 
             JSONObject jsCreateShare = new JSONObject(createShare);
-            System.out.println("create Share");
-            System.out.println(jsCreateShare.toString(1));
             String postUrl = getEndpointUrl("share/create");
 
             String serverPostResponse = null;
@@ -1283,19 +1297,19 @@ public class HammerJ {
             LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
             LOGGER.fine("Server responds to user device POST " + postResponse.toString());
             JSONObject serverResult = new JSONObject(postResponse.toString());
-            System.out.println();
-            if (!serverResult.get("data").toString().startsWith("{")){
-               String[] message = serverResult.get("data").toString().split(",");
-               for (int i=0; i< message.length;i++){
-                   System.out.println(message[i]);
-               }
+            if (!serverResult.get("data").toString().startsWith("{")) {
+                String[] message = serverResult.get("data").toString().split(",");
+                for (int i = 0; i < message.length; i++) {
+                    //This message should stay
+                    System.out.println(message[i]);
+                }
                 System.exit(0);
-            }else {
+            } else {
 
                 JSONObject result = new JSONObject(serverResult.get("data").toString());
 
                 //generating email keys and shareable link
-                String shareUrl = generateEmailShareUrl(isEmailShare, result, keyPair, recipientEmailLinkKeyPair);
+                String shareUrl = generateEmailShareUrl(isEmailShare, result, senderKeys, recipientEmailLinkKeyPair);
                 result.put("shareUrl", shareUrl);
 
                 return result;
@@ -1304,22 +1318,143 @@ public class HammerJ {
         throw new Error("Unable to create share. Data id mismatch.");
     }
 
-    private String generateEmailShareUrl(boolean isEmailShare, JSONObject shareResult,UserKeyPair keyPair, UserKeyPair emailKeyPair) {
+    /**
+     * Shares the file either with other accounts from the network, that the user already have in contacts, or
+     * by providing an email. With the email-share it also returns a link that sends a secret code to the email.
+     * Only with the possession of this code can the contents of the share be decrypted.
+     *
+     * @param dataId      file's chain ID
+     * @param recipientId recipient(s) chain ID
+     * @param senderKeys  user/sender's key pair
+     * @return a JSON obj containing the shared file
+     */
+
+    public JSONObject shareData(String dataId, String recipientId, UserKeyPair senderKeys, UserKeyPair recipientsEmailLinkKeyPair, UserKeyPair enctryptionEmailKeyPair, String execFileSelectionHash) {
+        boolean isEmailShare;
+        isEmailShare = recipientId.contains("@");
+        String[] recipientQuerySpecific = recipientCheck(recipientId);
+
+        String recipientType = recipientQuerySpecific[0];
+        String requestType = recipientQuerySpecific[1];
+
+        //providing that the right API is called
+        String getUrl = getEndpointUrl("share/credentials", "&dataId=" + dataId + "&" + recipientType + "=" + recipientId);
+        LOGGER.severe("credentials/share get request " + getUrl);
+        String getShareResponse = getRequest(getUrl);
+        // Share response is going to give back data either for email or for an identity share
+        LOGGER.fine("Share res " + getShareResponse);
+
+        JSONObject shareResData = new JSONObject(getShareResponse);
+        JSONObject shareRes = new JSONObject(shareResData.get("data").toString());
+
+        // if the server is OK and gave back the correct data
+        if (shareRes.get("dataId").toString().equals(dataId)) {
+            //the encryption sent contains pub key of the receiver, if is to be to an identity
+            JSONObject encryption = new JSONObject(shareRes.get("encryption").toString());
+
+            //can go into a method
+            String encryptedPassA = encryption.get("encryptedPassA").toString();
+            String pubKeyA = encryption.get("pubKeyA").toString();
+            String decryptedPassword = decryptDataWithPublicAndPrivateKey(encryptedPassA, pubKeyA, senderKeys.getPrivateEncKey());
+            String syncPassHash = getHash(decryptedPassword);
+            String recipientEncrKey = recipientsEmailLinkKeyPair.getPublicEncKey();
+
+            EncryptedDataWithPublicKey reEncryptedPasswordInfo = null;
+            try {
+                reEncryptedPasswordInfo = encryptDataToPublicKeyWithKeyPair(decryptedPassword, recipientEncrKey, senderKeys);
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
+
+            String senderId = senderKeys.getAddress();
+            String trailHash = getHash(dataId + senderId + requestType + recipientId);
+            String trailHashSignatureHash = getHash(signMessage(trailHash, senderKeys));
+
+            // can go into a method
+            SortedMap<String, Object> createShare = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            createShare.put("userId", senderId);
+            createShare.put("dataId", dataId);
+            createShare.put("requestId", defaultRequestId);
+            createShare.put("requestType", requestType);
+            createShare.put("requestBodyHashSignature", "NULL");
+            createShare.put("trailHash", trailHash);
+            createShare.put("trailHashSignatureHash", trailHashSignatureHash);
+            //TODO: instead of recipientId as key i will have recipientType
+            createShare.put(recipientType, recipientId);
+            createShare.put("payload", "");
+
+            SortedMap<String, Object> encrpt = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            encrpt.put("senderEncrKey", senderKeys.getPublicEncKey());
+            encrpt.put("syncPassHash", syncPassHash);
+            encrpt.put("encryptedPassA", reEncryptedPasswordInfo.getPayload());
+
+            createShare.put("encryption", encrpt);
+
+            String requestBodyHash = signMessage(getRequestHashJSON(createShare), senderKeys);
+
+            createShare.put("requestBodyHashSignature", requestBodyHash);
+
+            JSONObject jsCreateShare = new JSONObject(createShare);
+            String postUrl = getEndpointUrl("share/create");
+
+            String serverPostResponse = null;
+            try {
+                serverPostResponse = post(postUrl, jsCreateShare);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //TODO: serverPostResponce and result could be null
+            JSONObject postResponse = new JSONObject(serverPostResponse);
+            LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
+            LOGGER.fine("Server responds to user device POST " + postResponse.toString());
+            JSONObject serverResult = new JSONObject(postResponse.toString());
+            if (!serverResult.get("data").toString().startsWith("{")) {
+                String[] message = serverResult.get("data").toString().split(",");
+                for (int i = 0; i < message.length; i++) {
+                    //This message should stay
+                    System.out.println(message[i]);
+                }
+                System.exit(0);
+            } else {
+
+                JSONObject result = new JSONObject(serverResult.get("data").toString());
+
+                //generating email keys and shareable link
+                String shareUrl = generateEmailShareUrl(isEmailShare, senderKeys, recipientsEmailLinkKeyPair, enctryptionEmailKeyPair, execFileSelectionHash);
+                result.put("shareUrl", shareUrl);
+
+                return result;
+            }
+        }
+        throw new Error("Unable to create share. Data id mismatch.");
+    }
+
+    /**
+     * This method will generate a link that will provide a one-time access to specific file. With privacy by design
+     * in mind, the link would be able to show the file to the user after they enter a code that is sent to the provided
+     * email
+     *
+     * @param isEmailShare boolean parameter to check whether the share is to another user or by email
+     * @param shareResult  this an object containing a selectionHash - reference to the recipient and file that's
+     *                     being sent
+     * @param keyPair      - the key pair of the sender
+     * @param emailKeyPair - a temporary key pair that is created for the recipient.
+     * @return String, link, that can be given to the receiver to open, having that they can get the security code from
+     * the provided email.
+     */
+
+    private String generateEmailShareUrl(boolean isEmailShare, JSONObject shareResult, UserKeyPair keyPair, UserKeyPair emailKeyPair) {
         String generatedShareUrl = null;
         if (!isEmailShare) {
             return generatedShareUrl;
         }
 
-//        if (shareResult.get("selectionHash").toString() != null) {
-//            throw new Error("Unable to create email share selection hash. Contact your service provider.");
-//        }
+        if (shareResult.get("selectionHash").toString() == null) {
+            System.err.println("Unable to create email share selection hash. Contact your service provider.");
+            System.exit(0);
+        }
 
         String selectionHash = shareResult.get("selectionHash").toString();
-
-        //TODO: to think how to pass the execSelection hash
-//        if ((execFileSelectionHash)) {
-//            selectionHash = execFileSelectionHash;
-//        }
 
         generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
         SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -1328,56 +1463,114 @@ public class HammerJ {
         queryObj.put("pubEncKey", emailKeyPair.getPublicEncKey());
         queryObj.put("shareUrl", generatedShareUrl);
         queryObj.put("requestBodyHashSignature", "NULL");
-        queryObj.put("payload", "");
 
 
         String requestBodyHash = signMessage(getRequestHashJSON(queryObj), keyPair);
         queryObj.put("requestBodyHashSignature", requestBodyHash);
 
-        Gson gson = new Gson();
 
-        // Convert the ordered map into an ordered string.
-        String queryO = gson.toJson(queryObj);
-        System.out.println("toz query Obj \n" + queryO);
         // Stringified for harder readability
         String query = getObjectIntoByte64(queryObj);
 
-        System.out.println("query 64 \n" + query);
         SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         fragmentObj.put("secretKey", emailKeyPair.getPrivateSignKey());
         fragmentObj.put("secretEncKey", emailKeyPair.getPrivateEncKey());
 
+        String fragment = getObjectIntoByte64(fragmentObj);
+
+        generatedShareUrl = generatedShareUrl + "?q=" + query + "#" + fragment;
+
+        return generatedShareUrl;
+    }
+
+    /**
+     * This method will generate a link that will provide a one-time access to specific file. With privacy by design
+     * in mind, the link would be able to show the file to the user after they enter a code that is sent to the provided
+     * email
+     *
+     * @param isEmailShare              boolean parameter to check whether the share is to another user or by email.
+     * @param senderKeys                - the key pair of the sender.
+     * @param recipientEmailLinkKeyPair - a temporary key pair that is created for the recipient.
+     * @param execFileSelectionHash     - a hash provided for the multiple files being sent as a pack.
+     * @return String, link, that can be given to the receiver to open, having that they can get the security code from
+     * the provided email.
+     */
+
+    private String generateEmailShareUrl(boolean isEmailShare, UserKeyPair senderKeys, UserKeyPair recipientEmailLinkKeyPair, UserKeyPair encryptionEmailLinkKeyPair, String execFileSelectionHash) {
+        String generatedShareUrl = null;
+        String selectionHash = "";
+
+        if (!isEmailShare) {
+            return generatedShareUrl;
+        }
+
+        if (execFileSelectionHash == null) {
+            System.err.println("Unable to create email share selection hash. Contact your service provider.");
+            System.exit(0);
+        } else {
+            selectionHash = execFileSelectionHash;
+        }
+
+        generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
+        SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        queryObj.put("selectionHash", selectionHash);
+        queryObj.put("pubKey", recipientEmailLinkKeyPair.getPublicSignKey());
+        queryObj.put("pubEncKey", recipientEmailLinkKeyPair.getPublicEncKey());
+        queryObj.put("shareUrl", generatedShareUrl);
+        queryObj.put("requestBodyHashSignature", "NULL");
+
+
+        String requestBodyHash = signMessage(getRequestHashJSON(queryObj), senderKeys);
+        queryObj.put("requestBodyHashSignature", requestBodyHash);
+
+
+        // Stringified for harder readability
+        String query = getObjectIntoByte64(queryObj);
+
+        SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+        fragmentObj.put("secretKey", recipientEmailLinkKeyPair.getPrivateSignKey());
+        fragmentObj.put("secretEncKey", recipientEmailLinkKeyPair.getPrivateEncKey());
 
         String fragment = getObjectIntoByte64(fragmentObj);
 
-        String fragmentO = gson.toJson(fragmentObj);
-        System.out.println("fragment object \n" + fragmentO);
-        System.out.println("fragment 64 \n" + fragment);
+        generatedShareUrl = generatedShareUrl + "?q=" + query + "#" + fragment;
 
-        generatedShareUrl = generatedShareUrl +"?q=" +query +"#"+fragment ;
+        JSONObject result = new JSONObject();
 
-//        JSONObject result = new JSONObject();
-//
-//        result.put("shareUrl", generatedShareUrl);
+        result.put("shareUrl", generatedShareUrl);
 
-//        if (!isNullAny(execFileSelectionHash, emailSharePubKeys)) {
-//
-//            let encryptedShareUrl = await encryptDataToPublicKeyWithKeyPair(generatedShareUrl, emailSharePubKeys.pubEncKey, keyPair);
-//            let emailSelectionsObj = {
-//                    selectionHash: selectionHash,
-//                    pubKey: emailSharePubKeys.pubKey,
-//                    pubEncKey: emailSharePubKeys.pubEncKey,
-//                    encryptedUrl: encryptedShareUrl.payload,
-//            };
-//
-//            let submitUrl = getEndpointUrl('email/share/create');
-//            let submitRes = (await axios.post(submitUrl, emailSelectionsObj)).data;
-//            log('Server returns result', submitRes.data);
-//            if (submitRes.status === "ERROR") {
-//                throw submitRes.data;
-//            }
-//        }
+
+        EncryptedDataWithPublicKey encryptedShareUrl = null;
+        try {
+            encryptedShareUrl = encryptDataToPublicKeyWithKeyPair(generatedShareUrl, encryptionEmailLinkKeyPair.getPublicEncKey(), senderKeys);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        }
+        SortedMap<String, Object> emailSelectionsObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+        emailSelectionsObj.put("selectionHash", selectionHash);
+        emailSelectionsObj.put("pubKey", encryptionEmailLinkKeyPair.getPublicSignKey());
+        emailSelectionsObj.put("pubEncKey", encryptionEmailLinkKeyPair.getPublicEncKey());
+        emailSelectionsObj.put("encryptedUrl", encryptedShareUrl.getPayload());
+
+        JSONObject emailSelecObj = new JSONObject(emailSelectionsObj);
+        String submitUrl = getEndpointUrl("email/share/create");
+        String submitRes = null;
+        try {
+            submitRes = post(submitUrl, emailSelecObj);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JSONObject serverResponse = new JSONObject(submitRes);
+
+        JSONObject submitResData = new JSONObject(serverResponse.get("data").toString());
+        LOGGER.severe("Server returns result" + submitResData);
+        if (serverResponse.get("status").equals("ERROR")) {
+            System.err.println("Something went wrong with execSelection share");
+            System.exit(0);
+        }
 
         return generatedShareUrl;
     }
@@ -1387,15 +1580,15 @@ public class HammerJ {
      * a participant in the actions and returns the transactions made with the file.
      *
      * @param dataChainId - the blockchain id of the file
-     * @param userId - the blockchain address of user that is a participant in the transactions
+     * @param userId      - the blockchain address of user that is a participant in the transactions
      * @return - info about the transactions made with the file
      */
 
-    public JSONObject checkHash(String dataChainId,String userId) {
-        if (userId.contains("ak_")){
+    public JSONObject checkHash(String dataChainId, String userId) {
+        if (userId.contains("ak_")) {
             userId = userId.substring(3);
         }
-        String query = "&userId="+ userId +"&dataId="+dataChainId;
+        String query = "&userId=" + userId + "&dataId=" + dataChainId;
 
         String getUrl = getEndpointUrl("tx/info", query);
         LOGGER.severe("query URL " + getUrl);
@@ -1449,10 +1642,10 @@ public class HammerJ {
     /**
      * This function is going to be called upon uploading a file and 'store' it on the blockchain
      *
-     * @param fileNameFromPath  - this will be the name stored on the platform
+     * @param fileNameFromPath - this will be the name stored on the platform
      * @return server's response whether the file has been uploaded
      */
-    public String store(String fileNameFromPath,UserKeyPair keyPair) {
+    public String store(String fileNameFromPath, UserKeyPair keyPair) {
         FileObj obj = new FileObj();
         byte[] array;
         String fileContent = "";
@@ -1467,15 +1660,15 @@ public class HammerJ {
         String name;
         if (indexName > 0) {
             name = fileNameFromPath.substring(indexName);
-        }else {
+        } else {
             name = fileNameFromPath;
         }
         String dataExtension;
         int index = name.lastIndexOf(".");
         if (index > 0) {
             dataExtension = name.substring(index);
-            name = name.substring(0,index);
-        }else {
+            name = name.substring(0, index);
+        } else {
             dataExtension = ".unknown";
         }
         obj.setName(name);
@@ -1495,7 +1688,7 @@ public class HammerJ {
      * Gets information about a file, which is owned by/shared to the user and opens it
      *
      * @param dataChainId file's chain ID
-     * @param keyPair user's key pair
+     * @param keyPair     user's key pair
      * @return the contents of the file in human readable form
      */
     public JSONObject openFile(String dataChainId, UserKeyPair keyPair) {
@@ -1514,9 +1707,9 @@ public class HammerJ {
      * This function is to for the user to put a signature with their private key on file or message
      * that they verify or validate to be authentic
      *
-     * @param dataId - the file or message to be signed
+     * @param dataId      - the file or message to be signed
      * @param recipientId - file or message's owner
-     * @param keyPair - signer's key pair
+     * @param keyPair     - signer's key pair
      * @return the result from the server - empty string for success, otherwise an error
      */
 
@@ -1529,9 +1722,9 @@ public class HammerJ {
 //        dataId = processExternalId(dataId, userId, isExternal);
 
         String requestType = "sign";
-        String trailHash = getHash(dataId + userId + requestType + recipientId );
+        String trailHash = getHash(dataId + userId + requestType + recipientId);
 
-        SortedMap<String,Object> signObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        SortedMap<String, Object> signObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         signObj.put("dataId", dataId);
         signObj.put("userId", userId);
         signObj.put("requestId", defaultRequestId);
@@ -1539,9 +1732,9 @@ public class HammerJ {
         signObj.put("requestType", requestType);
         signObj.put("requestBodyHashSignature", "NULL");
         signObj.put("trailHash", trailHash);
-        signObj.put("trailHashSignatureHash",getHash(signMessage(trailHash,keyPair)));
+        signObj.put("trailHashSignatureHash", getHash(signMessage(trailHash, keyPair)));
 
-        String requestBodyHashSignature = signMessage(getRequestHashJSON(signObj),keyPair);
+        String requestBodyHashSignature = signMessage(getRequestHashJSON(signObj), keyPair);
 
         signObj.put("requestBodyHashSignature", requestBodyHashSignature);
 
@@ -1566,7 +1759,7 @@ public class HammerJ {
      * Function to open/share/mobile open to a particular selection of files
      *
      * @param selection hash of selection of files
-     * @param keyPair user's key pair
+     * @param keyPair   user's key pair
      * @return a collection with hashes of the files that have been manipulated
      */
     public ArrayList<ResultFileObj> execSelection(String selection, UserKeyPair keyPair) {
@@ -1590,8 +1783,12 @@ public class HammerJ {
 
 
             if (selectionRes.get("selectionHash").toString() != null) {
-
-                String[] recipients = selectionRes.get("usersIds").toString().split(",");
+                String[] recipients;
+                if (action.equals("se")) {
+                    recipients = selectionRes.get("usersEmails").toString().split(",");
+                } else {
+                    recipients = selectionRes.get("usersIds").toString().split(",");
+                }
                 for (int i = 0; i < recipients.length; i++) {
                     recipients[i] = recipients[i].replace("[", "");
                     recipients[i] = recipients[i].replace("]", "");
@@ -1604,6 +1801,37 @@ public class HammerJ {
                     files[i] = files[i].replace("]", "");
                     files[i] = files[i].replace("\"", "");
                 }
+
+                UserKeyPair emailSharePubKeys = null;
+                UserKeyPair recipientsEmailLinkKeyPair = null;
+                if (action.equals("se")) {
+                    try {
+                        recipientsEmailLinkKeyPair = newKeyPair(null);
+                    } catch (GeneralSecurityException e) {
+                        e.printStackTrace();
+                    }
+
+                    String getUrl = getEndpointUrl("email/info", "&selectionHash=" + selectionHash);
+                    String serverRes = getRequest(getUrl);
+                    JSONObject serverResJSON = new JSONObject(serverRes);
+                    LOGGER.severe("email/info res " + serverResJSON.toString(1));
+                    JSONObject serverResponse = new JSONObject(serverResJSON.get("data").toString());
+
+                    if (serverResJSON.get("status").equals("ERROR")) {
+                        System.err.println(serverResponse.get("data"));
+                        System.exit(0);
+                    }
+//                  TODO: have a check whether everything in the data is there
+
+//                    if (serverResponse.get("data") == null){
+//                        if ()isNullAny(serverResponse.data.pubKey, serverResponse.data.pubEncKey)
+//                    }) {
+//                        throw new Error('Invalid email selection server response.');
+//                    }
+
+                    emailSharePubKeys = new UserKeyPair(serverResponse.get("pubKey").toString(),serverResponse.get("pubEncKey").toString());
+                }
+
 
                 if (recipients.length != files.length) {   // the array sizes must be equal
                     throw new Error("Invalid selection format.");
@@ -1646,13 +1874,18 @@ public class HammerJ {
 
                         result.add(new ResultFileObj(files[i], shareResult));
 
+                    } else if (action.equals("se")) {
+
+                        JSONObject shareResult = shareData(files[i], recipients[i], keyPair, recipientsEmailLinkKeyPair, emailSharePubKeys, selectionHash);
+
+                        result.add(new ResultFileObj(files[i], shareResult));
+
                     } else if (action.equals("sg")) {
 
                         JSONObject signResult = signFile(files[i], recipients[i], keyPair);
 
                         result.add(new ResultFileObj(files[i], signResult));
-                    }
-                    else {
+                    } else {
                         throw new Error("Unsupported selection operation code.");
                     }
                 }
@@ -1668,12 +1901,12 @@ public class HammerJ {
      * downloaded to
      *
      * @param fileChainID the file's chain ID
-     * @param keys user's keys
-     * @param directory directory to which the user wants to download the file
+     * @param keys        user's keys
+     * @param directory   directory to which the user wants to download the file
      */
 
-    public void downloadFile(String fileChainID, UserKeyPair keys, String directory){
-        JSONObject jss = openFile(fileChainID,keys);
+    public void downloadFile(String fileChainID, UserKeyPair keys, String directory) {
+        JSONObject jss = openFile(fileChainID, keys);
         File dir = new File(directory);
         if (!dir.exists()) {
             if (dir.mkdir()) {
@@ -1685,7 +1918,7 @@ public class HammerJ {
 
         // decodes the file and puts it together
         byte[] decodedFile = Base64.getDecoder().decode((String) jss.get("payload"));
-        File newFile = new File((String)directory + jss.get("dataName") + jss.get("dataExtension"));
+        File newFile = new File((String) directory + jss.get("dataName") + jss.get("dataExtension"));
 
         try {
             OutputStream os = new FileOutputStream(newFile);
