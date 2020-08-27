@@ -63,7 +63,7 @@ public class Test {
 //        System.out.println(js.toString());
 
 //         execSelection for open share and open selection
-                ArrayList<ResultFileObj> res = hammerJ.execSelection("se:0x656a395008241429ba9f56556f0b8a61d625390c079ffc4b38bf7256ff6985c5", keys);
+                ArrayList<ResultFileObj> res = hammerJ.execSelection("sh:0xbdfe2f46dd93f32887a61151300956acda4f4cbc13ae80d4a6da6239965a2692", keys);
                 System.out.println(res.get(0).getDataId());
 //
     }
