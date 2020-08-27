@@ -31,11 +31,7 @@ public class Test {
         String fileChainID = "0xd57f03fb24b0ee160eafcb54b4d939d752d372f216b1577f87cec6ffc8242963";
 
         UserKeyPair keys = null;
-        try {
-          keys = hammerJ.newKeyPair(passphrase);
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        }
+        keys = hammerJ.generateNewKeyPair(passphrase);
 
         //login
         showKeys(keys);
