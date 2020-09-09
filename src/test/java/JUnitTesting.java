@@ -1,4 +1,5 @@
 
+import io.recheck.client.Crypto.Utils;
 import io.recheck.client.HammerJ;
 import io.recheck.client.Crypto.TweetNaclFast;
 import io.recheck.client.POJO.UserKeyPair;
@@ -10,16 +11,16 @@ import java.security.GeneralSecurityException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JUnitTesting {
-    private HammerJ ap = new HammerJ();
+    private Utils utils = new Utils();
 
     @Test
     void generateAkKeyPairTestAE0() {
-        ap.setNetwork("ae");
+        utils.setNetwork("ae");
         String passphrase ="";
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.newKeyPair(passphrase);
+            keyPair = utils.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -31,16 +32,16 @@ public class JUnitTesting {
     @Test
         //AEthernity keypair
     void generateAkKeyPairTestAE1() {
-        ap.setNetwork("ae");
+        utils.setNetwork("ae");
         String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
-        String publicKey = "ak_ApGfbxjgRLrHzHsKXXmTrpX6h9QvRwTfC8GBKsD4ojBapKoE5";
-        String secretKey = "43410906a8fe275712236f0976e7e6a7e57c02760370c5e79880064fc64729cb164941e8ee75a37b177ffd157a63f2d6b01ba5a1b2364a809db2aad915364d14";
-        String publicEncKey = "2pYnhELKZnC4Ykg8YwE9zKRTnzcN2dbkNzFQhn6qR7fcmkoSZ5";
-        String secretEncKey = "584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354";
+        String publicKey = "ak_ss3HAQPSjyMRHsmKfjwhHJNPFMq1ghouykb95teN61cVZ2kxj";
+        String secretKey = "17f15e01dc1b1353384262ee7bdae6099133a2a1b60637e03086f22727c972be737d7663da2c742416788f15cbc8445a37a320016bf739ac71f679198d6a1e7e";
+        String publicEncKey = "3rXZh5YEJ11GXNP37CUdaASTYEobKumXfVUmboUPtohfnfGik";
+        String secretEncKey = "4be64e3e3e138fa220b08f29f4a2537ccbfa835fd3ca845d5290cd3b82665a84";
         String address = "";
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.newKeyPair(passphrase);
+            keyPair = utils.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -56,16 +57,16 @@ public class JUnitTesting {
     @Test
         //AEthernity keypair
     void generateAkKeyPairTestAE2() {
-        ap.setNetwork("ae");
+        utils.setNetwork("ae");
         String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
-        String publicKey = "ak_wnSecLhxY8fD88JDsQTSskHcahNhjEqBhifxYtYZUSP4fWW3v";
-        String secretKey = "c0ae46e67ca1f88efa0be77749515edb2b869bbb6bd5fe7d10914083302c24c67c6481f253c693b03e23502df789286c0882b8711105e8af5ba703f99c0c492c";
-        String publicEncKey = "yLa7yurFPguxS7pzrFt6XsybmsndE3JeHHPwUoPE8i88xAhXD";
-        String secretEncKey = "67265d50f0e8881bde95e4ffdfc825432eb82d4ea7fea8cef64cee3dd12c4b3e";
+        String publicKey = "ak_hLrgbiSkiGZLmMgHBMWvX7LpxUB65rPyGm9ELsFpAMzrdLLsg";
+        String secretKey = "8eebdbc922decfa6a8ce63bdfb81be3225e11ac525be4478fd7198657b2d5e265b9a2d399152e80850f765199f7b17b475edab4c00d24a7543723bfe1501e3c0";
+        String publicEncKey = "pfa5gk3uMuSC9A83d6YWwhqP3SgjJfYs1P8pqpuEoLPDUd4h3";
+        String secretEncKey = "57cb652c56e75276d2134983bf6c99df9e5cc8ade84343665ec4990551b83864";
         String address = "";
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.newKeyPair(passphrase);
+            keyPair = utils.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -80,12 +81,12 @@ public class JUnitTesting {
 
     @Test
     void generateAkKeyPairTestEth0() {
-        ap.setNetwork("eth");
+        utils.setNetwork("eth");
         String passphrase ="";
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.newKeyPair(passphrase);
+            keyPair = utils.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -96,17 +97,17 @@ public class JUnitTesting {
 
     @Test //Ethereum account
     void generateAkKeyPairTestEth1() {
-        ap.setNetwork("eth");
-        String publicAddress = "0xFbC5af5F69b2CA77C43190d58F75A47574F38187";
-        String publicSigningKey = "13c6f2b1c6ba3c1dc6e6a51fdee08bb26e18e72a4ba608991193364e6f78609a06383e0d44d1db5d6de78d107b00d8d7bffcaf5d77f8f6a6ff83c6735ae60c0a";
-        String privateSigningKey = "0xd16ab98dcdf2bdb2538b069f14da5ec6c057c10e058ba6a439dd3ea59e6259ba";
-        String publicEncryptionKey = "mQURuMzyH1VQv4ZYab2kb8cnsU7jg4nQQBoFvEoCbYL3SWJ6V";
-        String privateEncryptionKey = "d16ab98dcdf2bdb2538b069f14da5ec6c057c10e058ba6a439dd3ea59e6259ba";
+        utils.setNetwork("eth");
+        String publicAddress = "0x72a63e2b3ee7d45a88dfc374cb9261eca268dd36";
+        String publicSigningKey = "1749f4f6bedf388813ec6741ae5d767f366169d0546770776be38ae914fe877593d54e3e76c8b9c6cab0d83d72dd6c338e26c4e5a2d1cd47c71b25a2a642d8e";
+        String privateSigningKey = "0x10335fee7f708690faa74ac62a0262f4d40e1fd40425663093f5fa312c1a4cd0";
+        String publicEncryptionKey = "2XHV1qZqoJojpwEGwkKjVt5LFaxED4Mw4hVrX7aJus1J4jSUBk";
+        String privateEncryptionKey = "10335fee7f708690faa74ac62a0262f4d40e1fd40425663093f5fa312c1a4cd0";
         String passphrase ="night hewitt stub ding tot viet heard hoi funny aver trout arrear";
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.newKeyPair(passphrase);
+            keyPair = utils.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -121,17 +122,17 @@ public class JUnitTesting {
 
     @Test //Ethereum account
     void generateAkKeyPairTestEth2() {
-        ap.setNetwork("eth");
-        String publicAddress = "0x94B3Eb02a1d2706413068259c8677b01e774dEac";
-        String publicSigningKey = "82e6006202a4f61ea63bc5c565e6140902c3355fd118cb39687f995a8c22a51c68bd8973479ae6aaa8ead4cc8e4bed97e7a1a6dd80f7707038845b85233b576f";
-        String privateSigningKey = "0xbfd9343792f81a2969078c67302f9361178f5e2d36af3b8c3ec18e19e532583e";
-        String publicEncryptionKey = "2kUm5oPRn5g8FUYXecvK9ozCCwCUJbthXG5D1Sb6ECkGMbFpeL";
-        String privateEncryptionKey = "bfd9343792f81a2969078c67302f9361178f5e2d36af3b8c3ec18e19e532583e";
+        utils.setNetwork("eth");
+        String publicAddress = "0x99cc18ec681542dcfc68657b4cc19df6060322a9";
+        String publicSigningKey = "6538bcfbdb1d2149fb3be88c3eb68f5218e1f03141ef0de235f5ddba3418a4e244794ccbbd02b7b80d13819eaf0614b2857ee049adea83f71700eecbab96b642";
+        String privateSigningKey = "0x763ab13116dd800b42371cdfc58057487e2ae887a573bc592b9399bb3702fb95";
+        String publicEncryptionKey = "2GLhEyUHKV5Dsvna723bC86ZV8RkktJvXjYUQX3a7h7ad2yM6c";
+        String privateEncryptionKey = "763ab13116dd800b42371cdfc58057487e2ae887a573bc592b9399bb3702fb95";
         String passphrase ="beggar naomi qb ck debris vita can't billow gumbo 6 roost scam";
 
         UserKeyPair keyPair = null;
         try {
-            keyPair = ap.newKeyPair(passphrase);
+            keyPair = utils.newKeyPair(passphrase);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
@@ -147,22 +148,22 @@ public class JUnitTesting {
     //tests with encrypt/decrypt
     @Test
     void basicEncryption(){
-        ap.setNetwork("ae");
+        utils.setNetwork("ae");
         String message = "ei tui";
         String message2 = "mn0go m0lya v! m@d@M";
 
-        byte[] mySecretEncKeyArray = ap.hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
+        byte[] mySecretEncKeyArray = utils.hexStringToByteArray("584cfc583aab5bd84ab5947d49426fe76a4f2054a7ea4e6c3c2803108f2e4354");
 
         TweetNaclFast.Box.KeyPair kp = new TweetNaclFast.Box.KeyPair();
         kp = TweetNaclFast.Box.keyPair_fromSecretKey(mySecretEncKeyArray);
 
         TweetNaclFast.Box kpFromSecret = new TweetNaclFast.Box(kp.getPublicKey(),kp.getSecretKey());
 
-        String firstEncryptedMessage = ap.encryptData(message,kpFromSecret);
-        String firstDecryptedMessage = ap.decryptData(firstEncryptedMessage, kpFromSecret);
+        String firstEncryptedMessage = utils.encryptData(message,kpFromSecret);
+        String firstDecryptedMessage = utils.decryptData(firstEncryptedMessage, kpFromSecret);
 
-        String secondEncryptedMessage = ap.encryptData(message2,kpFromSecret);
-        String secondDecryptedMessage = ap.decryptData(secondEncryptedMessage, kpFromSecret);
+        String secondEncryptedMessage = utils.encryptData(message2,kpFromSecret);
+        String secondDecryptedMessage = utils.decryptData(secondEncryptedMessage, kpFromSecret);
 
         assertEquals(message, firstDecryptedMessage, "First decrypted message");
         assertEquals(message2, secondDecryptedMessage, "Second decrypted message");
