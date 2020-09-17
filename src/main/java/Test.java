@@ -46,9 +46,9 @@ public class Test {
 //        JSONObject js = hammerJ.checkHash(fileChainID,keys.getAddress());
 //        System.out.println(js.toString(1));
 
-        //share
-//        JSONObject jss = hammerJ.shareData(fileChainID, recipientMail, keys);
-//        System.out.println(jss.toString(1));
+//        share
+        JSONObject jss = hammerJ.shareData(fileChainID, recipientMail, keys);
+        System.out.println(jss.toString(1));
 
         //upload
 //       String s = hammerJ.store("today.txt", keys);

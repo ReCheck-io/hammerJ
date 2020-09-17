@@ -164,7 +164,7 @@ public class HammerJ {
 
         JSONObject dataRes = new JSONObject(serverPostResponse);
         JSONObject serverResponse = new JSONObject(dataRes.get("data").toString());
-        LOGGER.severe("User device POST to server encryption info " + devicePost.toString(1));
+        LOGGER.info("User device POST to server encryption info " + devicePost.toString(1));
         LOGGER.fine("Server responds to user device POST " + serverResponse.toString());
         return serverResponse;
     }
@@ -191,7 +191,7 @@ public class HammerJ {
 
         //providing that the right API is called
         String getUrl = utils.getEndpointUrl("share/credentials", "&dataId=" + dataId + "&" + recipientType + "=" + recipientId);
-        LOGGER.severe("credentials/share get request " + getUrl);
+        LOGGER.fine("credentials/share get request " + getUrl);
         String getShareResponse = utils.getRequest(getUrl);
         // Share response is going to give back data either for email or for an identity share
         LOGGER.fine("Share res " + getShareResponse);
@@ -270,34 +270,53 @@ public class HammerJ {
             }
             //TODO: serverPostResponce and result could be null
             JSONObject postResponse = new JSONObject(serverPostResponse);
-            LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
+            LOGGER.info("Share POST to server encryption info " + jsCreateShare.toString(1));
             LOGGER.fine("Server responds to user device POST " + postResponse.toString());
             JSONObject serverResult = new JSONObject(postResponse.toString());
-            if (!serverResult.get("data").toString().startsWith("{")) {
-                String[] message = serverResult.get("data").toString().split(",");
-                for (int i = 0; i < message.length; i++) {
-                    //This message should stay
-                    System.out.println(message[i]);
+            try {
+                if (!serverResult.get("data").toString().startsWith("{")) {
+                    String[] message = serverResult.get("data").toString().split(",");
+                    for (int i = 0; i < message.length; i++) {
+                        //This message should stay
+                        LOGGER.info(message[i]);
+                    }
+                    throw new Exception("Already sent");
+
+                } else {
+
+                    JSONObject result = new JSONObject(serverResult.get("data").toString());
+
+                    //generating email keys and shareable link
+                    if (isEmailShare){
+                        String shareUrl = generateEmailShareUrl(result, senderKeys, recipientEmailLinkKeyPair);
+                        result.put("shareUrl", shareUrl);
+                    }
+
+                    return result;
                 }
-                System.exit(0);
-            } else {
 
-                JSONObject result = new JSONObject(serverResult.get("data").toString());
+            } catch (Exception e) {
+                e.getMessage();
+            }
 
-                //generating email keys and shareable link
-                String shareUrl = generateEmailShareUrl(isEmailShare, result, senderKeys, recipientEmailLinkKeyPair);
-                result.put("shareUrl", shareUrl);
-
-                return result;
+        }else {
+            try{
+               if(!shareRes.get("dataId").toString().equals(dataId)){
+                   throw new Exception("The data is different or missing");
+               }
+            }catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        throw new Error("Unable to create share. Data id mismatch.");
+        return new JSONObject("{\"message\":{\"EN\":\"The sending has been interuppted.\"}}");
     }
 
     /**
      * Shares the file either with other accounts from the network, that the user already have in contacts, or
      * by providing an email. With the email-share it also returns a link that sends a secret code to the email.
      * Only with the possession of this code can the contents of the share be decrypted.
+     *
+     * This method is being used in execSelection()
      *
      * @param dataId      file's chain ID
      * @param recipientId recipient(s) chain ID
@@ -315,7 +334,7 @@ public class HammerJ {
 
         //providing that the right API is called
         String getUrl = utils.getEndpointUrl("share/credentials", "&dataId=" + dataId + "&" + recipientType + "=" + recipientId);
-        LOGGER.severe("credentials/share get request " + getUrl);
+        LOGGER.fine("credentials/share get request " + getUrl);
         String getShareResponse = utils.getRequest(getUrl);
         // Share response is going to give back data either for email or for an identity share
         LOGGER.fine("Share res " + getShareResponse);
@@ -381,28 +400,29 @@ public class HammerJ {
             }
             //TODO: serverPostResponce and result could be null
             JSONObject postResponse = new JSONObject(serverPostResponse);
-            LOGGER.severe("Share POST to server encryption info " + jsCreateShare.toString(1));
+            LOGGER.info("Share POST to server encryption info " + jsCreateShare.toString(1));
             LOGGER.fine("Server responds to user device POST " + postResponse.toString());
             JSONObject serverResult = new JSONObject(postResponse.toString());
             if (!serverResult.get("data").toString().startsWith("{")) {
                 String[] message = serverResult.get("data").toString().split(",");
                 for (int i = 0; i < message.length; i++) {
                     //This message should stay
-                    System.out.println(message[i]);
+                    LOGGER.info(message[i]);
                 }
-                System.exit(0);
+                return new JSONObject("Sending interupted");
             } else {
 
                 JSONObject result = new JSONObject(serverResult.get("data").toString());
 
                 //generating email keys and shareable link
-                String shareUrl = generateEmailShareUrl(isEmailShare, senderKeys, recipientsEmailLinkKeyPair, enctryptionEmailKeyPair, execFileSelectionHash);
-                result.put("shareUrl", shareUrl);
-
+                if (isEmailShare) {
+                    String shareUrl = generateEmailShareUrl(senderKeys, recipientsEmailLinkKeyPair, enctryptionEmailKeyPair, execFileSelectionHash);
+                    result.put("shareUrl", shareUrl);
+                }
                 return result;
             }
         }
-        throw new Error("Unable to create share. Data id mismatch.");
+        return new JSONObject("{\"message\":{\"EN\":\"The sending has been interuppted.\"}}");
     }
 
     /**
@@ -410,7 +430,6 @@ public class HammerJ {
      * in mind, the link would be able to show the file to the user after they enter a code that is sent to the provided
      * email
      *
-     * @param isEmailShare boolean parameter to check whether the share is to another user or by email
      * @param shareResult  this an object containing a selectionHash - reference to the recipient and file that's
      *                     being sent
      * @param keyPair      - the key pair of the sender
@@ -419,45 +438,43 @@ public class HammerJ {
      * the provided email.
      */
 
-    private String generateEmailShareUrl(boolean isEmailShare, JSONObject shareResult, UserKeyPair keyPair, UserKeyPair emailKeyPair) {
+    private String generateEmailShareUrl( JSONObject shareResult, UserKeyPair keyPair, UserKeyPair emailKeyPair) {
         String generatedShareUrl = null;
-        if (!isEmailShare) {
-            return generatedShareUrl;
-        }
 
         if (shareResult.get("selectionHash").toString() == null) {
-            System.err.println("Unable to create email share selection hash. Contact your service provider.");
-            System.exit(0);
+            LOGGER.info("Unable to create email share selection hash. Contact your service provider.");
+            return new String("Unable to create email share selection hash. Contact your service provider.");
+        }else {
+
+            String selectionHash = shareResult.get("selectionHash").toString();
+
+            generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
+            SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            queryObj.put("selectionHash", selectionHash);
+            queryObj.put("pubKey", emailKeyPair.getPublicSignKey());
+            queryObj.put("pubEncKey", emailKeyPair.getPublicEncKey());
+            queryObj.put("shareUrl", generatedShareUrl);
+            queryObj.put("requestBodyHashSignature", "NULL");
+
+
+            String requestBodyHash = utils.signMessage(utils.getRequestHashJSON(queryObj), keyPair);
+            queryObj.put("requestBodyHashSignature", requestBodyHash);
+
+
+            // Stringified for harder readability
+            String query = utils.getObjectIntoByte64(queryObj);
+
+            SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+            fragmentObj.put("secretKey", emailKeyPair.getPrivateSignKey());
+            fragmentObj.put("secretEncKey", emailKeyPair.getPrivateEncKey());
+
+            String fragment = utils.getObjectIntoByte64(fragmentObj);
+
+            generatedShareUrl = generatedShareUrl + "?q=" + query + "#" + fragment;
+
+            return generatedShareUrl;
         }
-
-        String selectionHash = shareResult.get("selectionHash").toString();
-
-        generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
-        SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        queryObj.put("selectionHash", selectionHash);
-        queryObj.put("pubKey", emailKeyPair.getPublicSignKey());
-        queryObj.put("pubEncKey", emailKeyPair.getPublicEncKey());
-        queryObj.put("shareUrl", generatedShareUrl);
-        queryObj.put("requestBodyHashSignature", "NULL");
-
-
-        String requestBodyHash = utils.signMessage(utils.getRequestHashJSON(queryObj), keyPair);
-        queryObj.put("requestBodyHashSignature", requestBodyHash);
-
-
-        // Stringified for harder readability
-        String query = utils.getObjectIntoByte64(queryObj);
-
-        SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-        fragmentObj.put("secretKey", emailKeyPair.getPrivateSignKey());
-        fragmentObj.put("secretEncKey", emailKeyPair.getPrivateEncKey());
-
-        String fragment = utils.getObjectIntoByte64(fragmentObj);
-
-        generatedShareUrl = generatedShareUrl + "?q=" + query + "#" + fragment;
-
-        return generatedShareUrl;
     }
 
     /**
@@ -465,7 +482,6 @@ public class HammerJ {
      * in mind, the link would be able to show the file to the user after they enter a code that is sent to the provided
      * email
      *
-     * @param isEmailShare              boolean parameter to check whether the share is to another user or by email.
      * @param senderKeys                - the key pair of the sender.
      * @param recipientEmailLinkKeyPair - a temporary key pair that is created for the recipient.
      * @param execFileSelectionHash     - a hash provided for the multiple files being sent as a pack.
@@ -473,82 +489,82 @@ public class HammerJ {
      * the provided email.
      */
 
-    private String generateEmailShareUrl(boolean isEmailShare, UserKeyPair senderKeys, UserKeyPair recipientEmailLinkKeyPair, UserKeyPair encryptionEmailLinkKeyPair, String execFileSelectionHash) {
+    private String generateEmailShareUrl(UserKeyPair senderKeys, UserKeyPair recipientEmailLinkKeyPair, UserKeyPair encryptionEmailLinkKeyPair, String execFileSelectionHash) {
         String generatedShareUrl = null;
         String selectionHash = "";
 
-        if (!isEmailShare) {
-            return generatedShareUrl;
-        }
-
         if (execFileSelectionHash == null) {
-            System.err.println("Unable to create email share selection hash. Contact your service provider.");
-            System.exit(0);
+            LOGGER.info("Unable to create email share selection hash. Contact your service provider.");
+            return new String("Unable to create email share selection hash. Contact your service provider.");
         } else {
             selectionHash = execFileSelectionHash;
+
+
+            generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
+            SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            queryObj.put("selectionHash", selectionHash);
+            queryObj.put("pubKey", recipientEmailLinkKeyPair.getPublicSignKey());
+            queryObj.put("pubEncKey", recipientEmailLinkKeyPair.getPublicEncKey());
+            queryObj.put("shareUrl", generatedShareUrl);
+            queryObj.put("requestBodyHashSignature", "NULL");
+
+
+            String requestBodyHash = utils.signMessage(utils.getRequestHashJSON(queryObj), senderKeys);
+            queryObj.put("requestBodyHashSignature", requestBodyHash);
+
+
+            // Stringified for harder readability
+            String query = utils.getObjectIntoByte64(queryObj);
+
+            SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+            fragmentObj.put("secretKey", recipientEmailLinkKeyPair.getPrivateSignKey());
+            fragmentObj.put("secretEncKey", recipientEmailLinkKeyPair.getPrivateEncKey());
+
+            String fragment = utils.getObjectIntoByte64(fragmentObj);
+
+            generatedShareUrl = generatedShareUrl + "?q=" + query + "#" + fragment;
+
+            JSONObject result = new JSONObject();
+
+            result.put("shareUrl", generatedShareUrl);
+
+
+            EncryptedDataWithPublicKey encryptedShareUrl = null;
+            try {
+                encryptedShareUrl = utils.encryptDataToPublicKeyWithKeyPair(generatedShareUrl, encryptionEmailLinkKeyPair.getPublicEncKey(), senderKeys);
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+            }
+            SortedMap<String, Object> emailSelectionsObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+            emailSelectionsObj.put("selectionHash", selectionHash);
+            emailSelectionsObj.put("pubKey", encryptionEmailLinkKeyPair.getPublicSignKey());
+            emailSelectionsObj.put("pubEncKey", encryptionEmailLinkKeyPair.getPublicEncKey());
+            emailSelectionsObj.put("encryptedUrl", encryptedShareUrl.getPayload());
+
+            JSONObject emailSelecObj = new JSONObject(emailSelectionsObj);
+            String submitUrl = utils.getEndpointUrl("email/share/create");
+            String submitRes = null;
+            try {
+                submitRes = utils.post(submitUrl, emailSelecObj);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            JSONObject serverResponse = new JSONObject(submitRes);
+
+            JSONObject submitResData = new JSONObject(serverResponse.get("data").toString());
+            LOGGER.info("Server returns result" + submitResData);
+
+            try {
+                if (serverResponse.get("status").equals("ERROR")) {
+                    throw new Exception("Something went wrong with execSelection share");
+                }
+            } catch (Exception e) {
+                e.getMessage();
+            }
+            return generatedShareUrl;
         }
-
-        generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
-        SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        queryObj.put("selectionHash", selectionHash);
-        queryObj.put("pubKey", recipientEmailLinkKeyPair.getPublicSignKey());
-        queryObj.put("pubEncKey", recipientEmailLinkKeyPair.getPublicEncKey());
-        queryObj.put("shareUrl", generatedShareUrl);
-        queryObj.put("requestBodyHashSignature", "NULL");
-
-
-        String requestBodyHash = utils.signMessage(utils.getRequestHashJSON(queryObj), senderKeys);
-        queryObj.put("requestBodyHashSignature", requestBodyHash);
-
-
-        // Stringified for harder readability
-        String query = utils.getObjectIntoByte64(queryObj);
-
-        SortedMap<String, Object> fragmentObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-        fragmentObj.put("secretKey", recipientEmailLinkKeyPair.getPrivateSignKey());
-        fragmentObj.put("secretEncKey", recipientEmailLinkKeyPair.getPrivateEncKey());
-
-        String fragment = utils.getObjectIntoByte64(fragmentObj);
-
-        generatedShareUrl = generatedShareUrl + "?q=" + query + "#" + fragment;
-
-        JSONObject result = new JSONObject();
-
-        result.put("shareUrl", generatedShareUrl);
-
-
-        EncryptedDataWithPublicKey encryptedShareUrl = null;
-        try {
-            encryptedShareUrl = utils.encryptDataToPublicKeyWithKeyPair(generatedShareUrl, encryptionEmailLinkKeyPair.getPublicEncKey(), senderKeys);
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        }
-        SortedMap<String, Object> emailSelectionsObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-        emailSelectionsObj.put("selectionHash", selectionHash);
-        emailSelectionsObj.put("pubKey", encryptionEmailLinkKeyPair.getPublicSignKey());
-        emailSelectionsObj.put("pubEncKey", encryptionEmailLinkKeyPair.getPublicEncKey());
-        emailSelectionsObj.put("encryptedUrl", encryptedShareUrl.getPayload());
-
-        JSONObject emailSelecObj = new JSONObject(emailSelectionsObj);
-        String submitUrl = utils.getEndpointUrl("email/share/create");
-        String submitRes = null;
-        try {
-            submitRes = utils.post(submitUrl, emailSelecObj);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        JSONObject serverResponse = new JSONObject(submitRes);
-
-        JSONObject submitResData = new JSONObject(serverResponse.get("data").toString());
-        LOGGER.severe("Server returns result" + submitResData);
-        if (serverResponse.get("status").equals("ERROR")) {
-            System.err.println("Something went wrong with execSelection share");
-            System.exit(0);
-        }
-
-        return generatedShareUrl;
     }
 
 
@@ -594,7 +610,7 @@ public class HammerJ {
             return utils.uploadFile(file);
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.severe("Error. " + e.getMessage());
+            LOGGER.info("Error. " + e.getMessage());
         }
         return null;
     }
@@ -656,7 +672,7 @@ public class HammerJ {
         JSONObject jsSignObject = new JSONObject(signObj);
 
         String postUrl = utils.getEndpointUrl("signature/create");
-        LOGGER.severe("dataSign " + jsSignObject.toString(1));
+        LOGGER.info("dataSign " + jsSignObject.toString(1));
 
         String serverPostResponse = null;
         try {
@@ -665,7 +681,7 @@ public class HammerJ {
             e.printStackTrace();
         }
         JSONObject serverPostResData = new JSONObject(serverPostResponse);
-        LOGGER.severe("Server responds to data sign POST" + serverPostResData.get("data").toString());
+        LOGGER.info("Server responds to data sign POST" + serverPostResData.get("data").toString());
         JSONObject serverPostData = new JSONObject(serverPostResData.get("data").toString());
         return serverPostData;
     }
@@ -687,7 +703,7 @@ public class HammerJ {
             String selectionHash = actionSelectionHash[1];
             String selectionResult = utils.getSelected(selectionHash);
 
-            LOGGER.severe("selection result " + selectionResult);
+            LOGGER.info("selection result " + selectionResult);
 
             JSONObject selectionResData = new JSONObject(selectionResult);
 
@@ -729,13 +745,17 @@ public class HammerJ {
                     String getUrl = utils.getEndpointUrl("email/info", "&selectionHash=" + selectionHash);
                     String serverRes = utils.getRequest(getUrl);
                     JSONObject serverResJSON = new JSONObject(serverRes);
-                    LOGGER.severe("email/info res " + serverResJSON.toString(1));
+                    LOGGER.info("email/info res " + serverResJSON.toString(1));
                     JSONObject serverResponse = new JSONObject(serverResJSON.get("data").toString());
 
-                    if (serverResJSON.get("status").equals("ERROR")) {
-                        System.err.println(serverResponse.get("data"));
-                        System.exit(0);
+                    try {
+                        if (serverResJSON.get("status").equals("ERROR")) {
+                            throw new Exception((String) serverResponse.get("data"));
+                        }
+                    } catch (Exception e) {
+                        e.getMessage();
                     }
+
 //                  TODO: have a check whether everything in the data is there
 
 //                    if (serverResponse.get("data") == null){
