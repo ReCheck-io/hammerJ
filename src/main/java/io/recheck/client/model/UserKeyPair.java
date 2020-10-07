@@ -1,4 +1,4 @@
-package io.recheck.client.POJO;
+package io.recheck.client.model;
 
 public class UserKeyPair {
     // The Enc keys are the normal public 32 bytes, the Sign are to be used with AEternity, for the moment.

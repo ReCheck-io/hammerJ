@@ -1,18 +1,19 @@
+package io.recheck.client.test;
+
 import io.recheck.client.HammerJ;
-import io.recheck.client.POJO.ResultFileObj;
-import io.recheck.client.POJO.UserKeyPair;
+import io.recheck.client.exceptions.*;
+import io.recheck.client.model.UserKeyPair;
 import org.json.JSONObject;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.*;
+import java.util.Base64;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
-public class Test {
-    public static void main(String[] args){
+public class TestBeta {
+    public static void main(String[] args) throws GeneralSecurityException, InvalidPhraseException, ValidationException, IOException, EncodeDecodeException, ServerException, KeyExchangeException, ExternalKeyPairException {
         HammerJ hammerJ = new HammerJ();
 
         LogManager.getLogManager().reset();
@@ -38,29 +39,33 @@ public class Test {
         hammerJ.login(keys,ch);
 
         //open
-//        JSONObject jss = hammerJ.openFile(fileChainID,keys);
+        JSONObject jss = hammerJ.openFileWithExternalID("DaakaTest",keys);
+        System.out.println(jss.toString(1));
 //        String directory = "downloads/";
-//        hammerJ.downloadFile(fileChainID, keys, directory);
+//        hammerJ.downloadFileWithExternalID("DaakaTest", keys, directory);
 
         //checkHash
 //        JSONObject js = hammerJ.checkHash(fileChainID,keys.getAddress());
 //        System.out.println(js.toString(1));
 
 //        share
-        JSONObject jss = hammerJ.shareData(fileChainID, recipientMail, keys);
-        System.out.println(jss.toString(1));
+//        JSONObject jss = hammerJ.shareData(fileChainID, recipientMail, keys);
+//        System.out.println(jss.toString(1));
 
-        //upload
-//       String s = hammerJ.store("today.txt", keys);
-//        System.out.println(s);
+//        upload
+        String data = "mamamu";
+        String fileContent = Base64.getEncoder().encodeToString(data.getBytes());
+
+        String s = hammerJ.store(fileContent,"test",".txt", keys);
+        System.out.println(s);
 
         //sign
 //        JSONObject js = hammerJ.signFile(fileChainID,keys.getAddress(),keys);
 //        System.out.println(js.toString());
 
 //         execSelection for open share and open selection
-                ArrayList<ResultFileObj> res = hammerJ.execSelection("sh:0xbdfe2f46dd93f32887a61151300956acda4f4cbc13ae80d4a6da6239965a2692", keys);
-                System.out.println(res.get(0).getDataId());
+//                ArrayList<ResultFileObj> res = hammerJ.execSelection("sh:0xbdfe2f46dd93f32887a61151300956acda4f4cbc13ae80d4a6da6239965a2692", keys);
+//                System.out.println(res.get(0).getDataId());
 //
     }
 

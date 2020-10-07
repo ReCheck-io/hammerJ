@@ -1,4 +1,4 @@
-package io.recheck.client.POJO;
+package io.recheck.client.model;
 
 public class FileToUpload {
 
@@ -9,7 +9,7 @@ public class FileToUpload {
     private String keywords = "Daka";
     private String userId;
     private String payload;
-    private io.recheck.client.POJO.Encryption encrypt;
+    private io.recheck.client.model.Encryption encrypt;
     private String userChainId;
     private String requestId;
     private String requestType;
@@ -74,11 +74,11 @@ public class FileToUpload {
         this.trailHashSignatureHash = trailHashSignatureHash;
     }
 
-    public io.recheck.client.POJO.Encryption getEncrypt() {
+    public io.recheck.client.model.Encryption getEncrypt() {
         return encrypt;
     }
 
-    public void setEncrypt(io.recheck.client.POJO.Encryption encrypt) {
+    public void setEncrypt(io.recheck.client.model.Encryption encrypt) {
         this.encrypt = encrypt;
     }
 

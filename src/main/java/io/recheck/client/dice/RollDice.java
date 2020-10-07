@@ -1,4 +1,4 @@
-package io.recheck.client;
+package io.recheck.client.dice;
 
 public class RollDice {
     public static void main(String[] args) {

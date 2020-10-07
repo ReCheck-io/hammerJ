@@ -2,7 +2,7 @@
  * License - released for public domain
  */
 
-package io.recheck.client.Crypto;
+package io.recheck.client.crypto;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;

@@ -1,4 +1,4 @@
-package io.recheck.client;
+package io.recheck.client.dice;
 /*
 Locate word that matches
 five dice rolled hands.

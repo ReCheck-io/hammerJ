@@ -1,4 +1,4 @@
-package io.recheck.client.POJO;
+package io.recheck.client.model;
 
 public class Encryption {
     private String docHash;

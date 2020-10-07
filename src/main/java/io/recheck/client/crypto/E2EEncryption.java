@@ -1,9 +1,10 @@
-package io.recheck.client.Crypto;
+package io.recheck.client.crypto;
 
 import com.google.gson.Gson;
 import com.lambdaworks.crypto.SCrypt;
-import io.recheck.client.POJO.*;
-import io.recheck.client.RollDice;
+import io.recheck.client.exceptions.*;
+import io.recheck.client.model.*;
+import io.recheck.client.dice.RollDice;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -29,7 +30,7 @@ import java.util.logging.Logger;
 import static java.util.Arrays.copyOfRange;
 
 
-public class Utils {
+public class E2EEncryption {
     private static String token = "";
     private static final String defaultRequestId = "ReCheck";
     private static String network = "ae"; //ae or eth  
@@ -48,10 +49,8 @@ public class Utils {
     }
 
     public static void setToken(String token) {
-        Utils.token = token;
+        E2EEncryption.token = token;
     }
-
-
 
     /**
      * Function to sign the bytes of a file using TweetNacl Signature class.
@@ -59,11 +58,17 @@ public class Utils {
      * @param file    file or message to encrypt
      * @param keyPair user's key pair
      * @return a byte array with the signature of the signature
-     * @throws NoSuchAlgorithmException
+     * @throws EncodeDecodeException
      */
-    protected byte[] sign(byte[] file, UserKeyPair keyPair) throws NoSuchAlgorithmException {
-        TweetNaclFast.Signature sig = new TweetNaclFast.Signature(decodeBase58(keyPair.getPublicSignKey()), hexStringToByteArray(keyPair.getPrivateSignKey()));
-        return sig.detached(file);
+    protected byte[] sign(byte[] file, UserKeyPair keyPair) throws EncodeDecodeException {
+        try {
+            TweetNaclFast.Signature sig = new TweetNaclFast.Signature(decodeBase58(keyPair.getPublicSignKey()), hexStringToByteArray(keyPair.getPrivateSignKey()));
+            return sig.detached(file);
+        } catch (NoSuchAlgorithmException e) {
+            throw new EncodeDecodeException(e.getMessage());
+        }
+
+
     }
 
     /**
@@ -132,13 +137,14 @@ public class Utils {
      */
 
     public String getRequestHashURL(String url, UserKeyPair keyPair) {
+        url = url.substring(baseUrl.length());
         String hashedURL = getHash(url);
         String signedUrl = signMessage(hashedURL, keyPair);
+        System.out.println(url);
         url = url.replace("NULL", signedUrl);
-
+        url = baseUrl + url;
         return url;
     }
-
 
 
     /**
@@ -215,16 +221,16 @@ public class Utils {
      * @return UserKeyPair object, containing the important information.
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
      *                                  provides type safety for all the security-related exception classes that extend from it.
+     * @throws InvalidPhraseException
      */
 
-    public UserKeyPair newKeyPair(String passphrase) throws GeneralSecurityException {
+    public UserKeyPair newKeyPair(String passphrase) throws GeneralSecurityException, InvalidPhraseException {
 
         if ((passphrase != null) && !(passphrase.equals(""))) {
             passphrase = passphrase.trim();
             String[] words = StringUtils.split(passphrase);
             if (words.length != 12) {
-                System.err.println("Invalid passphrase. Your input is " + words.length + " words. It must be 12 words long.");
-                System.exit(0);
+                throw new InvalidPhraseException("Invalid passphrase. Your input is " + words.length + " words. It must be 12 words long.");
             }
         } else {
             String[] fullphrase = StringUtils.split(diceware());
@@ -320,8 +326,9 @@ public class Utils {
      * @throws GeneralSecurityException     The GeneralSecurityException class is a generic security exception class that
      *                                      provides type safety for all the security-related exception classes that extend from it.
      * @throws UnsupportedEncodingException The Character Encoding is not supported.
+     * @throws InvalidPhraseException
      */
-    public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException {
+    public EncryptedFile encryptFileToPublicKey(String fileData, String dstPublicKey) throws GeneralSecurityException, UnsupportedEncodingException, InvalidPhraseException {
 
         // create random object
         Random r = new Random();
@@ -367,9 +374,8 @@ public class Utils {
      * @param data the message to be encrypted
      * @param key  a Base64 encoded key (in the program we encode a sha3 hashed String)
      * @return String encrypted message then encoded in Base64
-     * @throws UnsupportedEncodingException The Character Encoding is not supported.
      */
-    public String encryptDataWithSymmetricKey(String data, String key) throws UnsupportedEncodingException {
+    public String encryptDataWithSymmetricKey(String data, String key) {
         // the key is encoded with Base64, otherwise the decoding won't work.
         byte[] keyUint8Array = Base64.getDecoder().decode(key);
         byte[] nonceBytes = TweetNaclFast.makeSecretBoxNonce();
@@ -458,8 +464,9 @@ public class Utils {
      * @param messageWithNonce a Base64 encoded message with the nonce
      * @param key              a TweetNacl Box object
      * @return decrypted String message
+     * @throws EncodeDecodeException
      */
-    public String decryptData(String messageWithNonce, TweetNaclFast.Box key) {
+    public String decryptData(String messageWithNonce, TweetNaclFast.Box key) throws EncodeDecodeException {
         byte[] messageWithNonceAsUint8Array = Base64.getDecoder().decode(messageWithNonce);
         byte[] nonce = new byte[24];
         byte[] message = new byte[messageWithNonceAsUint8Array.length - nonce.length];
@@ -473,8 +480,7 @@ public class Utils {
 
         byte[] decrypted = key.open(message, nonce);
         if (decrypted == null) {
-            LOGGER.severe("The decryption failed");
-            System.exit(0);
+            throw new EncodeDecodeException("The decryption failed");
         }
         String decryptedBase64Message = new String(decrypted);
         return decryptedBase64Message;
@@ -490,8 +496,9 @@ public class Utils {
      * for the encryption
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
      *                                  provides type safety for all the security-related exception classes that extend from it.
+     * @throws InvalidPhraseException
      */
-    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException {
+    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey, UserKeyPair userAkKeyPairs) throws GeneralSecurityException, InvalidPhraseException {
         if (userAkKeyPairs == null) {
             //passing a null variable to escape overloading the whole parameter
             String generate = null;
@@ -524,8 +531,9 @@ public class Utils {
      * for the encryption
      * @throws GeneralSecurityException The GeneralSecurityException class is a generic security exception class that
      *                                  provides type safety for all the security-related exception classes that extend from it.
+     * @throws InvalidPhraseException
      */
-    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException {
+    public EncryptedDataWithPublicKey encryptDataToPublicKeyWithKeyPair(String data, String dstPublicEncKey) throws GeneralSecurityException, InvalidPhraseException {
         String generate = null;
         UserKeyPair srcAkPair = newKeyPair(generate);
 
@@ -566,15 +574,15 @@ public class Utils {
     /**
      * function to convert a hex String into byte[]
      *
-     * @param s - hex String
+     * @param str - hex String
      * @return the converted String into byte array
      */
-    public byte[] hexStringToByteArray(String s) {
-        int len = s.length();
+    public byte[] hexStringToByteArray(String str) {
+        int len = str.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i + 1), 16));
+            data[i / 2] = (byte) ((Character.digit(str.charAt(i), 16) << 4)
+                    + Character.digit(str.charAt(i + 1), 16));
         }
         return data;
     }
@@ -590,8 +598,9 @@ public class Utils {
      * @throws GeneralSecurityException     The GeneralSecurityException class is a generic security exception class that
      *                                      provides type safety for all the security-related exception classes that extend from it.
      * @throws UnsupportedEncodingException The Character Encoding is not supported.
+     * @throws InvalidPhraseException
      */
-    public FileToUpload getFileUploadData(FileObj fileObj, UserKeyPair keyPair) throws GeneralSecurityException, UnsupportedEncodingException {
+    public FileToUpload getFileUploadData(FileObj fileObj, UserKeyPair keyPair) throws GeneralSecurityException, UnsupportedEncodingException, InvalidPhraseException {
 
         String fileContents = fileObj.getPayload();
         EncryptedFile encryptedFile = encryptFileToPublicKey(fileContents, keyPair.getPublicEncKey());
@@ -619,7 +628,7 @@ public class Utils {
             upload.setCategory("OTHER");
         }
         if (fileObj.getKeywords() == null) {
-            upload.setKeywords("Daka");
+            upload.setKeywords(" ");
         }
         upload.setPayload(encryptedFile.getPayload());
 
@@ -653,36 +662,32 @@ public class Utils {
      * @param challenge the identification given by the server, so that the user can access the web GUI
      * @param keyPair   user's keypair
      * @return the token response, either success or fail
+     * @throws IOException
      */
-    public String loginWithChallenge(String challenge, UserKeyPair keyPair) {
-        try {
-            String sig58 = signMessage(challenge, keyPair);
-            JSONObject payload = new JSONObject();
+    public String loginWithChallenge(String challenge, UserKeyPair keyPair) throws IOException {
+        String sig58 = signMessage(challenge, keyPair);
+        JSONObject payload = new JSONObject();
 
-            payload.put("action", "login");
-            payload.put("pubKey", keyPair.getPublicSignKey());
-            payload.put("pubEncKey", keyPair.getPublicEncKey());
-            payload.put("firebase", "notoken");
-            payload.put("challenge", challenge);
-            payload.put("challengeSignature", sig58);
-            payload.put("rtnToken", "notoken");
+        payload.put("action", "login");
+        payload.put("pubKey", keyPair.getPublicSignKey());
+        payload.put("pubEncKey", keyPair.getPublicEncKey());
+        payload.put("firebase", "notoken");
+        payload.put("challenge", challenge);
+        payload.put("challengeSignature", sig58);
+        payload.put("rtnToken", "notoken");
 
-            String loginURL = getEndpointUrl("login/mobile");
+        String loginURL = getEndpointUrl("login/mobile");
 
-            String loginPostResult = post(loginURL, payload);
+        String loginPostResult = post(loginURL, payload);
 
-            JSONObject data = new JSONObject(loginPostResult);
+        JSONObject data = new JSONObject(loginPostResult);
 
-            JSONObject result = new JSONObject(data.get("data").toString());
+        JSONObject result = new JSONObject(data.get("data").toString());
 
-            String tokenRes = result.get("rtnToken").toString();
+        String tokenRes = result.get("rtnToken").toString();
 
-            setToken(tokenRes);
-            return tokenRes;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "Err";
+        setToken(tokenRes);
+        return tokenRes;
 
     }
 
@@ -727,8 +732,9 @@ public class Utils {
      *
      * @param url the url to the server API
      * @return JSON object in the form of a String
+     * @throws ServerException
      */
-    public String getRequest(String url) {
+    public String getRequest(String url) throws ServerException {
 
         Request request = new Request.Builder()
                 .url(url)
@@ -736,8 +742,7 @@ public class Utils {
         try (Response response = client.newCall(request).execute()) {
             return response.body().string();
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new ServerException(e.getMessage());
         }
     }
 
@@ -821,12 +826,12 @@ public class Utils {
      * @return the server's response, which should be the browser key pair
      */
 
-    public JSONObject prepare(String dataChainId, String userChainId) {
+    public JSONObject prepare(String dataChainId, String userChainId) throws GeneralSecurityException, ExternalKeyPairException, IOException {
         if (browserKeyPair.getPublicEncKey() == null) {
             try {
                 browserKeyPair = newKeyPair("");
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
+            } catch (InvalidPhraseException e) {
+                throw new ExternalKeyPairException(e.getMessage());
             }
         }
         LOGGER.fine("Browser has key: " + browserKeyPair.getPublicSignKey());
@@ -846,17 +851,13 @@ public class Utils {
         LOGGER.fine("browser poll post submit pubKeyB " + browserPubKeySubmitUrl);
 
         String browserPubKeySubmitRes = null;
-        try {
-            browserPubKeySubmitRes = post(browserPubKeySubmitUrl, browserPubKeySubmit);
 
-            JSONObject js = new JSONObject(browserPubKeySubmitRes);
-            JSONObject credentials = new JSONObject(js.get("data").toString());
+        browserPubKeySubmitRes = post(browserPubKeySubmitUrl, browserPubKeySubmit);
 
-            return credentials;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        JSONObject js = new JSONObject(browserPubKeySubmitRes);
+        JSONObject credentials = new JSONObject(js.get("data").toString());
+
+        return credentials;
 
     }
 
@@ -868,14 +869,15 @@ public class Utils {
      * @param srcPublicEncKey sender's public key
      * @param secretKey       receiver's secret key
      * @return decrypted data
+     * @throws EncodeDecodeException
      */
 
-    public String decryptDataWithPublicAndPrivateKey(String payload, String srcPublicEncKey, String secretKey) {
+    public String decryptDataWithPublicAndPrivateKey(String payload, String srcPublicEncKey, String secretKey) throws EncodeDecodeException {
         byte[] srcPublicEncKeyArray = null;
         try {
             srcPublicEncKeyArray = decodeBase58(srcPublicEncKey);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            throw new EncodeDecodeException(e.getMessage());
         }
         byte[] secretKeyArray = hexStringToByteArray(secretKey);
         TweetNaclFast.Box decryptedBox = new TweetNaclFast.Box(srcPublicEncKeyArray, secretKeyArray);
@@ -890,9 +892,10 @@ public class Utils {
      * @param devicePublicKey   mobile device, or the user's, public key
      * @param browserPrivateKey the browser's private key
      * @return JSON obj result with the decrypted data.
+     * @throws EncodeDecodeException
      */
 
-    private JSONObject processEncryptedFileInfo(JSONObject encryptedFileInfo, String devicePublicKey, String browserPrivateKey) {
+    private JSONObject processEncryptedFileInfo(JSONObject encryptedFileInfo, String devicePublicKey, String browserPrivateKey) throws EncodeDecodeException {
         JSONObject encryption = new JSONObject(encryptedFileInfo.get("encryption").toString());
 
         String decryptedSymPassword = decryptDataWithPublicAndPrivateKey(encryption.get("encryptedPassB").toString(), devicePublicKey, browserPrivateKey);
@@ -909,6 +912,7 @@ public class Utils {
         resultFileInfo.put("encryption", "");
         return resultFileInfo;
     }
+
     /**
      * Verification of the file decryption, before returning it to the user who has selected to open/download it
      *
@@ -916,9 +920,11 @@ public class Utils {
      * @param userId       user's chain ID
      * @param dataId       file's chain ID
      * @return the result taken from the server, after sending the data for double check
+     * @throws IOException
+     * @throws ValidationException
      */
 
-    private JSONObject validate(String fileContents, String userId, String dataId) {
+    private JSONObject validate(String fileContents, String userId, String dataId) throws IOException, ValidationException {
         String fileHash = getHash(fileContents);
 
         String requestType = "verify";
@@ -946,25 +952,19 @@ public class Utils {
 
         String validateUrl = getEndpointUrl("credentials/validate");
 
-        String result = null;
-        try {
-            result = post(validateUrl, upload);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String result = post(validateUrl, upload);
 
-
-        //TODO: write a good condition if result is NULL
         JSONObject res = new JSONObject(result);
         LOGGER.fine(res.toString());
         if (res.toString() == null) {
             LOGGER.severe("Unable to verify file.");
+            throw new ValidationException("Unable to verify file.");
         } else {
             LOGGER.fine("File contents validated.");
         }
-
         return res;
     }
+
     /**
      * Searches for file based on the credential, data id and user id, given.
      *
@@ -972,8 +972,13 @@ public class Utils {
      *                            want to open
      * @param receiverPubKey      receiver's public key
      * @return decrypted file or a selection of files
+     * @throws EncodeDecodeException
+     * @throws IOException
+     * @throws ValidationException
+     * @throws KeyExchangeException
+     * @throws ServerException
      */
-    public JSONObject poll(JSONObject credentialsResponse, String receiverPubKey) {
+    public JSONObject poll(JSONObject credentialsResponse, String receiverPubKey) throws EncodeDecodeException, IOException, ValidationException, KeyExchangeException, ServerException {
         if (credentialsResponse.get("userId").toString() != null) {
             String pollUrl = getEndpointUrl("data/info", "&userId=" + credentialsResponse.get("userId").toString() + "&dataId=" + credentialsResponse.get("dataId").toString());
 
@@ -999,11 +1004,11 @@ public class Utils {
                     return decryptedFile;
                 }
             }
-            throw new Error("Polling timeout.");
+            throw new KeyExchangeException("Polling timeout.");
         } else if (credentialsResponse.get("status").toString().equals("ERROR")) {
-            throw new Error("Intermediate public key B submission error. Details: " + credentialsResponse.toString());
+            throw new KeyExchangeException("Intermediate public key B submission error. Details: " + credentialsResponse.toString());
         } else {
-            throw new Error("Server did not return userId. Details: " + credentialsResponse);
+            throw new KeyExchangeException("Server did not return userId. Details: " + credentialsResponse);
         }
     }
 
@@ -1012,9 +1017,11 @@ public class Utils {
      *
      * @param selectionHash a hash of the selected files
      * @return the server response with the corresponding files
+     *
+     * @throws ServerException
      */
 
-    public String getSelected(String selectionHash) {
+    public String getSelected(String selectionHash) throws ServerException {
         String getUrl = getEndpointUrl("selection/info", "&selectionHash=" + selectionHash);
         LOGGER.fine("getSelectedFiles get request " + getUrl);
         String selectionResponse = getRequest(getUrl);
@@ -1060,8 +1067,14 @@ public class Utils {
         return matcher.find();
     }
 
-
-    public String[] recipientCheck(String recipientId) {
+    /**
+     * Checks whether the recipient is with a blockchain address or an email
+     *
+     * @param recipientId - blockchain address or email
+     * @return the recipient type (blockchain address or email) and request type (email/share)
+     * @throws ValidationException
+     */
+    public String[] recipientCheck(String recipientId) throws ValidationException {
 
         String recipientType;
         String requestType = "share";
@@ -1076,11 +1089,7 @@ public class Utils {
             recipientType = "recipientId";
         } else {
             recipientType = "";
-            try {
-                throw new Exception("Address not valid");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            throw new ValidationException("The recipient has invalid email or blockchain address");
         }
         String[] result = new String[2];
         result[0] = recipientType;
@@ -1098,7 +1107,7 @@ public class Utils {
      * @return - info about the transactions made with the file
      */
 
-    public JSONObject checkHash(String dataChainId, String userId) {
+    public JSONObject checkHash(String dataChainId, String userId) throws ServerException {
         if (userId.contains("ak_")) {
             userId = userId.substring(3);
         }
@@ -1131,7 +1140,7 @@ public class Utils {
                 try {
                     signatureBytes = sign((message).getBytes(), keyPair);
                     return encodeBase58(signatureBytes);// signatureB58;
-                } catch (NoSuchAlgorithmException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 break;
@@ -1150,6 +1159,68 @@ public class Utils {
         return "";
     }
 
+    /**
+     * This method is used to save the files in the blockchain under client's specific ID.
+     *
+     * @param externalId - ID provided by the client
+     * @param userChainId - the user's ID
+     * @param dataOriginalHash - file's byte array hashed with keccak256
+     * @return  server response success/fail
+     * @throws IOException
+     * @throws ServerException
+     */
+    public JSONObject saveExternalId(String externalId,String userChainId,String dataOriginalHash) throws IOException, ServerException {
+
+        JSONObject body = new JSONObject();
+
+        body.put("externalId", externalId);
+        body.put("userId", userChainId);
+        body.put("dataOriginalHash", dataOriginalHash);
+
+        String postUrl = getEndpointUrl("data/id/create");
+        LOGGER.fine("saveExternalId, " + body);
+
+        String serPostRes = post(postUrl, body);
+
+        JSONObject serverPostResponse = new JSONObject(serPostRes);
+//        System.out.println(serverPostResponse);
+        JSONObject postResponseData = new JSONObject(serverPostResponse.get("data").toString());
+
+        LOGGER.fine("Server responds to saveExternalId POST" + postResponseData);
+
+        if (serverPostResponse.get("status").toString().equals("ERROR")) {
+            throw new ServerException("External ID server error");
+        }
+
+        return postResponseData;
+    }
+
+    /**
+     * This method converts the default ID into client's specific I
+     *
+     * @param externalId - the external ID that has to be checked to be used
+     * @param userId - user's blockchain ID
+     * @return - whether the externalID is written into the blockchain
+     * @throws ServerException
+     */
+
+    public JSONObject convertExternalId(String externalId, String userId) throws ServerException {
+        String query = "&userId=" +userId + "&externalId=" + externalId;
+
+        String getUrl = getEndpointUrl("data/id/info", query);
+        LOGGER.info("query URL " + getUrl);
+
+        String serverGet = getRequest(getUrl);
+        JSONObject serverResponse = new JSONObject(serverGet);
+        JSONObject serverResponseData = new JSONObject(serverResponse.get("data").toString());
+        LOGGER.info("Server responds to convertExternalId GET" +  serverResponseData);
+
+        if (serverResponse.get("status").toString().equals("ERROR")) {
+            throw new ServerException("External ID server error");
+        }
+
+        return serverResponseData;
+    }
 
 
 }
