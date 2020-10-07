@@ -140,7 +140,6 @@ public class E2EEncryption {
         url = url.substring(baseUrl.length());
         String hashedURL = getHash(url);
         String signedUrl = signMessage(hashedURL, keyPair);
-        System.out.println(url);
         url = url.replace("NULL", signedUrl);
         url = baseUrl + url;
         return url;
@@ -1183,7 +1182,6 @@ public class E2EEncryption {
         String serPostRes = post(postUrl, body);
 
         JSONObject serverPostResponse = new JSONObject(serPostRes);
-//        System.out.println(serverPostResponse);
         JSONObject postResponseData = new JSONObject(serverPostResponse.get("data").toString());
 
         LOGGER.fine("Server responds to saveExternalId POST" + postResponseData);

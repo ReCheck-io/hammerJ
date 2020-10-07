@@ -112,12 +112,10 @@ public class HammerJ {
 
         //hashes the request, and puts it as a value inside the url
         getUrl = e2EEncryption.getRequestHashURL(getUrl, keyPair);
-        System.out.println(getUrl);
         LOGGER.fine("decryptWithKeyPair get request " + getUrl);
         String serverEncryptionInfo = e2EEncryption.getRequest(getUrl);
 
         JSONObject serverEncrptInfo = new JSONObject(serverEncryptionInfo);
-        System.out.println(serverEncrptInfo.toString());
         JSONObject data = new JSONObject(serverEncrptInfo.get("data").toString());
         JSONObject encrpt = new JSONObject(data.get("encryption").toString());
 
@@ -694,9 +692,7 @@ public class HammerJ {
 
     public JSONObject openFileWithExternalID(String externalID, UserKeyPair keyPair) throws GeneralSecurityException, EncodeDecodeException, IOException, ExternalKeyPairException, ServerException, KeyExchangeException, ValidationException {
         JSONObject externalIDResponse = e2EEncryption.convertExternalId(externalID, keyPair.getAddress());
-        System.out.println(externalIDResponse);
         String dataID = externalIDResponse.get("dataId").toString();
-        System.out.println("koi tui " + dataID);
         return openFile(dataID,keyPair);
     }
 
