@@ -39,7 +39,7 @@ public class E2EEncryption {
     private static String baseUrl = "https://beta.recheck.io";
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-    public static final Pattern VALID_AETHERNITY = Pattern.compile("^ak_[0-9a-zA-Z]{41,}$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern VALID_AETHERNITY = Pattern.compile("^re_[0-9a-zA-Z]{41,}$", Pattern.CASE_INSENSITIVE);
     public static final Pattern VALID_ETHEREUM = Pattern.compile("^0x[0-9a-fA-F]{40}$", Pattern.CASE_INSENSITIVE);
     public final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
@@ -166,7 +166,7 @@ public class E2EEncryption {
      *                                  but is not available in the environment.
      */
     private byte[] decodeBase58(String toDecode) throws NoSuchAlgorithmException {
-        toDecode = toDecode.replace("ak_", "");
+        toDecode = toDecode.replace("re_", "");
         return Base58Check.decode(toDecode);
     }
 
@@ -262,7 +262,7 @@ public class E2EEncryption {
 
         switch (network) {
             case "ae":
-                publicSignKey = "ak_" + Base58Check.encode(keyPairS.getPublicKey());
+                publicSignKey = "re_" + Base58Check.encode(keyPairS.getPublicKey());
                 privateSignKey = bytesToHex(keyPairS.getSecretKey());
                 address = publicSignKey;
                 break;
@@ -1107,7 +1107,7 @@ public class E2EEncryption {
      */
 
     public JSONObject checkHash(String dataChainId, String userId) throws ServerException {
-        if (userId.contains("ak_")) {
+        if (userId.contains("re_")) {
             userId = userId.substring(3);
         }
         String query = "&userId=" + userId + "&dataId=" + dataChainId;

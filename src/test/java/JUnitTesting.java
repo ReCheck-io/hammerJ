@@ -38,7 +38,7 @@ public class JUnitTesting {
     void generateAkKeyPairTestAE1() {
         e2EEncryption.setNetwork("ae");
         String passphrase = "bode boxy 1992 deacon keep free clod sg grata image nelsen gsa";
-        String publicKey = "ak_ss3HAQPSjyMRHsmKfjwhHJNPFMq1ghouykb95teN61cVZ2kxj";
+        String publicKey = "re_ss3HAQPSjyMRHsmKfjwhHJNPFMq1ghouykb95teN61cVZ2kxj";
         String secretKey = "17f15e01dc1b1353384262ee7bdae6099133a2a1b60637e03086f22727c972be737d7663da2c742416788f15cbc8445a37a320016bf739ac71f679198d6a1e7e";
         String publicEncKey = "3rXZh5YEJ11GXNP37CUdaASTYEobKumXfVUmboUPtohfnfGik";
         String secretEncKey = "4be64e3e3e138fa220b08f29f4a2537ccbfa835fd3ca845d5290cd3b82665a84";
@@ -63,7 +63,7 @@ public class JUnitTesting {
     void generateAkKeyPairTestAE2() {
         e2EEncryption.setNetwork("ae");
         String passphrase = "glum ouzo mike police linus remus chin bethel torch wail kenya cv";
-        String publicKey = "ak_hLrgbiSkiGZLmMgHBMWvX7LpxUB65rPyGm9ELsFpAMzrdLLsg";
+        String publicKey = "re_hLrgbiSkiGZLmMgHBMWvX7LpxUB65rPyGm9ELsFpAMzrdLLsg";
         String secretKey = "8eebdbc922decfa6a8ce63bdfb81be3225e11ac525be4478fd7198657b2d5e265b9a2d399152e80850f765199f7b17b475edab4c00d24a7543723bfe1501e3c0";
         String publicEncKey = "pfa5gk3uMuSC9A83d6YWwhqP3SgjJfYs1P8pqpuEoLPDUd4h3";
         String secretEncKey = "57cb652c56e75276d2134983bf6c99df9e5cc8ade84343665ec4990551b83864";
