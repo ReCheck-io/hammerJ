@@ -3,11 +3,14 @@ import io.recheck.client.crypto.E2EEncryption;
 import io.recheck.client.crypto.TweetNaclFast;
 import io.recheck.client.exceptions.EncodeDecodeException;
 import io.recheck.client.exceptions.InvalidPhraseException;
+import io.recheck.client.model.EncryptedDataWithPublicKey;
 import io.recheck.client.model.UserKeyPair;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
+import java.util.Base64;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -170,5 +173,57 @@ public class JUnitTesting {
         assertEquals(message2, secondDecryptedMessage, "Second decrypted message");
 
     }
-    //tests with encryptDataWithSymmetricKey / decryptDataWithSymmetricKey
+
+    @Test
+    void symmetricEncryption(){
+        e2EEncryption.setNetwork("ae");
+        String message = "ei tui";
+        String message2 = "mn0go m0lya v! m@d@M";
+        // create random object
+        Random r = new Random();
+
+        // create byte array
+        byte[] bytesFileKey = new byte[32];
+        byte[] bytesSaltKey = new byte[32];
+
+        // put the next byte in the array
+        r.nextBytes(bytesFileKey);
+        r.nextBytes(bytesSaltKey);
+
+        String fileKey = Base64.getEncoder().encodeToString(bytesFileKey);
+        String salt = Base64.getEncoder().encodeToString(bytesSaltKey);
+
+        String symKey = Base64.getEncoder().encodeToString(e2EEncryption.hexStringToByteArray(e2EEncryption.keccak256(fileKey + salt)));
+
+        String firstEncryptedMessage = e2EEncryption.encryptDataWithSymmetricKey(message,symKey);
+        String firstDecryptedMessage = e2EEncryption.decryptDataWithSymmetricKey(firstEncryptedMessage,symKey);
+
+        String secondEncryptedMessage = e2EEncryption.encryptDataWithSymmetricKey(message2,symKey);
+        String secondDecryptedMessage = e2EEncryption.decryptDataWithSymmetricKey(secondEncryptedMessage, symKey);
+
+        assertEquals(message, firstDecryptedMessage, "First decrypted message");
+        assertEquals(message2, secondDecryptedMessage, "Second decrypted message");
+
+    }
+
+    @Test
+    void encryptionWithPKI() throws EncodeDecodeException, GeneralSecurityException, InvalidPhraseException {
+        e2EEncryption.setNetwork("ae");
+        String message = "ei tui";
+        String message2 = "mn0go m0lya v! m@d@M";
+
+        UserKeyPair user1 = e2EEncryption.newKeyPair("");
+        UserKeyPair user2 = e2EEncryption.newKeyPair("");
+        
+        EncryptedDataWithPublicKey firstEncryptedMessage = e2EEncryption.encryptDataToPublicKeyWithKeyPair(message,user2.getPublicEncKey(),user1);
+        String firstDecryptedMessage = e2EEncryption.decryptDataWithPublicAndPrivateKey(firstEncryptedMessage.getPayload(),firstEncryptedMessage.getSrcPublicEncKey(), user2.getPrivateEncKey());
+
+        EncryptedDataWithPublicKey secondEncryptedMessage = e2EEncryption.encryptDataToPublicKeyWithKeyPair(message2,user2.getPublicEncKey(),user1);
+        String secondDecryptedMessage = e2EEncryption.decryptDataWithPublicAndPrivateKey(secondEncryptedMessage.getPayload(),firstEncryptedMessage.getSrcPublicEncKey(), user2.getPrivateEncKey());
+
+
+        assertEquals(message, firstDecryptedMessage, "First decrypted message");
+        assertEquals(message2, secondDecryptedMessage, "Second decrypted message");
+
+    }
 }
