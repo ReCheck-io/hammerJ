@@ -7,6 +7,7 @@ import io.recheck.client.model.*;
 import io.recheck.client.dice.RollDice;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.kocakosm.jblake2.Blake2s;
 import org.web3j.crypto.Credentials;
@@ -609,11 +610,11 @@ public class E2EEncryption {
         String dataChainId = getHash(dataOriginalHash);
         String requestType = "upload";
 
-        String trailHash = getHash(dataChainId + keyPair.getPublicSignKey() + requestType + keyPair.getPublicSignKey());
+        String trailHash = getHash(dataChainId + keyPair.getAddress() + requestType + keyPair.getAddress());
 
 
         FileToUpload upload = new FileToUpload();
-        upload.setUserId(keyPair.getPublicSignKey());
+        upload.setUserId(keyPair.getAddress());
         upload.setDataId(dataChainId);
         upload.setRequestId(defaultRequestId);
         upload.setRequestType(requestType);
@@ -1209,7 +1210,10 @@ public class E2EEncryption {
         LOGGER.info("query URL " + getUrl);
 
         String serverGet = getRequest(getUrl);
+        System.out.println(serverGet);
         JSONObject serverResponse = new JSONObject(serverGet);
+        System.out.println(new JSONArray(serverResponse.get("data").toString()));
+
         JSONObject serverResponseData = new JSONObject(serverResponse.get("data").toString());
         LOGGER.info("Server responds to convertExternalId GET" +  serverResponseData);
 

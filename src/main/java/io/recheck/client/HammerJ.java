@@ -576,8 +576,9 @@ public class HammerJ {
         obj.setDataExtention(dataExtension);
         try {
             FileToUpload file = e2EEncryption.getFileUploadData(obj, keyPair);
+            String uploadFile = e2EEncryption.uploadFile(file);
             e2EEncryption.saveExternalId(externalID,keyPair.getAddress(),file.getEncrypt().getDataHash());
-            return e2EEncryption.uploadFile(file);
+            return uploadFile;
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.info("Error. " + e.getMessage());
@@ -662,8 +663,9 @@ public class HammerJ {
 
         try {
             FileToUpload file = e2EEncryption.getFileUploadData(obj, keyPair);
+            String uploadFile = e2EEncryption.uploadFile(file);
             e2EEncryption.saveExternalId(externalID,keyPair.getAddress(),file.getEncrypt().getDataHash());
-            return e2EEncryption.uploadFile(file);
+            return uploadFile;
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.info("Error. " + e.getMessage());
