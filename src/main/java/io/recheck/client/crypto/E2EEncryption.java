@@ -1210,18 +1210,26 @@ public class E2EEncryption {
         LOGGER.info("query URL " + getUrl);
 
         String serverGet = getRequest(getUrl);
-        System.out.println(serverGet);
+        System.out.println( "tva sa "  + serverGet);
         JSONObject serverResponse = new JSONObject(serverGet);
-        System.out.println(new JSONArray(serverResponse.get("data").toString()));
+        try{
+            JSONObject serverResponseData = new JSONObject(serverResponse.get("data").toString());
+            LOGGER.info("Server responds to convertExternalId GET" +  serverResponseData);
 
-        JSONObject serverResponseData = new JSONObject(serverResponse.get("data").toString());
-        LOGGER.info("Server responds to convertExternalId GET" +  serverResponseData);
-
-        if (serverResponse.get("status").toString().equals("ERROR")) {
-            throw new ServerException("External ID server error");
+            if (serverResponse.get("status").toString().equals("ERROR")) {
+                throw new ServerException("External ID server error");
+            }
+            return serverResponseData;
+        }catch (Exception e){
+           JSONArray errorMessage =  new JSONArray(serverResponse.get("data").toString());
+           System.out.println(errorMessage.length());
+           StringBuilder concatenateError = new StringBuilder();
+           for (int i=0; i<errorMessage.length();i++){
+               concatenateError.append(errorMessage.get(i)).append("\n");
+           }
+           throw new ServerException(concatenateError.toString());
         }
 
-        return serverResponseData;
     }
 
 
