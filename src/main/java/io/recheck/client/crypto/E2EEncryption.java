@@ -235,7 +235,7 @@ public class E2EEncryption {
         } else {
             String[] fullphrase = StringUtils.split(diceware());
             for (int i = 0; i < 12; i++) {
-                passphrase += fullphrase[0] + " ";
+                passphrase += fullphrase[i] + " ";
             }
         }
 
@@ -1210,7 +1210,6 @@ public class E2EEncryption {
         LOGGER.info("query URL " + getUrl);
 
         String serverGet = getRequest(getUrl);
-        System.out.println( "tva sa "  + serverGet);
         JSONObject serverResponse = new JSONObject(serverGet);
         try{
             JSONObject serverResponseData = new JSONObject(serverResponse.get("data").toString());
@@ -1222,7 +1221,6 @@ public class E2EEncryption {
             return serverResponseData;
         }catch (Exception e){
            JSONArray errorMessage =  new JSONArray(serverResponse.get("data").toString());
-           System.out.println(errorMessage.length());
            StringBuilder concatenateError = new StringBuilder();
            for (int i=0; i<errorMessage.length();i++){
                concatenateError.append(errorMessage.get(i)).append("\n");

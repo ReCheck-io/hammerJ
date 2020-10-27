@@ -36,11 +36,11 @@ public class TestBeta {
 
         //login
         showKeys(keys);
-        hammerJ.login(keys,ch);
+//        hammerJ.login(keys,ch);
 
         //open
-        JSONObject jss = hammerJ.openFileWithExternalID("DaakaTest",keys);
-        System.out.println(jss.toString(1));
+//        JSONObject jss = hammerJ.openFileWithExternalID("DaakaTest",keys);
+//        System.out.println(jss.toString(1));
 //        String directory = "downloads/";
 //        hammerJ.downloadFileWithExternalID("DaakaTest", keys, directory);
 
@@ -53,11 +53,11 @@ public class TestBeta {
 //        System.out.println(jss.toString(1));
 
 //        upload
-        String data = "mamamu";
-        String fileContent = Base64.getEncoder().encodeToString(data.getBytes());
+//        String data = "mamamu";
+//        String fileContent = Base64.getEncoder().encodeToString(data.getBytes());
 
-        String s = hammerJ.store(fileContent,"test",".txt", keys);
-        System.out.println(s);
+//        String s = hammerJ.store(fileContent,"test",".txt", keys);
+//        System.out.println(s);
 
         //sign
 //        JSONObject js = hammerJ.signFile(fileChainID,keys.getAddress(),keys);

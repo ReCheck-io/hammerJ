@@ -6,7 +6,7 @@
 
     <groupId>io.github.recheck-io</groupId>
     <artifactId>hammerJ</artifactId>
-    <version>0.0.22</version>
+    <version>1.0.0</version>
 
     <dependencies>
         <dependency>
