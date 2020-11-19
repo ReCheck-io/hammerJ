@@ -756,7 +756,9 @@ public class E2EEncryption {
      *                     exceptions produced by failed or interrupted I/O operations.
      */
     public String post(String url, JSONObject json) throws IOException {
-        RequestBody body = RequestBody.create(json.toString(), JSON);
+        String jsBody = json.toString();
+        LOGGER.severe(jsBody);
+        RequestBody body = RequestBody.create(jsBody, JSON);
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
