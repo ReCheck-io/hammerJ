@@ -1127,6 +1127,32 @@ public class E2EEncryption {
         return serverRes;
     }
 
+    /**
+     * This method asks for the blockchain ID of the file and the blockchain ID (the address) of
+     * a participant and a requestId in the actions and returns the transactions made with the file/data.
+     *
+     * @param dataChainId - blockchain data ID
+     * @param userId - blockchain user ID
+     * @param requestId - requestID of the party that executed the request
+     * @return info about the transaction (if any) made.
+     * @throws ServerException
+     */
+    public JSONObject checkHash(String dataChainId, String userId, String requestId) throws ServerException {
+        if (userId.contains("re_")) {
+            userId = userId.substring(3);
+        }
+        String query = "&userId=" + userId + "&dataId=" + dataChainId + "&requestId=" + requestId;
+
+        String getUrl = getEndpointUrl("tx/info", query);
+        LOGGER.severe("query URL " + getUrl);
+
+        String serverResponse = getRequest(getUrl);
+        JSONObject serverRes = new JSONObject(serverResponse);
+
+        LOGGER.severe("Server responds to checkHash GET " + serverRes.get("data"));
+
+        return serverRes;
+    }
 
     /**
      * Function to sign a message, depending on the network eth/ae
