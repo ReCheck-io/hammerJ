@@ -1,0 +1,5 @@
+mvn versions:set -DnewVersion=x.x.x
+
+mvn clean deploy 
+
+(pray to deploy successfully)

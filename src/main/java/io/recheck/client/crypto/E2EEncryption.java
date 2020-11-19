@@ -758,7 +758,8 @@ public class E2EEncryption {
     public String post(String url, JSONObject json) throws IOException {
         String jsBody = json.toString();
         LOGGER.severe(jsBody);
-        RequestBody body = RequestBody.create(jsBody, JSON);
+//        RequestBody body = RequestBody.create(jsBody, JSON);
+        RequestBody body = RequestBody.create(JSON, jsBody);
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
