@@ -33,7 +33,7 @@ public class HammerJ {
      * @param network
      */
     public void init(String token, String baseUrl, String network) {
-        E2EEncryption.setToken(token);
+        e2EEncryption.setToken(token);
         this.baseUrl = baseUrl;
         e2EEncryption.setNetwork(network);
     }

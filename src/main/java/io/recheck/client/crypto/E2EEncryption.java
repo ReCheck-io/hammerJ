@@ -32,7 +32,7 @@ import static java.util.Arrays.copyOfRange;
 
 
 public class E2EEncryption {
-    private static String token = "";
+    private String token = "";
     private static final String defaultRequestId = "ReCheck";
     private static String network = "ae"; //ae or eth  
     private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
@@ -45,12 +45,12 @@ public class E2EEncryption {
     public final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
 
-    public static String getToken() {
+    public String getToken() {
         return token;
     }
 
-    public static void setToken(String token) {
-        E2EEncryption.token = token;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     /**
