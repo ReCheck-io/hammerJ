@@ -15,6 +15,9 @@ import java.util.logging.LogManager;
 public class TestBeta {
     public static void main(String[] args) throws GeneralSecurityException, InvalidPhraseException, ValidationException, IOException, EncodeDecodeException, ServerException, KeyExchangeException, ExternalKeyPairException {
         HammerJ hammerJ = new HammerJ();
+        String baseUrl = "http://xlw-prod-55.xl-websolutions.nl:3000";
+        String network = "eth";
+        hammerJ.init(baseUrl, network);
 
         LogManager.getLogManager().reset();
         hammerJ.LOGGER.setLevel(Level.SEVERE);
@@ -25,7 +28,7 @@ public class TestBeta {
 
         String passphrase = "m's folio blinn tuft layup chili felix why mitre beep gino medley";
 
-        String ch="0xd7323d4eb25e57060f68f59640b06178ee81ea30b796f9653f9fa13e454b0b21";
+        String ch="";
 
         String recipient = "ak_25ZrFQDCAHoGVnT8Ed3hXgWwPwy7jpcQVtfs63DwEAYW6m6vgU";
         String recipientMail = "vampireskooo@gmail.com";
@@ -36,7 +39,7 @@ public class TestBeta {
 
         //login
         showKeys(keys);
-//        hammerJ.login(keys,ch);
+        hammerJ.login(keys,ch);
 
         //open
 //        JSONObject jss = hammerJ.openFileWithExternalID("DaakaTest",keys);

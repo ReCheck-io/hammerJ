@@ -19,7 +19,9 @@ public class HammerJ {
 
     private static final String defaultRequestId = "ReCheck";
     // it will change to eth
-    private static String baseUrl = "https://beta.recheck.io";
+//    private static String baseUrl = "https://beta.recheck.io";
+//    private static String baseUrl = "http://chain.ipocean.com";
+
     private E2EEncryption e2EEncryption = new E2EEncryption();
 
     private static final String BOX_NONCE = "69696ee955b62b73cd62bda875fc73d68219e0036b7a0b37";
@@ -28,13 +30,11 @@ public class HammerJ {
     /**
      * Initializing of the API token, baseURL (beta/my.recheck) and the network (currently ae or eth)
      *
-     * @param token
      * @param baseUrl
      * @param network
      */
-    public void init(String token, String baseUrl, String network) {
-        e2EEncryption.setToken(token);
-        this.baseUrl = baseUrl;
+    public void init(String baseUrl, String network) {
+        e2EEncryption.setBaseUrl(baseUrl);
         e2EEncryption.setNetwork(network);
     }
 
@@ -434,7 +434,7 @@ public class HammerJ {
 
             String selectionHash = shareResult.get("selectionHash").toString();
 
-            generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
+            generatedShareUrl = e2EEncryption.getBaseUrl() + "/view/email/" + selectionHash;
             SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             queryObj.put("selectionHash", selectionHash);
             queryObj.put("pubKey", emailKeyPair.getPublicSignKey());
@@ -484,7 +484,7 @@ public class HammerJ {
             selectionHash = execFileSelectionHash;
 
 
-            generatedShareUrl = baseUrl + "/view/email/" + selectionHash;
+            generatedShareUrl = e2EEncryption.getBaseUrl() + "/view/email/" + selectionHash;
             SortedMap<String, Object> queryObj = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             queryObj.put("selectionHash", selectionHash);
             queryObj.put("pubKey", recipientEmailLinkKeyPair.getPublicSignKey());

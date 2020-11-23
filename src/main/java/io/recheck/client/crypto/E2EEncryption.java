@@ -34,10 +34,12 @@ import static java.util.Arrays.copyOfRange;
 public class E2EEncryption {
     private String token = "";
     private static final String defaultRequestId = "ReCheck";
-    private static String network = "ae"; //ae or eth  
+    private static String network = "eth"; //ae or eth
     private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
+
     // TODO: Change the baseUrl to have instances
-    private static String baseUrl = "https://beta.recheck.io";
+//    private static String baseUrl = "https://beta.recheck.io";
+    private static String baseUrl = "http://chain.ipocean.com";
     public static final Pattern VALID_EMAIL_ADDRESS_REGEX =
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
     public static final Pattern VALID_AETHERNITY = Pattern.compile("^re_[0-9a-zA-Z]{41,}$", Pattern.CASE_INSENSITIVE);
@@ -51,6 +53,14 @@ public class E2EEncryption {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public static String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public static void setBaseUrl(String baseUrl) {
+        E2EEncryption.baseUrl = baseUrl;
     }
 
     /**
@@ -667,7 +677,7 @@ public class E2EEncryption {
     public String loginWithChallenge(String challenge, UserKeyPair keyPair) throws IOException {
         String sig58 = signMessage(challenge, keyPair);
         JSONObject payload = new JSONObject();
-
+        
         payload.put("action", "login");
         payload.put("pubKey", keyPair.getPublicSignKey());
         payload.put("pubEncKey", keyPair.getPublicEncKey());
