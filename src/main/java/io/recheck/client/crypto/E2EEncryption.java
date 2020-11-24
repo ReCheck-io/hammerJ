@@ -33,7 +33,7 @@ import static java.util.Arrays.copyOfRange;
 
 public class E2EEncryption {
     private String token = "";
-    private static final String defaultRequestId = "ReCheck";
+    private static String defaultRequestId = "ReCheck";
     private static String network = "eth"; //ae or eth
     private static UserKeyPair browserKeyPair = new UserKeyPair("", "", "", "", "");
 
@@ -61,6 +61,14 @@ public class E2EEncryption {
 
     public static void setBaseUrl(String baseUrl) {
         E2EEncryption.baseUrl = baseUrl;
+    }
+
+    public static String getRequestId() {
+        return defaultRequestId;
+    }
+
+    public static void setRequestId(String defaultRequestId) {
+        E2EEncryption.defaultRequestId = defaultRequestId;
     }
 
     /**
