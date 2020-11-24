@@ -1155,10 +1155,19 @@ public class E2EEncryption {
      * @return info about the transaction (if any) made.
      * @throws ServerException
      */
-    public JSONObject checkHash(String dataChainId, String userId, String requestId) throws ServerException {
+    public JSONObject checkHashWithExternalId(String dataChainId, String userId, String requestId) throws ServerException, ValidationException {
         if (userId.contains("re_")) {
             userId = userId.substring(3);
         }
+
+        try{
+            JSONObject result = convertExternalId(dataChainId, userId);
+            dataChainId = result.get("dataId").toString();
+        }catch (Exception e){
+            throw new ValidationException(e.getMessage());
+        }
+
+
         String query = "&userId=" + userId + "&dataId=" + dataChainId + "&requestId=" + requestId;
 
         String getUrl = getEndpointUrl("tx/info", query);

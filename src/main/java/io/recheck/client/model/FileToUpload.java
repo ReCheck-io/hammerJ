@@ -6,7 +6,7 @@ public class FileToUpload {
     private String dataName;
     private String dataExtension;
     private String category = "OTHER";
-    private String keywords = "Daka";
+    private String keywords = "";
     private String userId;
     private String payload;
     private io.recheck.client.model.Encryption encrypt;
