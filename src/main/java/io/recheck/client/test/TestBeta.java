@@ -34,9 +34,10 @@ public class TestBeta {
 
         String token = hammerJ.login(keyPair,"");
         e2EEncryption.setToken(token);
-        JSONObject result =  e2EEncryption.convertExternalId("0xtestaaaa","0x4D65B95f651282bAe0554D429B3A2D93310541E2");
-        System.out.println("ei tva sq kak e " + result.toString());
 
+        System.out.println("tva " + keyPair.getAddress());
+        String result = hammerJ.store("data","neshto",".txt",keyPair);
+        System.out.println("toz rez " + result);
 
         ConsoleHandler handler = new ConsoleHandler();
         handler.setLevel(Level.SEVERE);

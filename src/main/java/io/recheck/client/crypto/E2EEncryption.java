@@ -1237,17 +1237,26 @@ public class E2EEncryption {
         LOGGER.fine("saveExternalId, " + body);
 
         String serPostRes = post(postUrl, body);
-
         JSONObject serverPostResponse = new JSONObject(serPostRes);
-        JSONObject postResponseData = new JSONObject(serverPostResponse.get("data").toString());
+        try {
+            JSONObject postResponseData = new JSONObject(serverPostResponse.get("data").toString());
 
-        LOGGER.fine("Server responds to saveExternalId POST" + postResponseData);
+            LOGGER.fine("Server responds to saveExternalId POST" + postResponseData);
 
-        if (serverPostResponse.get("status").toString().equals("ERROR")) {
-            throw new ServerException("External ID server error");
+            if (serverPostResponse.get("status").toString().equals("ERROR")) {
+                throw new ServerException("External ID server error");
+            }
+            return postResponseData;
+            
+        }catch (Exception e){
+            JSONArray errorMessage =  new JSONArray(serverPostResponse.get("data").toString());
+            StringBuilder concatenateError = new StringBuilder();
+            for (int i=0; i<errorMessage.length();i++){
+                concatenateError.append(errorMessage.get(i)).append("\n");
+            }
+            throw new ServerException(concatenateError.toString());
         }
 
-        return postResponseData;
     }
 
     /**
