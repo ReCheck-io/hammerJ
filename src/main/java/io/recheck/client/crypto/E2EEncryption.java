@@ -1252,7 +1252,7 @@ public class E2EEncryption {
             JSONArray errorMessage =  new JSONArray(serverPostResponse.get("data").toString());
             StringBuilder concatenateError = new StringBuilder();
             for (int i=0; i<errorMessage.length();i++){
-                concatenateError.append(errorMessage.get(i)).append("\n");
+                concatenateError.append(errorMessage.get(i)).append(",");
             }
             throw new ServerException(concatenateError.toString());
         }
@@ -1288,7 +1288,7 @@ public class E2EEncryption {
            JSONArray errorMessage =  new JSONArray(serverResponse.get("data").toString());
            StringBuilder concatenateError = new StringBuilder();
            for (int i=0; i<errorMessage.length();i++){
-               concatenateError.append(errorMessage.get(i)).append("\n");
+               concatenateError.append(errorMessage.get(i)).append(",");
            }
            throw new ServerException(concatenateError.toString());
         }

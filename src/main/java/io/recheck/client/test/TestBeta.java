@@ -4,6 +4,7 @@ import io.recheck.client.HammerJ;
 import io.recheck.client.crypto.E2EEncryption;
 import io.recheck.client.exceptions.*;
 import io.recheck.client.model.UserKeyPair;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.web3j.crypto.Credentials;
 
@@ -52,12 +53,12 @@ public class TestBeta {
         String fileChainID = "0xd57f03fb24b0ee160eafcb54b4d939d752d372f216b1577f87cec6ffc8242963";
 
 
-//        UserKeyPair keys = null;
-//        keys = hammerJ.generateNewKeyPair(passphrase);
+        UserKeyPair keys = null;
+        keys = hammerJ.generateNewKeyPair(passphrase);
 
         //login
-//        showKeys(keys);
-//        hammerJ.login(keys,ch);
+        showKeys(keys);
+        hammerJ.login(keys,ch);
 
         //open
 //        JSONObject jss = hammerJ.openFileWithExternalID("DaakaTest",keys);
@@ -74,11 +75,15 @@ public class TestBeta {
 //        System.out.println(jss.toString(1));
 
 //        upload
-//        String data = "mamamu";
-//        String fileContent = Base64.getEncoder().encodeToString(data.getBytes());
+        String data = "mamamu";
+        String fileContent = Base64.getEncoder().encodeToString(data.getBytes());
 
-//        String s = hammerJ.store(fileContent,"test",".txt", keys);
-//        System.out.println(s);
+        String s = hammerJ.store(fileContent,"test",".txt", keys);
+        JSONArray js = new JSONArray(s);
+        for(int i =0;i<js.length();i++){
+            System.out.println(js.getJSONObject(i).toString());
+        }
+
 
         //sign
 //        JSONObject js = hammerJ.signFile(fileChainID,keys.getAddress(),keys);
