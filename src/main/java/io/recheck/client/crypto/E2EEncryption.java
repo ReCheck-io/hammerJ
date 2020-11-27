@@ -876,6 +876,7 @@ public class E2EEncryption {
         browserPubKeySubmitRes = post(browserPubKeySubmitUrl, browserPubKeySubmit);
 
         JSONObject js = new JSONObject(browserPubKeySubmitRes);
+        System.out.println(js.toString(1));
         JSONObject credentials = new JSONObject(js.get("data").toString());
 
         return credentials;
