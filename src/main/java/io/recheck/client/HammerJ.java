@@ -569,7 +569,7 @@ public class HammerJ {
      * @param data - this will be the name stored on the platform
      * @return server's response whether the file has been uploaded
      */
-    public String storeWithExternalID(String data,String dataName, String dataExtension, String externalID, UserKeyPair keyPair) throws IOException {
+    public String storeWithExternalID(String data,String dataName, String dataExtension, String externalID, UserKeyPair keyPair) throws IOException, ServerException {
         FileObj obj = new FileObj();
         obj.setPayload(data);
         obj.setName(dataName);
@@ -582,8 +582,8 @@ public class HammerJ {
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.info("Error. " + e.getMessage());
+            throw new ServerException(e.getMessage());
         }
-        return null;
     }
 
 
