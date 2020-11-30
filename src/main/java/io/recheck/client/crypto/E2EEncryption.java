@@ -1297,4 +1297,26 @@ public class E2EEncryption {
     }
 
 
+    public JSONObject checkData(String payload, String dataName) throws ServerException {
+
+        String dataOriginalHash = getHash(payload);
+        String query = "&dataOriginalHash=" + dataOriginalHash +"&dataName=" + dataName;
+        String getUrl = getEndpointUrl("data/chain", query);
+        String request = getRequest(getUrl);
+        JSONObject result = new JSONObject(request);
+        try{
+            JSONObject dataRes = new JSONObject(result.get("data").toString());
+            return dataRes;
+        }catch (Exception e){
+            JSONArray errorMessage =  new JSONArray(result.get("data").toString());
+            StringBuilder concatenateError = new StringBuilder();
+            for (int i=0; i<errorMessage.length();i++){
+                concatenateError.append(errorMessage.get(i)).append(",");
+            }
+            throw new ServerException(concatenateError.toString());
+        }
+
+    }
+
+
 }
