@@ -1157,29 +1157,34 @@ public class E2EEncryption {
      * @throws ServerException
      */
     public JSONObject checkHashWithExternalId(String dataChainId, String userId, String requestId) throws ServerException, ValidationException {
-        if (userId.contains("re_")) {
-            userId = userId.substring(3);
+        if (validateEthAddress(userId) || validateAEAddress(userId)) {
+            if (userId.contains("re_")) {
+                userId = userId.substring(3);
+            }
+
+            try{
+                JSONObject result = convertExternalId(dataChainId, userId);
+                dataChainId = result.get("dataId").toString();
+            }catch (Exception e){
+                throw new ValidationException(e.getMessage());
+            }
+
+
+            String query = "&userId=" + userId + "&dataId=" + dataChainId + "&requestId=" + requestId;
+
+            String getUrl = getEndpointUrl("tx/info", query);
+            LOGGER.severe("query URL " + getUrl);
+
+            String serverResponse = getRequest(getUrl);
+            JSONObject serverRes = new JSONObject(serverResponse);
+
+            LOGGER.severe("Server responds to checkHash GET " + serverRes.get("data"));
+
+            return serverRes;
+        }else {
+            throw new ValidationException("The userId is invalid.");
         }
 
-        try{
-            JSONObject result = convertExternalId(dataChainId, userId);
-            dataChainId = result.get("dataId").toString();
-        }catch (Exception e){
-            throw new ValidationException(e.getMessage());
-        }
-
-
-        String query = "&userId=" + userId + "&dataId=" + dataChainId + "&requestId=" + requestId;
-
-        String getUrl = getEndpointUrl("tx/info", query);
-        LOGGER.severe("query URL " + getUrl);
-
-        String serverResponse = getRequest(getUrl);
-        JSONObject serverRes = new JSONObject(serverResponse);
-
-        LOGGER.severe("Server responds to checkHash GET " + serverRes.get("data"));
-
-        return serverRes;
     }
 
     /**
