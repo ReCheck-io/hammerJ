@@ -295,9 +295,9 @@ public class HammerJ {
     }
 
     public JSONObject shareDataWithExternalID(String externalID, String recipientId, UserKeyPair senderKeys) throws ServerException, EncodeDecodeException, GeneralSecurityException, InvalidPhraseException, IOException, ValidationException {
-       JSONObject externalIDResponse = e2EEncryption.convertExternalId(externalID, senderKeys.getAddress());
-       String dataID = externalIDResponse.get("dataId").toString();
-       return shareData(dataID,recipientId,senderKeys);
+        JSONObject externalIDResponse = e2EEncryption.convertExternalId(externalID, senderKeys.getAddress());
+        String dataID = externalIDResponse.get("dataId").toString();
+        return shareData(dataID, recipientId, senderKeys);
     }
 
     /**
@@ -408,7 +408,7 @@ public class HammerJ {
     public JSONObject shareDataWithExternalID(String externalID, String recipientId, UserKeyPair senderKeys, UserKeyPair recipientsEmailLinkKeyPair, UserKeyPair enctryptionEmailKeyPair, String execFileSelectionHash) throws ServerException, EncodeDecodeException, GeneralSecurityException, InvalidPhraseException, IOException, ValidationException {
         JSONObject externalIDResponse = e2EEncryption.convertExternalId(externalID, senderKeys.getAddress());
         String dataID = externalIDResponse.get("dataId").toString();
-        return shareDataWithExternalID(dataID,recipientId,senderKeys, recipientsEmailLinkKeyPair,enctryptionEmailKeyPair, execFileSelectionHash);
+        return shareDataWithExternalID(dataID, recipientId, senderKeys, recipientsEmailLinkKeyPair, enctryptionEmailKeyPair, execFileSelectionHash);
     }
 
     /**
@@ -548,7 +548,7 @@ public class HammerJ {
      * @param data - this will be the name stored on the platform
      * @return server's response whether the file has been uploaded
      */
-    public String store(String data,String dataName, String dataExtension, UserKeyPair keyPair) throws IOException {
+    public String store(String data, String dataName, String dataExtension, UserKeyPair keyPair) throws IOException {
         FileObj obj = new FileObj();
         obj.setPayload(data);
         obj.setName(dataName);
@@ -569,7 +569,7 @@ public class HammerJ {
      * @param data - this will be the name stored on the platform
      * @return server's response whether the file has been uploaded
      */
-    public String storeWithExternalID(String data,String dataName, String dataExtension, String externalID, UserKeyPair keyPair) throws IOException, ServerException {
+    public String storeWithExternalID(String data, String dataName, String dataExtension, String externalID, UserKeyPair keyPair) throws IOException, ServerException {
         FileObj obj = new FileObj();
         obj.setPayload(data);
         obj.setName(dataName);
@@ -577,7 +577,7 @@ public class HammerJ {
         try {
             FileToUpload file = e2EEncryption.getFileUploadData(obj, keyPair);
             String uploadFile = e2EEncryption.uploadFile(file);
-            e2EEncryption.saveExternalId(externalID,keyPair.getAddress(),file.getEncrypt().getDataHash());
+            e2EEncryption.saveExternalId(externalID, keyPair.getAddress(), file.getEncrypt().getDataHash());
             return uploadFile;
         } catch (Exception e) {
             e.printStackTrace();
@@ -633,7 +633,7 @@ public class HammerJ {
      * client specific ID.
      *
      * @param fileNameFromPath - this will be the name stored on the platform
-     * @param externalID - the id provided by the client
+     * @param externalID       - the id provided by the client
      * @return server's response whether the file has been uploaded
      */
     public String storeFileWithExternalID(String fileNameFromPath, UserKeyPair keyPair, String externalID) throws IOException {
@@ -664,7 +664,7 @@ public class HammerJ {
         try {
             FileToUpload file = e2EEncryption.getFileUploadData(obj, keyPair);
             String uploadFile = e2EEncryption.uploadFile(file);
-            e2EEncryption.saveExternalId(externalID,keyPair.getAddress(),file.getEncrypt().getDataHash());
+            e2EEncryption.saveExternalId(externalID, keyPair.getAddress(), file.getEncrypt().getDataHash());
             return uploadFile;
         } catch (Exception e) {
             e.printStackTrace();
@@ -693,20 +693,25 @@ public class HammerJ {
     }
 
     public JSONObject openFileWithExternalID(String externalID, UserKeyPair keyPair) throws GeneralSecurityException, EncodeDecodeException, IOException, ExternalKeyPairException, ServerException, KeyExchangeException, ValidationException {
-        JSONObject externalIDResponse = e2EEncryption.convertExternalId(externalID, keyPair.getAddress());
-        String dataID = externalIDResponse.get("dataId").toString();
-        return openFile(dataID,keyPair);
+        if (e2EEncryption.validateEthAddress(keyPair.getAddress()) || e2EEncryption.validateAEAddress(keyPair.getAddress())) {
+            JSONObject externalIDResponse = e2EEncryption.convertExternalId(externalID, keyPair.getAddress());
+            String dataID = externalIDResponse.get("dataId").toString();
+            return openFile(dataID, keyPair);
+        } else {
+            throw new ValidationException("The userId/address is invalid");
+        }
+
     }
 
-        /**
-         * This function is to for the user to put a signature with their private key on file or message
-         * that they verify or validate to be authentic
-         *
-         * @param dataId      - the file or message to be signed
-         * @param recipientId - file or message's owner
-         * @param keyPair     - signer's key pair
-         * @return the result from the server - empty string for success, otherwise an error
-         */
+    /**
+     * This function is to for the user to put a signature with their private key on file or message
+     * that they verify or validate to be authentic
+     *
+     * @param dataId      - the file or message to be signed
+     * @param recipientId - file or message's owner
+     * @param keyPair     - signer's key pair
+     * @return the result from the server - empty string for success, otherwise an error
+     */
 
     public JSONObject signFile(String dataId, String recipientId, UserKeyPair keyPair) throws IOException {
         String userId = keyPair.getAddress();
@@ -749,16 +754,16 @@ public class HammerJ {
     public JSONObject signFileWithExternalID(String externalID, String recipientId, UserKeyPair keyPair) throws IOException, ServerException {
         JSONObject externalIDResponse = e2EEncryption.convertExternalId(externalID, keyPair.getAddress());
         String dataID = externalIDResponse.get("dataId").toString();
-        return signFile(dataID,recipientId, keyPair);
+        return signFile(dataID, recipientId, keyPair);
     }
 
-        /**
-         * Function to open/share/mobile open to a particular selection of files
-         *
-         * @param selection hash of selection of files
-         * @param keyPair   user's key pair
-         * @return a collection with hashes of the files that have been manipulated
-         */
+    /**
+     * Function to open/share/mobile open to a particular selection of files
+     *
+     * @param selection hash of selection of files
+     * @param keyPair   user's key pair
+     * @return a collection with hashes of the files that have been manipulated
+     */
     public ArrayList<ResultFileObj> execSelection(String selection, UserKeyPair keyPair) throws ServerException, GeneralSecurityException, ExternalKeyPairException, IOException, EncodeDecodeException, KeyExchangeException, ValidationException, InvalidPhraseException {
         ArrayList<ResultFileObj> result = new ArrayList<>();
         // check if we have a selection or an id
@@ -925,6 +930,7 @@ public class HammerJ {
             e.printStackTrace();
         }
     }
+
     public void downloadFileWithExternalID(String externalID, UserKeyPair keys, String directory) throws GeneralSecurityException, ExternalKeyPairException, KeyExchangeException, IOException, EncodeDecodeException, ServerException, ValidationException {
         JSONObject jss = openFileWithExternalID(externalID, keys);
         File dir = new File(directory);

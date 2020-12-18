@@ -50,14 +50,17 @@ public class TestBeta {
 //        String passphrase = "m's folio blinn tuft layup chili felix why mitre beep gino medley";
         String passphrase = "m's folio blinn tuft layup chili felix why mitre beep gino daka";
         UserKeyPair keyPair = hammerJ.generateNewKeyPair(passphrase);
-        String token = hammerJ.login(keyPair,"");
-        e2EEncryption.setToken(token);
-        String ch="";
+//        String token = hammerJ.login(keyPair,"");
+//        e2EEncryption.setToken(token);
+//        String ch="";
 
-        String recipient = "ak_25ZrFQDCAHoGVnT8Ed3hXgWwPwy7jpcQVtfs63DwEAYW6m6vgU";
+        String recipient = "re_25ZrFQDCAHoGVnT8Ed3hXgWwPwy7jpcQVtfs63DwEAYW6m6vgU";
         String recipientMail = "vampireskooo@gmail.com";
         String fileChainID = "0xd57f03fb24b0ee160eafcb54b4d939d752d372f216b1577f87cec6ffc8242963";
+        String ethAcc = "0x44fb5016b224b259120b8836cd7086d7bee7043f";
 
+        System.out.println("re_acc: " + recipient.length());
+        System.out.println("eth_acc: " + ethAcc.length());
 
 //        UserKeyPair keys = null;
 //        keys = hammerJ.generateNewKeyPair(passphrase);
@@ -67,12 +70,12 @@ public class TestBeta {
 //        hammerJ.login(keys,ch);
 
         //open
-        JSONObject jss = hammerJ.openFile("0x64a55f81804340c0d6393a8a1d99829e3ec9641806ce8cb57bc1a10ef78f0bba",keyPair);
+//        JSONObject jss = hammerJ.openFile("0x64a55f81804340c0d6393a8a1d99829e3ec9641806ce8cb57bc1a10ef78f0bba",keyPair);
 //        System.out.println(jss.toString(1));
 
         //check data
-        JSONObject jsss = e2EEncryption.checkData(jss.get("payload").toString(), "cirdax");
-        System.out.println(jsss.toString());
+//        JSONObject jsss = e2EEncryption.checkData(data, "cirdax");
+//        System.out.println(jsss.toString());
 //        String directory = "downloads/";
 //        hammerJ.downloadFileWithExternalID("DaakaTest", keys, directory);
 
